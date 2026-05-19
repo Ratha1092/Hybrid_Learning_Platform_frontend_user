@@ -1,0 +1,461 @@
+/* ============================================================
+   Register.css — Verdant Split-Panel Registration Page
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+
+/* ── Tokens ── */
+:root {
+  --green-900: #1a3a2e;
+  --green-800: #1f4535;
+  --green-700: #245240;
+  --green-600: #2d6a50;
+  --green-500: #3a8c6a;
+  --green-400: #4aad84;
+  --green-100: #e8f5ef;
+  --green-50:  #f3faf6;
+
+  --text-dark:   #111b17;
+  --text-mid:    #4a5e55;
+  --text-light:  #8fa89e;
+  --text-white:  #ffffff;
+
+  --border:      #dce8e2;
+  --input-bg:    #f7faf8;
+  --error:       #d94f4f;
+  --success:     #1e7d4f;
+
+  --radius-card: 20px;
+  --radius-btn:  12px;
+  --radius-input:10px;
+
+  --shadow-card: 0 24px 64px rgba(0,0,0,.13), 0 4px 16px rgba(0,0,0,.07);
+  --shadow-btn:  0 4px 20px rgba(26,90,60,.40);
+
+  --transition: .18s ease;
+}
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+button { cursor: pointer; border: none; background: none; }
+a      { text-decoration: none; }
+input  { font-family: inherit; }
+
+/* ── Page Shell ── */
+.register-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eef5f1;
+  padding: 24px;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ── Card ── */
+.register-card {
+  display: flex;
+  width: 100%;
+  max-width: 860px;
+  min-height: 560px;
+  background: #fff;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+/* ============================================================
+   LEFT PANEL — dark green branding
+   ============================================================ */
+.register-image-wrap {
+  position: relative;
+  width: 310px;
+  flex-shrink: 0;
+  background: var(--green-800);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 32px 30px 36px;
+  overflow: hidden;
+}
+
+/* decorative blobs */
+.register-image-wrap::before,
+.register-image-wrap::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  opacity: .18;
+  pointer-events: none;
+}
+.register-image-wrap::before {
+  width: 240px; height: 240px;
+  background: var(--green-400);
+  top: -60px; right: -60px;
+}
+.register-image-wrap::after {
+  width: 180px; height: 180px;
+  background: var(--green-500);
+  bottom: 40px; left: -60px;
+}
+
+/* hide the actual <img> — we use CSS for the left panel */
+.register-image-wrap img { display: none; }
+
+/* Logo badge */
+.register-logo {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.register-logo-badge {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.15);
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.register-logo-badge svg {
+  width: 18px; height: 18px;
+  color: #fff;
+}
+
+.register-logo-name {
+  font-family: 'DM Serif Display', serif;
+  font-size: 18px;
+  color: #fff;
+  letter-spacing: .01em;
+}
+
+/* Headline copy */
+.register-panel-copy {
+  position: relative;
+  z-index: 1;
+}
+
+.register-panel-copy h2 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 34px;
+  line-height: 1.15;
+  color: #fff;
+  margin-bottom: 14px;
+}
+
+.register-panel-copy p {
+  font-size: 14px;
+  font-weight: 300;
+  color: rgba(255,255,255,.72);
+  line-height: 1.6;
+}
+
+/* Feature list */
+.register-features {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.register-feature {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255,255,255,.80);
+  font-size: 13.5px;
+  font-weight: 400;
+}
+
+.register-feature svg {
+  width: 16px; height: 16px;
+  flex-shrink: 0;
+  color: rgba(255,255,255,.60);
+}
+
+/* ============================================================
+   RIGHT PANEL — form
+   ============================================================ */
+.register-form-panel {
+  flex: 1;
+  padding: 48px 44px 44px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Title */
+.register-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 30px;
+  color: var(--text-dark);
+  margin-bottom: 6px;
+  letter-spacing: -.01em;
+}
+
+.register-subtitle {
+  font-size: 14px;
+  color: var(--text-mid);
+  margin-bottom: 28px;
+  font-weight: 300;
+}
+
+/* ── Fields Grid ── */
+.register-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+/* two-column row for first/last name */
+.register-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* ── Field Label ── */
+.register-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-mid);
+  margin-bottom: 6px;
+}
+
+/* ── Input wrap ── */
+.register-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.register-input-icon {
+  position: absolute;
+  left: 14px;
+  display: flex;
+  align-items: center;
+  color: var(--text-light);
+  pointer-events: none;
+}
+
+.register-input-icon svg {
+  width: 16px; height: 16px;
+}
+
+/* ── Input ── */
+.register-input {
+  width: 100%;
+  height: 46px;
+  padding: 0 14px 0 40px;
+  background: var(--input-bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-input);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-dark);
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+}
+
+.register-input::placeholder {
+  color: var(--text-light);
+  font-weight: 300;
+}
+
+.register-input:focus {
+  border-color: var(--green-600);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(45,106,80,.10);
+}
+
+.register-input--error {
+  border-color: var(--error) !important;
+  background: #fff5f5 !important;
+}
+
+.register-input--with-toggle {
+  padding-right: 44px;
+}
+
+/* ── Eye toggle button ── */
+.register-eye-btn {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  color: var(--text-light);
+  transition: color var(--transition);
+}
+
+.register-eye-btn:hover { color: var(--green-600); }
+
+.register-eye-btn svg { width: 16px; height: 16px; }
+
+/* ── Inline error message ── */
+.register-error-msg {
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--error);
+  font-weight: 400;
+}
+
+/* ── Terms checkbox ── */
+.register-terms {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-mid);
+  margin-bottom: 6px;
+}
+
+.register-terms input[type="checkbox"] {
+  width: 16px; height: 16px;
+  margin-top: 1px;
+  accent-color: var(--green-600);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.register-terms a {
+  color: var(--green-600);
+  font-weight: 500;
+  transition: color var(--transition);
+}
+
+.register-terms a:hover { color: var(--green-800); }
+
+/* ── Readiness hint ── */
+.register-ready-hint {
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--text-light);
+  margin-bottom: 14px;
+  font-weight: 300;
+  font-style: italic;
+}
+
+/* ── Submit button ── */
+.register-submit {
+  width: 100%;
+  height: 52px;
+  background: var(--green-800);
+  color: #fff;
+  border-radius: var(--radius-btn);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: var(--shadow-btn);
+  transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+  margin-bottom: 18px;
+}
+
+.register-submit:hover:not(:disabled) {
+  background: var(--green-900);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 28px rgba(26,90,60,.45);
+}
+
+.register-submit:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--shadow-btn);
+}
+
+.register-submit:disabled {
+  opacity: .7;
+  cursor: not-allowed;
+}
+
+.register-submit-arrow {
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* ── Spinner ── */
+.register-spinner {
+  width: 18px; height: 18px;
+  animation: register-spin .8s linear infinite;
+}
+
+@keyframes register-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Footer link ── */
+.register-footer {
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--text-mid);
+}
+
+.register-footer a {
+  color: var(--green-600);
+  font-weight: 500;
+  transition: color var(--transition);
+}
+
+.register-footer a:hover { color: var(--green-800); }
+
+/* ── Alert banners ── */
+.register-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 400;
+  margin-bottom: 18px;
+}
+
+.register-alert svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+.register-alert--success {
+  background: #e8f5ef;
+  color: var(--success);
+  border: 1px solid #b6deca;
+}
+
+.register-alert--error {
+  background: #fdf0f0;
+  color: var(--error);
+  border: 1px solid #f5c6c6;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 680px) {
+  .register-card {
+    flex-direction: column;
+    max-width: 420px;
+  }
+
+  .register-image-wrap {
+    width: 100%;
+    min-height: 160px;
+    padding: 24px 24px 20px;
+  }
+
+  .register-panel-copy h2 { font-size: 24px; }
+  .register-panel-copy p  { display: none; }
+
+  .register-form-panel { padding: 32px 24px 28px; }
+
+  .register-row { grid-template-columns: 1fr; }
+}

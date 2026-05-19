@@ -1,0 +1,31 @@
+/* ── Add these rules to your existing navbar.css ── */
+
+/* Small primary button (Register) */
+.btn-primary-sm {
+  padding: 0.3rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 6px;
+  border: none;
+  background: var(--color-primary, #4f46e5);
+  color: #fff;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.btn-primary-sm:hover {
+  opacity: 0.85;
+}
+
+/* Icon-only outline button (Profile) */
+.btn-outline-sm.icon-only {
+  padding: 0.3rem 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Logout button inherits .btn-outline-sm — add flex so icon + text align */
+.btn-outline-sm {
+  display: inline-flex;
+  align-items: center;
+}
