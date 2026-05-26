@@ -1,0 +1,273 @@
+import { useState, type ChangeEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext";
+import { authService } from "../../../services/authService";
+import "./Register.css";
+
+interface FormState {
+  name: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+}
+
+interface FormErrors {
+  name?: string;
+  email?: string;
+  password?: string;
+  password_confirmation?: string;
+}
+
+type Status = "idle" | "loading" | "success" | "error";
+
+const IconEye = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}>
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
+
+const IconEyeOff = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}>
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+    <line x1="1" y1="1" x2="23" y2="23" />
+  </svg>
+);
+
+const IconMail = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}>
+    <rect x="2" y="4" width="20" height="16" rx="2" />
+    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+  </svg>
+);
+
+const IconLock = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}>
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </svg>
+);
+
+function getStrength(pw: string): { level: number; label: string } {
+  if (!pw) return { level: 0, label: "" };
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  if (score <= 1) return { level: 1, label: "Weak" };
+  if (score === 2) return { level: 2, label: "Fair" };
+  if (score === 3) return { level: 3, label: "Medium" };
+  return { level: 4, label: "Strong" };
+}
+
+export default function Register() {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const [form, setForm] = useState<FormState>({ name: "", email: "", password: "", password_confirmation: "" });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [status, setStatus] = useState<Status>("idle");
+  const [serverMessage, setServerMessage] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+
+  const strength = getStrength(form.password);
+
+  const validate = (): FormErrors => {
+    const e: FormErrors = {};
+    if (!form.name.trim()) e.name = "Name is required.";
+    if (!form.email.trim()) e.email = "Email is required.";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Invalid email format.";
+    if (!form.password) e.password = "Password is required.";
+    else if (form.password.length < 8) e.password = "Password must be at least 8 characters.";
+    if (!form.password_confirmation) e.password_confirmation = "Please confirm your password.";
+    else if (form.password !== form.password_confirmation) e.password_confirmation = "Passwords do not match.";
+    return e;
+  };
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: undefined }));
+  };
+
+  const handleSubmit = async () => {
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) { setErrors(validationErrors); return; }
+
+    setStatus("loading");
+    setServerMessage("");
+
+    try {
+      const { data } = await authService.register(form);
+      login(data.data.user, data.data.token);
+      setStatus("success");
+      setServerMessage(data.message || "Registration successful!");
+      setForm({ name: "", email: "", password: "", password_confirmation: "" });
+      setTimeout(() => navigate("/"), 1200);
+    } catch (err: unknown) {
+      setStatus("error");
+      const res = (err as { response?: { data?: { message?: string; errors?: Record<string, string | string[]> } } }).response;
+      if (res?.data?.errors) {
+        const apiErrors: FormErrors = {};
+        Object.keys(res.data.errors).forEach((k) => {
+          const val = res.data!.errors![k];
+          (apiErrors as Record<string, string>)[k] = Array.isArray(val) ? val[0] : val;
+        });
+        setErrors(apiErrors);
+      }
+      setServerMessage(res?.data?.message || "Registration failed. Please try again.");
+    }
+  };
+
+  const strengthColor = ["", "#ef4444", "#f59e0b", "#60a5fa", "#22c55e"][strength.level];
+
+  return (
+    <div className="rg-page">
+      <div className="rg-card">
+
+        {/* ── Left panel ── */}
+        <div className="rg-left">
+          <div className="rg-left-bg">
+            <div className="rg-circle rg-circle--1" />
+            <div className="rg-circle rg-circle--2" />
+            <div className="rg-dots" />
+          </div>
+
+          <div className="rg-float-card rg-float-card--top">
+            <div className="rg-float-icon">🎓</div>
+            <div>
+              <div className="rg-float-title">DRC Learning</div>
+              <div className="rg-float-sub">Online Platform</div>
+            </div>
+          </div>
+
+          <div className="rg-float-card rg-float-card--mid">
+            <div className="rg-progress-label">Your progress</div>
+            <div className="rg-progress-track">
+              <div className="rg-progress-fill" style={{ width: "72%" }} />
+            </div>
+            <div className="rg-progress-pct">72% complete</div>
+          </div>
+
+          <div className="rg-pill">✓ Free forever</div>
+
+          <div className="rg-left-content">
+            <div className="rg-tag">✦ Online learning</div>
+            <h2 className="rg-left-heading">Start your learning journey today</h2>
+            <p className="rg-left-desc">Join thousands of students and unlock premium courses for free.</p>
+            <div className="rg-stats">
+              <div><div className="rg-stat-num">12k+</div><div className="rg-stat-lbl">Students</div></div>
+              <div><div className="rg-stat-num">340+</div><div className="rg-stat-lbl">Courses</div></div>
+              <div><div className="rg-stat-num">98%</div><div className="rg-stat-lbl">Satisfaction</div></div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Right form ── */}
+        <div className="rg-right">
+          <div className="rg-logo">
+            <div className="rg-logo-box">🏆</div>
+            <span className="rg-logo-name">DRC Platform</span>
+          </div>
+
+          <h1 className="rg-title">Create account</h1>
+          <p className="rg-subtitle">Fill in your details to get started</p>
+
+          {status === "success" && (
+            <div className="rg-alert rg-alert--success">✓ {serverMessage}</div>
+          )}
+          {status === "error" && serverMessage && (
+            <div className="rg-alert rg-alert--error">⚠ {serverMessage}</div>
+          )}
+
+          <div className="rg-field">
+            <label className="rg-label">Full name</label>
+            <div className={`rg-input-row ${errors.name ? "rg-input-row--err" : ""}`}>
+              <span className="rg-input-icon">👤</span>
+              <input name="name" type="text" placeholder="Your Full Name" value={form.name} onChange={handleChange} className="rg-input" />
+            </div>
+            {errors.name && <p className="rg-err-msg">{errors.name}</p>}
+          </div>
+
+          <div className="rg-field">
+            <label className="rg-label">Email address</label>
+            <div className={`rg-input-row ${errors.email ? "rg-input-row--err" : ""}`}>
+              <span className="rg-input-icon"><IconMail /></span>
+              <input name="email" type="email" placeholder="Your Email Address" value={form.email} onChange={handleChange} className="rg-input" />
+            </div>
+            {errors.email && <p className="rg-err-msg">{errors.email}</p>}
+          </div>
+
+          <div className="rg-field">
+            <label className="rg-label">Password</label>
+            <div className={`rg-input-row ${errors.password ? "rg-input-row--err" : ""}`}>
+              <span className="rg-input-icon"><IconLock /></span>
+              <input name="password" type={showPass ? "text" : "password"} placeholder="Min. 8 characters" value={form.password} onChange={handleChange} className="rg-input" />
+              <button type="button" className="rg-eye" onClick={() => setShowPass((v) => !v)}>
+                {showPass ? <IconEyeOff /> : <IconEye />}
+              </button>
+            </div>
+            {form.password && (
+              <div className="rg-strength">
+                <div className="rg-strength-bars">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="rg-strength-bar" style={{ background: i <= strength.level ? strengthColor : undefined }} />
+                  ))}
+                </div>
+                <span className="rg-strength-lbl" style={{ color: strengthColor }}>{strength.label}</span>
+              </div>
+            )}
+            <p className="rg-hint">
+              Password must include at least one <strong>uppercase letter</strong>, one <strong>number</strong>, and one <strong>special character</strong> (e.g. !@#$%).
+            </p>
+            {errors.password && <p className="rg-err-msg">{errors.password}</p>}
+          </div>
+
+          <div className="rg-field">
+            <label className="rg-label">Confirm password</label>
+            <div className={`rg-input-row ${errors.password_confirmation ? "rg-input-row--err" : ""}`}>
+              <span className="rg-input-icon"><IconLock /></span>
+              <input name="password_confirmation" type={showConfirm ? "text" : "password"} placeholder="Repeat password" value={form.password_confirmation} onChange={handleChange} className="rg-input" />
+              <button type="button" className="rg-eye" onClick={() => setShowConfirm((v) => !v)}>
+                {showConfirm ? <IconEyeOff /> : <IconEye />}
+              </button>
+            </div>
+            {errors.password_confirmation && <p className="rg-err-msg">{errors.password_confirmation}</p>}
+          </div>
+
+          <div className="rg-terms">
+            <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} id="terms" />
+            <label htmlFor="terms">
+              I agree to the <Link to="/terms">Terms of Service</Link> and <Link to="/privacy">Privacy Policy</Link>
+            </label>
+          </div>
+
+          <button className="rg-btn" onClick={handleSubmit} disabled={status === "loading"}>
+            {status === "loading" ? <span className="rg-spinner" /> : "Create account"}
+          </button>
+
+          <div className="rg-divider"><span>or continue with</span></div>
+
+          <div className="rg-social">
+            <button className="rg-social-btn">
+              <svg width="15" height="15" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+              Google
+            </button>
+            <button className="rg-social-btn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+              GitHub
+            </button>
+          </div>
+
+          <p className="rg-footer">
+            Already have an account? <Link to="/PageLogin">Sign in</Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

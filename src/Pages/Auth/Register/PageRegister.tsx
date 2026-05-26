@@ -1,5 +1,5 @@
 
-import Register from "../component/register";
+import Register from "./Register.tsx";
 
 export default function PageRegister() {
     return (  

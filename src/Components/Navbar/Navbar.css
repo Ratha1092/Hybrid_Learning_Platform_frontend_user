@@ -6,6 +6,34 @@
   margin: 0;
   padding: 0;
 }
+.navbar-profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f0f9ff;
+  border: 1.5px solid #bae6fd;
+  border-radius: 999px;
+  padding: 5px 14px 5px 5px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.navbar-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #3b82f6;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.navbar-username {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e40af;
+}
 
 /* ─── Navbar Shell ───────────────────────────────────────────── */
 .navbar {

@@ -1,6 +1,6 @@
 
 
-import Login from "../component/login.tsx";
+import Login from "./Login.tsx";
 export default function Pagelogin() {
   return (
    <>
