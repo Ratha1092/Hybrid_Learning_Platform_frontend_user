@@ -1,6 +1,6 @@
 
-import Footer from "../component/footer";
-import Categories from "../component/categories";
+import Footer from "../../Components/Footer";
+import Categories from "./Categories";
 export default function PageCategories() {
   return (
    <>
