@@ -1,71 +1,77 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../../context/AuthContext";
+import { useEffect, useState } from "react";
+import { instructorService, type DashboardStats } from "../../../services/instructorService";
+import "./InstructorDashboard.css";
 
 export default function InstructorDashboard() {
-  const { user, isAuthenticated, logout } = useAuth();
-  const navigate = useNavigate();
+  const [data, setData] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated) navigate("/instructor/login", { replace: true });
-  }, [isAuthenticated, navigate]);
+    instructorService.getDashboard()
+      .then(({ data: res }) => setData(res.data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
-  const handleLogout = () => {
-    logout();
-    navigate("/");
-  };
+  if (loading) {
+    return (
+      <div className="idash-loading">
+        <div className="idash-spinner" />
+      </div>
+    );
+  }
+
+  if (!data) return <div className="idash-loading">Failed to load dashboard.</div>;
+
+  const stats = [
+    { label: "Total Courses", value: data.courses.total, color: "#0ea5e9", icon: "🎓" },
+    { label: "Published", value: data.courses.published, color: "#22c55e", icon: "✅" },
+    { label: "Students", value: data.students.total_unique, color: "#a855f7", icon: "👥" },
+    { label: "Revenue", value: `$${data.revenue.total_earned}`, color: "#f59e0b", icon: "💰" },
+  ];
 
   return (
-    <div style={styles.page}>
-      <div style={styles.card}>
-        <div style={styles.badge}>🎓 Instructor Dashboard</div>
-        <h1 style={styles.title}>Welcome, {user?.name?.split(" ")[0]}!</h1>
-        <p style={styles.subtitle}>You are now an Instructor on DRC Platform.</p>
-        <button style={styles.logoutBtn} onClick={handleLogout}>
-          Logout
-        </button>
+    <div className="idash-page">
+      <h1 className="idash-title">Dashboard</h1>
+
+      <div className="idash-stats">
+        {stats.map((s) => (
+          <div key={s.label} className="idash-stat" style={{ borderTopColor: s.color }}>
+            <div className="idash-stat__icon">{s.icon}</div>
+            <p className="idash-stat__label">{s.label}</p>
+            <p className="idash-stat__value" style={{ color: s.color }}>{s.value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="idash-card">
+        <h3 className="idash-card__title">Recent Students</h3>
+        {data.recent_enrollments.length === 0 ? (
+          <p className="idash-empty">No students enrolled yet.</p>
+        ) : (
+          <table className="idash-table">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Course</th>
+                <th>Enrolled</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.recent_enrollments.map((e, i) => (
+                <tr key={i}>
+                  <td>
+                    <strong>{e.student_name}</strong>
+                    <span>{e.student_email}</span>
+                  </td>
+                  <td>{e.course_title}</td>
+                  <td>{new Date(e.enrolled_at).toLocaleDateString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  page: {
-    minHeight: "100vh",
-    background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: "24px",
-  },
-  card: {
-    background: "#fff",
-    borderRadius: "24px",
-    padding: "48px 40px",
-    maxWidth: "480px",
-    width: "100%",
-    textAlign: "center",
-    boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
-  },
-  badge: {
-    display: "inline-block",
-    background: "#fef3c7",
-    color: "#92400e",
-    fontSize: "13px",
-    fontWeight: 700,
-    padding: "6px 16px",
-    borderRadius: "999px",
-    marginBottom: "20px",
-  },
-  title: { fontSize: "28px", fontWeight: 700, color: "#1a1a2e", margin: "0 0 10px" },
-  subtitle: { fontSize: "15px", color: "#6b7280", margin: "0 0 32px" },
-  logoutBtn: {
-    padding: "11px 32px",
-    background: "#fef2f2",
-    color: "#ef4444",
-    border: "none",
-    borderRadius: "10px",
-    fontWeight: 600,
-    cursor: "pointer",
-  },
-};

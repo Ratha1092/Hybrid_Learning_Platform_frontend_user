@@ -16,37 +16,56 @@ import Pagelogin from "./Pages/Auth/Login/Pagelogin";
 import Profile from "./Pages/User/Profile/StudentProfile";
 import InstructorRegister from "./Pages/User/Instructor/InstructorRegister";
 import InstructorLogin from "./Pages/User/Instructor/InstructorLogin";
+import InstructorLayout from "./Pages/User/Instructor/InstructorLayout";
 import InstructorDashboard from "./Pages/User/Instructor/InstructorDashboard";
+import MyCourses from "./Pages/User/Instructor/MyCourses";
+import CreateCourse from "./Pages/User/Instructor/CreateCourse";
+import EditCourse from "./Pages/User/Instructor/EditCourse/index";
+import Revenue from "./Pages/User/Instructor/Revenue";
+import Students from "./Pages/User/Instructor/Students";
+import Library from "./Pages/Library/Library";
 function MainPage() {
   return (
     <>
       <Hero />
+      
       <Categories />
+      <Courses />
       <Footer />
     </>
   );
 }
 
 function App() {
-    
   return (
     <>
-      {/* IMPORTANT */}
       <Navbar />
-
+     
       <Routes>
         <Route path="/" element={<MainPage />} />
-        <Route path="/courses" element={<Courses />}/>
-        <Route path="/courses/:slug" element={<DetailCourse />}/>
+        <Route path="/courses" element={<Courses />} />
+        <Route path="/courses/:slug" element={<DetailCourse />} />
 
-        <Route path="/categories" element={<PageCategories />}/>
+        <Route path="/categories" element={<PageCategories />} />
         <Route path="/PageRegister" element={<PageRegister />} />
-        <Route path="/PageLogin" element={<Pagelogin />}/>
-
+        <Route path="/PageLogin" element={<Pagelogin />} />
         <Route path="/profile" element={<Profile />} />
+
+        {/* Instructor auth (no sidebar) */}
         <Route path="/instructor/register" element={<InstructorRegister />} />
         <Route path="/instructor/login" element={<InstructorLogin />} />
-        <Route path="/instructor/dashboard" element={<InstructorDashboard />} />
+
+        {/* Instructor dashboard (with sidebar layout) */}
+        <Route path="/instructor" element={<InstructorLayout />}>
+          <Route path="dashboard" element={<InstructorDashboard />} />
+          <Route path="courses" element={<MyCourses />} />
+          <Route path="courses/create" element={<CreateCourse />} />
+          <Route path="courses/:id/edit" element={<EditCourse />} />
+          <Route path="revenue" element={<Revenue />} />
+          <Route path="students" element={<Students />} />
+        </Route>
+        <Route path="/library" element={<Library />} />
+        
       </Routes>
     </>
   );
