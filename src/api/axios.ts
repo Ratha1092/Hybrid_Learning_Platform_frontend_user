@@ -20,9 +20,14 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      window.location.href = "/PageLogin";
+      const url: string = error.config?.url ?? "";
+      // Only force-logout on core auth endpoints, not feature APIs that may lack permissions
+      const isCoreAuth = url.includes("/auth/") || url.includes("/instructor/") || url.includes("/user/");
+      if (isCoreAuth) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.href = "/PageLogin";
+      }
     }
     return Promise.reject(error);
   }

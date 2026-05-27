@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { courseService, type CourseDetail, type Section } from "../../services/courseService";
+import EnrollButton from "./EnrollButton";
 import "./DetailCourse.css";
 
 function fmtDuration(seconds: number) {
@@ -186,7 +187,7 @@ function DetailCourse() {
               `$${course.price}`
             )}
           </div>
-          <button className="detail-enroll-btn">Enroll Now</button>
+          <EnrollButton course={course} />
           <ul className="detail-card__info">
             <li><span>Level</span><strong>{course.level}</strong></li>
             {course.language && <li><span>Language</span><strong>{course.language}</strong></li>}

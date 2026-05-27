@@ -1,0 +1,156 @@
+/* ── Shared spinner ─────────────────────────────── */
+.curr-loading, .ec-loading {
+  display: flex; align-items: center; justify-content: center; min-height: 300px;
+}
+.curr-spinner, .ec-spinner {
+  width: 32px; height: 32px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #2ec4b6;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── EditCourse page ────────────────────────────── */
+.ec-page { max-width: 820px; font-family: "Nunito", system-ui, sans-serif; }
+.ec-header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+.ec-back { background: #f3f4f6; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; color: #374151; }
+.ec-back:hover { background: #e5e7eb; }
+.ec-title { font-size: 22px; font-weight: 800; color: #111827; margin: 0; }
+
+/* Tabs */
+.ec-tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 2px solid #e5e7eb; }
+.ec-tab {
+  padding: 10px 20px;
+  border: none;
+  background: none;
+  font-family: "Nunito", system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: #9ca3af;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.ec-tab:hover { color: #374151; }
+.ec-tab--active { color: #2ec4b6; border-bottom-color: #2ec4b6; }
+
+/* Info form */
+.ec-card { background: #fff; border-radius: 14px; padding: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+.ec-form { display: flex; flex-direction: column; gap: 16px; }
+.ec-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.ec-field { display: flex; flex-direction: column; gap: 6px; }
+.ec-field label { font-size: 13px; font-weight: 700; color: #374151; }
+.ec-field input, .ec-field select, .ec-field textarea {
+  padding: 10px 12px; border: 1.5px solid #e5e7eb; border-radius: 8px;
+  font-family: "Nunito", system-ui, sans-serif; font-size: 14px; color: #111827;
+  outline: none; transition: border-color 0.15s, box-shadow 0.15s; background: #fff;
+}
+.ec-field input:focus, .ec-field select:focus, .ec-field textarea:focus {
+  border-color: #2ec4b6; box-shadow: 0 0 0 3px rgba(46,196,182,0.12);
+}
+.ec-field textarea { resize: vertical; min-height: 100px; }
+.ec-save {
+  padding: 12px; background: #2ec4b6; color: #fff; border: none; border-radius: 10px;
+  font-family: "Nunito", system-ui, sans-serif; font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: background 0.15s; box-shadow: 0 3px 10px rgba(46,196,182,0.25);
+}
+.ec-save:hover { background: #1da89c; }
+.ec-save:disabled { opacity: 0.6; cursor: not-allowed; }
+.ec-success { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 10px 14px; color: #16a34a; font-size: 13px; font-weight: 600; }
+.ec-error { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 10px 14px; color: #dc2626; font-size: 13px; }
+
+/* ── Curriculum ─────────────────────────────────── */
+.curr-wrap { font-family: "Nunito", system-ui, sans-serif; }
+.curr-header { margin-bottom: 16px; }
+.curr-summary { font-size: 13px; color: #9ca3af; margin: 0; }
+
+.curr-sections { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+
+.curr-section {
+  border: 1.5px solid #e5e7eb; border-radius: 12px; overflow: hidden; transition: border-color 0.15s;
+}
+.curr-section--open { border-color: #2ec4b6; }
+
+.curr-section__head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 14px; background: #f9fafb;
+  border-bottom: 1px solid transparent;
+}
+.curr-section--open .curr-section__head { border-bottom-color: #e5e7eb; background: #e8f9f7; }
+
+.curr-section__toggle {
+  flex: 1; display: flex; align-items: center; gap: 10px;
+  background: none; border: none; cursor: pointer; text-align: left; padding: 0;
+}
+.curr-section__chevron { font-size: 10px; color: #9ca3af; width: 14px; }
+.curr-section--open .curr-section__chevron { color: #2ec4b6; }
+.curr-section__title { font-size: 14px; font-weight: 700; color: #111827; flex: 1; }
+.curr-section__meta { font-size: 12px; color: #9ca3af; }
+
+.curr-lessons { padding: 8px 14px 12px; background: #fff; }
+.curr-lessons__empty { font-size: 13px; color: #9ca3af; padding: 8px 0; margin: 0; }
+
+.curr-lesson {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: 8px; transition: background 0.12s;
+}
+.curr-lesson:hover { background: #f9fafb; }
+.curr-lesson__icon { font-size: 12px; color: #9ca3af; width: 18px; text-align: center; }
+.curr-lesson__title { flex: 1; font-size: 13.5px; color: #374151; }
+.curr-lesson__type { font-size: 11px; color: #9ca3af; background: #f3f4f6; padding: 2px 8px; border-radius: 999px; }
+.curr-lesson__preview { font-size: 11px; color: #2ec4b6; background: #e8f9f7; padding: 2px 8px; border-radius: 999px; border: 1px solid #a7f3ed; }
+
+.curr-add-lesson {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  padding: 8px 0 0; margin-top: 4px;
+}
+.curr-add-lesson input, .curr-add-lesson select {
+  padding: 7px 10px; border: 1.5px solid #e5e7eb; border-radius: 7px;
+  font-family: "Nunito", system-ui, sans-serif; font-size: 13px; outline: none;
+}
+.curr-add-lesson input { flex: 1; min-width: 140px; }
+.curr-add-lesson input:focus, .curr-add-lesson select:focus { border-color: #2ec4b6; }
+.curr-preview-label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: #6b7280; cursor: pointer; white-space: nowrap;
+}
+.curr-preview-label input[type="checkbox"] { accent-color: #2ec4b6; width: 14px; height: 14px; }
+
+.curr-btn-add-lesson {
+  margin-top: 8px; padding: 6px 14px;
+  background: none; border: 1.5px dashed #d1d5db;
+  border-radius: 7px; color: #9ca3af;
+  font-family: "Nunito", system-ui, sans-serif;
+  font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+}
+.curr-btn-add-lesson:hover { border-color: #2ec4b6; color: #2ec4b6; background: #f0fdfd; }
+
+/* Shared buttons */
+.curr-btn {
+  padding: 6px 12px; border-radius: 7px; border: none;
+  font-family: "Nunito", system-ui, sans-serif; font-size: 12px; font-weight: 700;
+  cursor: pointer; background: #f3f4f6; color: #374151; transition: background 0.15s;
+}
+.curr-btn:hover { background: #e5e7eb; }
+.curr-btn--primary { background: #2ec4b6; color: #fff; }
+.curr-btn--primary:hover { background: #1da89c; }
+.curr-btn--primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.curr-btn--danger { background: #fef2f2; color: #ef4444; }
+.curr-btn--danger:hover { background: #fee2e2; }
+.curr-btn--sm { padding: 4px 8px; font-size: 11px; }
+
+/* Add section */
+.curr-add-section {
+  display: flex; gap: 10px; align-items: center;
+  padding: 14px; background: #f9fafb;
+  border: 1.5px dashed #d1d5db; border-radius: 12px;
+}
+.curr-add-section input {
+  flex: 1; padding: 9px 12px; border: 1.5px solid #e5e7eb; border-radius: 8px;
+  font-family: "Nunito", system-ui, sans-serif; font-size: 14px; outline: none;
+}
+.curr-add-section input:focus { border-color: #2ec4b6; }
+
+@media (max-width: 600px) { .ec-row { grid-template-columns: 1fr; } }

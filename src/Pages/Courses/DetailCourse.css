@@ -372,6 +372,75 @@
 .detail-card__info li:last-child { border-bottom: none; padding-bottom: 0; }
 .detail-card__info strong { color: #111827; font-weight: 600; }
 
+/* ── EnrollButton states ──────────────────────────── */
+.enroll-success {
+  text-align: center;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 12px;
+  padding: 20px 16px;
+  margin-bottom: 24px;
+}
+.enroll-success__icon { font-size: 36px; margin-bottom: 8px; }
+.enroll-success__title { font-size: 17px; font-weight: 700; color: #16a34a; margin: 0 0 6px; }
+.enroll-success__sub { font-size: 13px; color: #4b5563; margin: 0 0 14px; }
+.enroll-success__link {
+  display: inline-block;
+  padding: 10px 22px;
+  background: #16a34a;
+  color: #fff;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 14px;
+  transition: background 0.15s;
+}
+.enroll-success__link:hover { background: #15803d; }
+
+.enroll-qr {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.enroll-qr__title { font-size: 17px; font-weight: 700; color: #111827; margin: 0 0 6px; }
+.enroll-qr__meta { font-size: 13px; color: #6b7280; margin: 0 0 12px; }
+.enroll-qr__img {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  border: 3px solid #0ea5e9;
+  border-radius: 10px;
+  display: block;
+  margin: 0 auto 10px;
+}
+.enroll-qr__placeholder {
+  width: 200px; height: 200px;
+  border: 3px solid #e5e7eb;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: #9ca3af; font-size: 13px;
+  margin: 0 auto 10px;
+}
+.enroll-qr__hint { font-size: 12px; color: #9ca3af; margin: 0 0 14px; }
+.enroll-qr__actions { display: flex; flex-direction: column; gap: 8px; }
+.enroll-qr__confirm { margin-bottom: 0 !important; }
+.enroll-qr__cancel {
+  width: 100%; padding: 11px;
+  background: #f1f5f9; border: none; border-radius: 10px;
+  font-size: 14px; font-weight: 600; color: #6b7280; cursor: pointer;
+  transition: background 0.15s;
+}
+.enroll-qr__cancel:hover { background: #e2e8f0; }
+
+.enroll-error {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #dc2626;
+  margin-bottom: 4px;
+}
+
 /* ── Responsive ───────────────────────────────────── */
 @media (max-width: 768px) {
   .detail-body {
