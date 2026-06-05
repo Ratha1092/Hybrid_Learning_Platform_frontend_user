@@ -10,7 +10,7 @@ import Courses from "./Pages/Courses/Courses";
 import DetailCourse from "./Pages/Courses/DetailCourse";
 
 import PageCategories from "./Pages/Category/Pagecategoires";
-
+import StudentProfileEdit from "./Pages/User/Profile/StudentProfileEdit";
 import PageRegister from "./Pages/Auth/Register/PageRegister";
 import Pagelogin from "./Pages/Auth/Login/Pagelogin";
 import Profile from "./Pages/User/Profile/StudentProfile";
@@ -24,6 +24,7 @@ import EditCourse from "./Pages/User/Instructor/EditCourse/index";
 import Revenue from "./Pages/User/Instructor/Revenue";
 import Students from "./Pages/User/Instructor/Students";
 import Library from "./Pages/Library/Library";
+import Learn from "./Pages/Learn/Learn";
 function MainPage() {
   return (
     <>
@@ -50,7 +51,7 @@ function App() {
         <Route path="/PageRegister" element={<PageRegister />} />
         <Route path="/PageLogin" element={<Pagelogin />} />
         <Route path="/profile" element={<Profile />} />
-
+        <Route path="/profile/edit" element={<StudentProfileEdit />} />
         {/* Instructor auth (no sidebar) */}
         <Route path="/instructor/register" element={<InstructorRegister />} />
         <Route path="/instructor/login" element={<InstructorLogin />} />
@@ -65,7 +66,8 @@ function App() {
           <Route path="students" element={<Students />} />
         </Route>
         <Route path="/library" element={<Library />} />
-        
+        <Route path="/learn/:slug" element={<Learn />} />
+
       </Routes>
     </>
   );

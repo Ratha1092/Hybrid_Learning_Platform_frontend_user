@@ -10,8 +10,9 @@ export default function Curriculum({ courseId }: Props) {
   const [openSections, setOpenSections] = useState<Set<number>>(new Set([0]));
   const [newSectionTitle, setNewSectionTitle] = useState("");
   const [addingSection, setAddingSection] = useState(false);
-  const [newLesson, setNewLesson] = useState<Record<number, { title: string; type: string; video_url: string; is_preview: boolean }>>({});
+  const [newLesson, setNewLesson] = useState<Record<number, { title: string; type: string; video_url: string; is_preview: boolean; videoFile?: File | null }>>({});
   const [addingLesson, setAddingLesson] = useState<number | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<Record<number, number>>({});
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -71,16 +72,27 @@ export default function Curriculum({ courseId }: Props) {
         type: lesson.type || "video",
         is_preview: lesson.is_preview ?? false,
       };
-      if (lesson.type === "video" && lesson.video_url?.trim()) {
+      if (lesson.type === "video" && !lesson.videoFile && lesson.video_url?.trim()) {
         lessonPayload.video_url = lesson.video_url.trim();
       }
       const { data } = await instructorService.createLesson(courseId, sectionId, lessonPayload);
+      const lessonId = data.data.id;
+
+      // Upload video file if selected
+      if (lesson.type === "video" && lesson.videoFile) {
+        setUploadProgress((p) => ({ ...p, [sectionId]: 0 }));
+        await instructorService.uploadVideo(courseId, sectionId, lessonId, lesson.videoFile, (pct) =>
+          setUploadProgress((p) => ({ ...p, [sectionId]: pct }))
+        );
+        setUploadProgress((p) => { const n = { ...p }; delete n[sectionId]; return n; });
+      }
+
       setSections((prev) =>
         prev.map((s) =>
           s.id === sectionId ? { ...s, lessons: [...(s.lessons ?? []), data.data] } : s
         )
       );
-      setNewLesson((prev) => ({ ...prev, [sectionId]: { title: "", type: "video", video_url: "", is_preview: false } }));
+      setNewLesson((prev) => ({ ...prev, [sectionId]: { title: "", type: "video", video_url: "", is_preview: false, videoFile: null } }));
       setAddingLesson(null);
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } }; message?: string };
@@ -191,16 +203,37 @@ export default function Curriculum({ courseId }: Props) {
                       <option value="quiz">📝 Quiz</option>
                     </select>
                     {newLesson[section.id]?.type === "video" && (
-                      <input
-                        placeholder="Video URL (optional)"
-                        value={newLesson[section.id]?.video_url ?? ""}
-                        onChange={(e) =>
-                          setNewLesson((prev) => ({
-                            ...prev,
-                            [section.id]: { ...prev[section.id], video_url: e.target.value },
-                          }))
-                        }
-                      />
+                      <>
+                        <label style={{ fontSize: 12, color: "#6b7280" }}>Upload video file (mp4, mov, webm — max 500MB)</label>
+                        <input
+                          type="file"
+                          accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0] ?? null;
+                            setNewLesson((prev) => ({ ...prev, [section.id]: { ...prev[section.id], videoFile: file } }));
+                          }}
+                        />
+                        {!newLesson[section.id]?.videoFile && (
+                          <input
+                            placeholder="Or paste video URL (YouTube / Vimeo)"
+                            value={newLesson[section.id]?.video_url ?? ""}
+                            onChange={(e) =>
+                              setNewLesson((prev) => ({
+                                ...prev,
+                                [section.id]: { ...prev[section.id], video_url: e.target.value },
+                              }))
+                            }
+                          />
+                        )}
+                        {uploadProgress[section.id] !== undefined && (
+                          <div style={{ marginTop: 4 }}>
+                            <div style={{ background: "#e5e7eb", borderRadius: 4, height: 6 }}>
+                              <div style={{ background: "#14b8a6", height: 6, borderRadius: 4, width: `${uploadProgress[section.id]}%`, transition: "width 0.3s" }} />
+                            </div>
+                            <span style={{ fontSize: 11, color: "#6b7280" }}>Uploading {uploadProgress[section.id]}%</span>
+                          </div>
+                        )}
+                      </>
                     )}
                     <label className="curr-preview-label">
                       <input

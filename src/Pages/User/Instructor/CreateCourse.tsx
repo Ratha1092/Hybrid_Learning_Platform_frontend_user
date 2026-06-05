@@ -13,16 +13,24 @@ interface LocalSection {
   id: number; title: string; order?: number; lessons: LocalLesson[];
 }
 interface LessonForm {
-  title: string; type: string; video_url: string; content: string; is_preview: boolean;
+  title: string; type: string; video_url: string; content: string; is_preview: boolean; videoFile: File | null;
 }
 
 const STEPS = ["Basic Info", "Curriculum", "Pricing", "Submit"];
 
+function isTechnicalError(msg: string): boolean {
+  return ["SQLSTATE", "SQL:", "pgsql", "transaction", "constraint", "duplicate key"].some((k) => msg.includes(k));
+}
+
 function getApiError(err: unknown): string {
-  const e = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } }; message?: string };
+  const e = err as { response?: { status?: number; data?: { message?: string; errors?: Record<string, string[]> } }; message?: string };
+  const status = e.response?.status;
+  if (status && status >= 500) return "Something went wrong. Please try again.";
   const errs = e.response?.data?.errors;
   if (errs) return Object.values(errs).flat().join(" ");
-  return e.response?.data?.message ?? e.message ?? "Something went wrong.";
+  const msg = e.response?.data?.message ?? e.message ?? "Something went wrong.";
+  if (isTechnicalError(msg)) return "Something went wrong. Please try again.";
+  return msg;
 }
 
 // ── SectionBlock ──────────────────────────────────────────────────────────────
@@ -38,8 +46,9 @@ interface SectionBlockProps {
 function SectionBlock({ section, index, courseId, onDelete, onLessonAdded, onLessonDeleted }: SectionBlockProps) {
   const [open, setOpen] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [lesson, setLesson] = useState<LessonForm>({ title: "", type: "video", video_url: "", content: "", is_preview: false });
+  const [lesson, setLesson] = useState<LessonForm>({ title: "", type: "video", video_url: "", content: "", is_preview: false, videoFile: null });
   const [saving, setSaving] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   const setL = (k: keyof LessonForm, v: string | boolean) => setLesson((f) => ({ ...f, [k]: v }));
@@ -52,11 +61,17 @@ function SectionBlock({ section, index, courseId, onDelete, onLessonAdded, onLes
         title: lesson.title.trim(),
         type: lesson.type,
         is_preview: lesson.is_preview,
-        video_url: lesson.video_url || undefined,
+        video_url: lesson.type === "video" && !lesson.videoFile ? (lesson.video_url || undefined) : undefined,
         content: lesson.content || undefined,
       });
+      const lessonId = data.data.id;
+      if (lesson.type === "video" && lesson.videoFile) {
+        setUploadProgress(0);
+        await instructorService.uploadVideo(courseId, section.id, lessonId, lesson.videoFile, setUploadProgress);
+        setUploadProgress(null);
+      }
       onLessonAdded({ ...data.data, lessons: undefined } as unknown as LocalLesson);
-      setLesson({ title: "", type: "video", video_url: "", content: "", is_preview: false });
+      setLesson({ title: "", type: "video", video_url: "", content: "", is_preview: false, videoFile: null });
       setShowForm(false);
     } catch (e) { setErr(getApiError(e)); }
     setSaving(false);
@@ -114,7 +129,25 @@ function SectionBlock({ section, index, courseId, onDelete, onLessonAdded, onLes
                 </label>
               </div>
               {lesson.type === "video" && (
-                <input placeholder="YouTube / Vimeo URL" value={lesson.video_url} onChange={(e) => setL("video_url", e.target.value)} />
+                <>
+                  <label style={{ fontSize: 12, color: "#6b7280" }}>Upload video (mp4, mov, webm — max 500MB)</label>
+                  <input
+                    type="file"
+                    accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm"
+                    onChange={(e) => setLesson((f) => ({ ...f, videoFile: e.target.files?.[0] ?? null }))}
+                  />
+                  {!lesson.videoFile && (
+                    <input placeholder="Or paste YouTube / Vimeo URL" value={lesson.video_url} onChange={(e) => setL("video_url", e.target.value)} />
+                  )}
+                  {uploadProgress !== null && (
+                    <div style={{ marginTop: 4 }}>
+                      <div style={{ background: "#e5e7eb", borderRadius: 4, height: 6 }}>
+                        <div style={{ background: "#14b8a6", height: 6, borderRadius: 4, width: `${uploadProgress}%`, transition: "width 0.3s" }} />
+                      </div>
+                      <span style={{ fontSize: 11, color: "#6b7280" }}>Uploading {uploadProgress}%</span>
+                    </div>
+                  )}
+                </>
               )}
               {lesson.type === "article" && (
                 <textarea rows={3} placeholder="Article content..." value={lesson.content} onChange={(e) => setL("content", e.target.value)} />
@@ -252,10 +285,22 @@ export default function CreateCourse() {
 
   const [info, setInfo] = useState({
     title: "", category_id: "", level: "beginner",
-    language: "English", description: "",
+    language: "English", short_description: "", description: "",
+    preview_video_url: "", requirements: "", what_you_will_learn: "",
   });
+  const [certificateEnabled, setCertificateEnabled] = useState(false);
+  const [visibility, setVisibility] = useState("public");
   const [isFree, setIsFree] = useState(true);
   const [price, setPrice] = useState("");
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setThumbnailFile(file);
+    setThumbnailPreview(URL.createObjectURL(file));
+  };
 
   useEffect(() => {
     api.get<{ data: Category[] }>("/categories")
@@ -268,18 +313,24 @@ export default function CreateCourse() {
 
   // ── Step 0: Create course ──────────────────────────────────────────────────
   const handleCreateCourse = async () => {
+    if (saving) return;
     if (!info.title.trim()) { setError("Course title is required."); return; }
     if (!info.category_id)  { setError("Please select a category."); return; }
     setSaving(true); setError(null);
     try {
       const { data } = await instructorService.createCourse({
         title: info.title,
+        short_description: info.short_description,
         description: info.description,
         level: info.level,
         language: info.language,
         category_id: Number(info.category_id),
       });
-      setCourseId(data.data.id);
+      const newId = data.data.id;
+      setCourseId(newId);
+      if (thumbnailFile) {
+        try { await instructorService.uploadThumbnail(newId, thumbnailFile); } catch { /* non-blocking */ }
+      }
       setStep(1);
     } catch (err) { setError(getApiError(err)); }
     setSaving(false);
@@ -287,6 +338,7 @@ export default function CreateCourse() {
 
   // ── Step 2: Save price ─────────────────────────────────────────────────────
   const handleSavePrice = async () => {
+    if (saving) return;
     if (!isFree && (!price || Number(price) < 0)) {
       setError("Please enter a valid price.");
       return;
@@ -304,9 +356,13 @@ export default function CreateCourse() {
 
   // ── Step 3: Submit for review ──────────────────────────────────────────────
   const handleSubmit = async () => {
-    if (!courseId) return;
+    if (saving || !courseId) return;
     setSaving(true); setError(null);
     try {
+      await instructorService.updateCourse(courseId, {
+        certificate_enabled: certificateEnabled,
+        visibility,
+      });
       await instructorService.submitForReview(courseId);
       navigate("/instructor/courses");
     } catch (err) { setError(getApiError(err)); }
@@ -352,6 +408,46 @@ export default function CreateCourse() {
                 />
               </div>
 
+              <div className="cc-field">
+                <label>Short Description <span className="cc-char">{info.short_description.length}/160</span></label>
+                <input
+                  placeholder="1-2 sentences shown on course card (e.g. Learn CSS from scratch)"
+                  maxLength={160}
+                  value={info.short_description}
+                  onChange={(e) => setI("short_description", e.target.value)}
+                />
+              </div>
+
+              <div className="cc-field">
+                <label>Course Thumbnail</label>
+                <label className="cc-thumb-upload">
+                  {thumbnailPreview ? (
+                    <img src={thumbnailPreview} alt="Thumbnail preview" className="cc-thumb-preview" />
+                  ) : (
+                    <div className="cc-thumb-placeholder">
+                      <span className="cc-thumb-placeholder__icon">🖼</span>
+                      <span className="cc-thumb-placeholder__text">Click to upload image</span>
+                      <span className="cc-thumb-placeholder__hint">JPG, PNG — recommended 1280×720</span>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    style={{ display: "none" }}
+                    onChange={handleThumbnailChange}
+                  />
+                </label>
+                {thumbnailFile && (
+                  <button
+                    type="button"
+                    className="cc-thumb-remove"
+                    onClick={() => { setThumbnailFile(null); setThumbnailPreview(null); }}
+                  >
+                    ✕ Remove image
+                  </button>
+                )}
+              </div>
+
               <div className="cc-row">
                 <div className="cc-field">
                   <label>Category <span className="cc-req">*</span></label>
@@ -388,6 +484,35 @@ export default function CreateCourse() {
                   placeholder="Tell your students what they will learn..."
                   value={info.description}
                   onChange={(e) => setI("description", e.target.value)}
+                />
+              </div>
+
+              <div className="cc-field">
+                <label>Preview Video URL</label>
+                <input
+                  placeholder="https://youtube.com/watch?v=..."
+                  value={info.preview_video_url}
+                  onChange={(e) => setI("preview_video_url", e.target.value)}
+                />
+              </div>
+
+              <div className="cc-field">
+                <label>What You Will Learn</label>
+                <textarea
+                  rows={4}
+                  placeholder="List key skills students will gain, one per line"
+                  value={info.what_you_will_learn}
+                  onChange={(e) => setI("what_you_will_learn", e.target.value)}
+                />
+              </div>
+
+              <div className="cc-field">
+                <label>Requirements</label>
+                <textarea
+                  rows={4}
+                  placeholder="List prerequisites, one per line"
+                  value={info.requirements}
+                  onChange={(e) => setI("requirements", e.target.value)}
                 />
               </div>
 
@@ -464,17 +589,41 @@ export default function CreateCourse() {
 
           {/* ── STEP 3: Submit ── */}
           {step === 3 && (
-            <div className="cc-card" style={{ textAlign: "center", padding: 40 }}>
-              <div style={{ fontSize: 52, marginBottom: 12 }}>🚀</div>
-              <h2 style={{ margin: "0 0 8px" }}>Ready to Submit!</h2>
-              <p style={{ color: "#6b7280", fontSize: 14, marginBottom: 24 }}>
-                <strong>{info.title}</strong><br />
-                {sections.length} section(s) · {totalLessons} lesson(s) ·{" "}
-                {isFree ? "Free" : `$${price}`}
-                <br /><br />
+            <div className="cc-card">
+              <div style={{ textAlign: "center", marginBottom: 24 }}>
+                <div style={{ fontSize: 52, marginBottom: 12 }}>🚀</div>
+                <h2 style={{ margin: "0 0 8px" }}>Ready to Submit!</h2>
+                <p style={{ color: "#6b7280", fontSize: 14 }}>
+                  <strong>{info.title}</strong><br />
+                  {sections.length} section(s) · {totalLessons} lesson(s) ·{" "}
+                  {isFree ? "Free" : `$${price}`}
+                </p>
+              </div>
+
+              <div className="cc-field">
+                <label>Visibility</label>
+                <select value={visibility} onChange={(e) => setVisibility(e.target.value)}>
+                  <option value="public">🌐 Public — anyone can find this course</option>
+                  <option value="private">🔒 Private — only enrolled students</option>
+                </select>
+              </div>
+
+              <div className="cc-field">
+                <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={certificateEnabled}
+                    onChange={(e) => setCertificateEnabled(e.target.checked)}
+                  />
+                  Enable certificate on course completion
+                </label>
+              </div>
+
+              <p style={{ color: "#6b7280", fontSize: 13, marginTop: 16, textAlign: "center" }}>
                 After submitting, admin will review and publish your course.
               </p>
-              <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+
+              <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 16 }}>
                 <button className="cc-discard" onClick={() => setStep(2)}>← Back</button>
                 <button
                   className="cc-continue"
@@ -493,8 +642,8 @@ export default function CreateCourse() {
         {step !== 1 && (
           <aside className="cc-aside">
             <div className="cc-preview">
-              <div className="cc-preview__thumb">
-                <button className="cc-preview__play">▶</button>
+              <div className="cc-preview__thumb" style={thumbnailPreview ? { backgroundImage: `url(${thumbnailPreview})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}>
+                {!thumbnailPreview && <button className="cc-preview__play">▶</button>}
               </div>
               <div className="cc-preview__body">
                 <p className="cc-preview__title">{info.title || "Your Course Title"}</p>

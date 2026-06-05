@@ -34,12 +34,15 @@ export interface Transaction {
 
 // Represents a student enrolled in instructor's course.
 export interface StudentEnrollment {
-  id: number;
+  id?: number;
+  student_id?: number;
   student_name: string;
   student_email: string;
   course_title: string;
+  course_slug?: string;
   enrolled_at: string;
   progress?: number;
+  progress_percentage?: number;
 }
 
 // Dashboard overview statistics.
@@ -59,6 +62,7 @@ export interface DashboardStats {
 export interface InstructorCourse {
   id: number;
   title: string;
+  short_description?: string;
   description?: string;
   status: string;
   level: string;
@@ -67,6 +71,11 @@ export interface InstructorCourse {
   thumbnail_url: string | null;
   students_count?: number;
   created_at: string;
+  preview_video_url?: string;
+  requirements?: string;
+  what_you_will_learn?: string;
+  certificate_enabled?: boolean;
+  visibility?: string;
 }
 
 // Represents a lesson inside a section.
@@ -112,6 +121,7 @@ export const instructorService = {
   // Create a new course.
   createCourse: (data: {
     title: string;
+    short_description?: string;
     description?: string;
     level: string;
     language?: string;
@@ -135,6 +145,16 @@ export const instructorService = {
       `/instructor/courses/${id}`,
       data
     ),
+
+  // Upload course thumbnail via PUT with method spoofing.
+  uploadThumbnail: (id: number | string, file: File) => {
+    const form = new FormData();
+    form.append("thumbnail", file);
+    form.append("_method", "PUT");
+    return api.post(`/instructor/courses/${id}`, form, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
 
   // Delete a course.
   deleteCourse: (id: number | string) =>
@@ -211,6 +231,28 @@ export const instructorService = {
       data
     ),
 
+  // Upload video file to a lesson.
+  uploadVideo: (
+    courseId: number | string,
+    sectionId: number | string,
+    lessonId: number | string,
+    file: File,
+    onProgress?: (percent: number) => void
+  ) => {
+    const form = new FormData();
+    form.append("video", file);
+    return api.post<{ data: { video_path: string; video_url: string } }>(
+      `/instructor/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}/upload-video`,
+      form,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (e) => {
+          if (onProgress && e.total) onProgress(Math.round((e.loaded / e.total) * 100));
+        },
+      }
+    );
+  },
+
   // Delete a lesson.
   deleteLesson: (
     courseId: number | string,
@@ -225,7 +267,7 @@ export const instructorService = {
 
   // Fetch all students enrolled in instructor courses.
   getStudents: () =>
-    api.get<{ data: StudentEnrollment[] }>("/instructor/students"),
+    api.get<{ data: { total: number; students: StudentEnrollment[] } }>("/instructor/students"),
 
   // ── Finance ─────────────────────────────────────────
 

@@ -1,7 +1,9 @@
 import api from "../api/axios";
-// បញ្ជាក់ structure នៃ data ដែល backend return មក:
+
 export interface StudentProfile {
   id?: number;
+  name?:string;
+  phone?:string|null;
   user_id?: number;
   bio?: string | null;
   avatar?: string | null;
@@ -12,13 +14,21 @@ export interface StudentProfile {
 }
 
 export const profileService = {
-//   → function get — ផ្ញើ GET request ទៅ /api/v1/user/profile
-// ដើម្បី ទាញ​យក profile data របស់ user
-  get: () => api.get<{ data: StudentProfile }>("/user/profile"),
-//  → function update — ទទួល payload 
-// (fields ដែលចង់ update) ហើយផ្ញើ PUT
-//  request ទៅ /api/v1/user/profile
-// ដើម្បី រក្សាទុក ការផ្លាស់ប្ដូរ profile
+
+  get: async () => {
+    const res = await api.get("/users/me");
+    const u = res.data.data;
+    return {
+      data: {
+        data: {
+          ...u.student_profile,
+          name: u.name,
+          phone: u.phone,
+        } as StudentProfile,
+      },
+    };
+  },
+
   update: (payload: Partial<StudentProfile>) =>
-    api.put<{ data: StudentProfile; message: string }>("/user/profile", payload),
+    api.put<{ data: StudentProfile; message: string }>("/users/profile", payload),
 };

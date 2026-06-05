@@ -35,7 +35,8 @@ export default function Revenue() {
       .then(([w, e, t]) => {
         setWallet(w.data.data);
         setEarnings(e.data.data);
-        setTxns(t.data.data ?? []);
+        const rawTxns = t.data.data;
+        setTxns(Array.isArray(rawTxns) ? rawTxns : []);
       })
       .catch(() => { setApiError(true); })
       .finally(() => setLoading(false));

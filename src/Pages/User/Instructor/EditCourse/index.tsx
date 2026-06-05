@@ -12,10 +12,23 @@ export default function EditCourse() {
   const [course, setCourse] = useState<InstructorCourse | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("info");
-  const [form, setForm] = useState({ title: "", description: "", price: "0", level: "beginner" });
+  const [form, setForm] = useState({
+    title: "", short_description: "", description: "", price: "0", level: "beginner",
+    preview_video_url: "", requirements: "", what_you_will_learn: "",
+    certificate_enabled: false, visibility: "public",
+  });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setThumbnailFile(file);
+    setThumbnailPreview(URL.createObjectURL(file));
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -25,9 +38,15 @@ export default function EditCourse() {
         setCourse(c);
         setForm({
           title: c.title,
+          short_description: c.short_description ?? "",
           description: c.description ?? "",
           price: c.price,
           level: c.level,
+          preview_video_url: c.preview_video_url ?? "",
+          requirements: c.requirements ?? "",
+          what_you_will_learn: c.what_you_will_learn ?? "",
+          certificate_enabled: c.certificate_enabled ?? false,
+          visibility: c.visibility ?? "public",
         });
       })
       .catch(() => {})
@@ -36,20 +55,32 @@ export default function EditCourse() {
 
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
-  const handleSave = async (e: React.FormEvent) => {
+  const getError = (err: unknown): string => {
+    const e = err as { response?: { status?: number; data?: { message?: string; errors?: Record<string, string[]> } }; message?: string };
+    if ((e.response?.status ?? 0) >= 500) return "Something went wrong. Please try again.";
+    const errs = e.response?.data?.errors;
+    if (errs) return Object.values(errs).flat().join(" ");
+    const msg = e.response?.data?.message ?? e.message ?? "Failed to save.";
+    if (["SQLSTATE", "SQL:", "pgsql", "transaction", "constraint", "duplicate key"].some((k) => msg.includes(k)))
+      return "Something went wrong. Please try again.";
+    return msg;
+  };
+
+  const handleSave = async (e: React.SyntheticEvent) => {
     e.preventDefault();
-    if (!id) return;
+    if (saving || !id) return;
     setSaving(true);
     setError(null);
     try {
       const { data } = await instructorService.updateCourse(id, form);
       setCourse(data.data);
+      if (thumbnailFile) {
+        await instructorService.uploadThumbnail(id, thumbnailFile);
+      }
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (err: unknown) {
-      const e = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } }; message?: string };
-      const msg = e.response?.data?.errors ? Object.values(e.response.data.errors).flat().join(" ") : e.response?.data?.message ?? e.message ?? "Failed to save.";
-      setError(msg);
+      setError(getError(err));
     }
     setSaving(false);
   };
@@ -100,8 +131,41 @@ export default function EditCourse() {
           {error && <div className="ec-error">⚠ {error}</div>}
           <form onSubmit={handleSave} className="ec-form">
             <div className="ec-field">
+              <label>Thumbnail</label>
+              <label className="ec-thumb-upload">
+                {thumbnailPreview ? (
+                  <img src={thumbnailPreview} alt="Preview" className="ec-thumb-preview" />
+                ) : course.thumbnail_url ? (
+                  <img src={course.thumbnail_url} alt="Current thumbnail" className="ec-thumb-preview" />
+                ) : (
+                  <div className="ec-thumb-placeholder">
+                    <span>🖼</span>
+                    <span>Click to upload thumbnail</span>
+                    <span style={{ fontSize: 11, color: "#9ca3af" }}>JPG, PNG — 1280×720 recommended</span>
+                  </div>
+                )}
+                <input type="file" accept="image/jpeg,image/png,image/webp" style={{ display: "none" }} onChange={handleThumbnailChange} />
+              </label>
+              {thumbnailFile && (
+                <button type="button" className="ec-thumb-remove" onClick={() => { setThumbnailFile(null); setThumbnailPreview(null); }}>
+                  ✕ Remove new image
+                </button>
+              )}
+            </div>
+
+            <div className="ec-field">
               <label>Course Title *</label>
               <input required value={form.title} onChange={(e) => set("title", e.target.value)} />
+            </div>
+
+            <div className="ec-field">
+              <label>Short Description <span style={{ fontWeight: 400, color: "#9ca3af", fontSize: 12 }}>{form.short_description.length}/160 — shown on course card</span></label>
+              <input
+                placeholder="1-2 sentences shown on course card"
+                maxLength={160}
+                value={form.short_description}
+                onChange={(e) => set("short_description", e.target.value)}
+              />
             </div>
 
             <div className="ec-row">
@@ -126,6 +190,56 @@ export default function EditCourse() {
             <div className="ec-field">
               <label>Description</label>
               <textarea rows={5} value={form.description} onChange={(e) => set("description", e.target.value)} />
+            </div>
+
+            <div className="ec-field">
+              <label>Preview Video URL</label>
+              <input
+                placeholder="https://youtube.com/watch?v=..."
+                value={form.preview_video_url}
+                onChange={(e) => set("preview_video_url", e.target.value)}
+              />
+            </div>
+
+            <div className="ec-field">
+              <label>What You Will Learn</label>
+              <textarea
+                rows={4}
+                placeholder="List key skills students will gain, one per line"
+                value={form.what_you_will_learn}
+                onChange={(e) => set("what_you_will_learn", e.target.value)}
+              />
+            </div>
+
+            <div className="ec-field">
+              <label>Requirements</label>
+              <textarea
+                rows={4}
+                placeholder="List prerequisites, one per line"
+                value={form.requirements}
+                onChange={(e) => set("requirements", e.target.value)}
+              />
+            </div>
+
+            <div className="ec-row">
+              <div className="ec-field">
+                <label>Visibility</label>
+                <select value={form.visibility} onChange={(e) => set("visibility", e.target.value)}>
+                  <option value="public">🌐 Public</option>
+                  <option value="private">🔒 Private</option>
+                </select>
+              </div>
+              <div className="ec-field" style={{ justifyContent: "center" }}>
+                <label>Certificate</label>
+                <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", marginTop: 8 }}>
+                  <input
+                    type="checkbox"
+                    checked={form.certificate_enabled}
+                    onChange={(e) => setForm((f) => ({ ...f, certificate_enabled: e.target.checked }))}
+                  />
+                  Enable certificate on completion
+                </label>
+              </div>
             </div>
 
             <button type="submit" className="ec-save" disabled={saving}>

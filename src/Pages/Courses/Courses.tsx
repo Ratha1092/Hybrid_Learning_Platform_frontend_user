@@ -7,6 +7,29 @@ const LEVELS = ["All", "beginner", "intermediate", "advanced"];
 
 const SKELETON_COUNT = 6;
 
+const API_BASE = import.meta.env.VITE_API_URL ?? "";
+function resolveUrl(url: string | null): string | null {
+  if (!url) return null;
+  return url.startsWith("http") ? url : `${API_BASE}${url}`;
+}
+
+function CourseThumb({ url, title, level, children }: { url: string | null; title: string; level: string; children?: React.ReactNode }) {
+  const [err, setErr] = useState(false);
+  const src = resolveUrl(url);
+  return (
+    <div className={`course-card__thumb course-card__thumb--${level.toLowerCase()}`}>
+      {src && !err ? (
+        <img src={src} alt={title} onError={() => setErr(true)} />
+      ) : (
+        <div className="course-card__thumb-placeholder">
+          <span className="course-card__thumb-icon">🎓</span>
+        </div>
+      )}
+      {children}
+    </div>
+  );
+}
+
 function SkeletonCard() {
   return (
     <div className="course-card course-card--skeleton">
@@ -161,18 +184,11 @@ function Courses() {
               onClick={() => navigate(`/courses/${course.slug ?? course.id}`)}
             >
               {/* Thumbnail */}
-              <div className={`course-card__thumb course-card__thumb--${course.level.toLowerCase()}`}>
-                {course.thumbnail_url ? (
-                  <img src={course.thumbnail_url} alt={course.title} />
-                ) : (
-                  <div className="course-card__thumb-placeholder">
-                    <span className="course-card__thumb-icon">🎓</span>
-                  </div>
-                )}
+              <CourseThumb url={course.thumbnail_url} title={course.title} level={course.level}>
                 <span className={`course-card__badge${Number(course.price) === 0 ? " course-card__badge--free" : ""}`}>
                   {Number(course.price) === 0 ? "Free" : `$${course.price}`}
                 </span>
-              </div>
+              </CourseThumb>
 
               {/* Body */}
               <div className="course-card__body">

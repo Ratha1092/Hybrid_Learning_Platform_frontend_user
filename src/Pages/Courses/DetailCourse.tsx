@@ -58,6 +58,12 @@ function SectionAccordion({ section, index, open, onToggle }: {
   );
 }
 
+const API_BASE = import.meta.env.VITE_API_URL ?? "";
+function resolveUrl(url: string | null): string | null {
+  if (!url) return null;
+  return url.startsWith("http") ? url : `${API_BASE}${url}`;
+}
+
 function DetailCourse() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
@@ -121,7 +127,7 @@ function DetailCourse() {
       {/* ── Hero ── */}
       <div className="detail-hero">
         {course.thumbnail_url ? (
-          <img src={course.thumbnail_url} alt={course.title} className="detail-hero__img" />
+          <img src={resolveUrl(course.thumbnail_url)!} alt={course.title} className="detail-hero__img" />
         ) : (
           <div className={`detail-hero__placeholder detail-hero__placeholder--${course.level}`} />
         )}
