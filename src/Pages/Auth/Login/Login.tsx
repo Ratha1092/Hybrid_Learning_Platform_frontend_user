@@ -1,4 +1,5 @@
 import { useState, type ChangeEvent } from "react";
+import { usePlatformStats } from "../../../hooks/usePlatformStats";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { authService } from "../../../services/authService";
@@ -66,13 +67,12 @@ const IconSpinner = () => (
   </svg>
 );
 
-const CLASSROOM_IMAGE =
-  "https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=520&q=80";
 
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const stats = usePlatformStats();
   const [form, setForm] = useState<LoginForm>({ email: "", password: "" });
   const [errors, setErrors] = useState<LoginErrors>({});
   const [status, setStatus] = useState<Status>("idle");
@@ -125,36 +125,75 @@ export default function Login() {
 
   return (
     <div className="login-page">
-      <div className="login-card">
-        <div className="login-image-wrap">
-          <img src={CLASSROOM_IMAGE} alt="Classroom" />
+    <div className="login-card">
+      {/* ── Left decorative panel ── */}
+      <div className="login-left">
+        <div className="login-brand">
+          <div className="login-brand__logo">HL</div>
+          <div>
+            <div className="login-brand__name">Hybrid Learning</div>
+            <div className="login-brand__sub">Learning Platform</div>
+          </div>
         </div>
 
+        <div className="login-hero">
+          <div className="login-hero__code">
+            <span className="c1">learn();</span>
+            <span className="c2">grow();</span>
+            <span className="c3">achieve();</span>
+            <span className="c4">succeed();</span>
+          </div>
+          <p className="login-hero__desc">
+            Your unified platform for online learning — courses, instructors, and community in one place.
+          </p>
+        </div>
+
+        <div className="login-stats">
+          <div className="login-stat">
+            <div className="login-stat__num">{stats?.total_students ?? "—"}</div>
+            <div className="login-stat__label">Students</div>
+            <div className="login-stat__trend">↑ 12.5%</div>
+          </div>
+          <div className="login-stat">
+            <div className="login-stat__num">{stats?.total_courses ?? "—"}</div>
+            <div className="login-stat__label">Courses</div>
+            <div className="login-stat__trend">↑ 8.3%</div>
+          </div>
+          <div className="login-stat">
+            <div className="login-stat__num">{stats?.total_instructors ?? "—"}</div>
+            <div className="login-stat__label">Instructors</div>
+            <div className="login-stat__trend">↑ 5.7%</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Right form panel ── */}
+      <div className="login-right">
         <div className="login-form-panel">
-          <h1 className="login-title">Welcome Back</h1>
+          <div className="login-form-badge">🔐 Student Access</div>
+          <h1 className="login-title">Welcome back_</h1>
+          <p className="login-subtitle">Sign in to continue your learning journey</p>
 
           {status === "success" && (
             <div className="login-alert login-alert--success">
-              <IconCheck />
-              {serverMessage}
+              <IconCheck />{serverMessage}
             </div>
           )}
-
           {status === "error" && serverMessage && (
             <div className="login-alert login-alert--error">
-              <IconAlert />
-              {serverMessage}
+              <IconAlert />{serverMessage}
             </div>
           )}
 
           <div className="login-fields">
             <div>
+              <label className="login-field-label">Email address *</label>
               <div className="login-input-wrap">
                 <span className="login-input-icon"><IconMail /></span>
                 <input
                   type="email"
                   name="email"
-                  placeholder="Email *"
+                  placeholder="you@example.com"
                   value={form.email}
                   onChange={handleChange}
                   className={`login-input${errors.email ? " login-input--error" : ""}`}
@@ -164,12 +203,13 @@ export default function Login() {
             </div>
 
             <div>
+              <label className="login-field-label">Password *</label>
               <div className="login-input-wrap">
                 <span className="login-input-icon"><IconLock /></span>
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
-                  placeholder="Password *"
+                  placeholder="••••••••"
                   value={form.password}
                   onChange={handleChange}
                   className={`login-input login-input--with-toggle${errors.password ? " login-input--error" : ""}`}
@@ -183,15 +223,19 @@ export default function Login() {
           </div>
 
           <button className="login-submit" onClick={handleSubmit} disabled={status === "loading"}>
-            {status === "loading" ? (<><IconSpinner />Signing in...</>) : "Login"}
+            {status === "loading" ? <><IconSpinner />Signing in...</> : ">_ SIGN IN →"}
           </button>
 
           <p className="login-footer">
-            Don't have an account?{" "}
-            <Link to="/PageRegister">Register</Link>
+            Don't have an account? <Link to="/PageRegister">Register</Link>
           </p>
+
+          <div className="login-secure">
+            🛡 256-bit SSL &nbsp;·&nbsp; Authorized Students Only
+          </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }

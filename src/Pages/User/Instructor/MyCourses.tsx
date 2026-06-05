@@ -3,6 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { instructorService, type InstructorCourse } from "../../../services/instructorService";
 import "./MyCourses.css";
 
+const API_BASE = import.meta.env.VITE_API_URL ?? "";
+function resolveUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  return url.startsWith("http") ? url : `${API_BASE}${url}`;
+}
+
 const STATUS_COLORS: Record<string, string> = {
   published: "#22c55e",
   draft: "#9ca3af",
@@ -67,11 +73,17 @@ export default function MyCourses() {
           {courses.map((course) => (
             <div key={course.id} className="mc-row">
               <div className="mc-row__thumb">
-                {course.thumbnail_url ? (
-                  <img src={course.thumbnail_url} alt={course.title} />
-                ) : (
-                  <div className="mc-row__thumb-placeholder">🎓</div>
-                )}
+                {resolveUrl(course.thumbnail_url) ? (
+                  <img
+                    src={resolveUrl(course.thumbnail_url)!}
+                    alt={course.title}
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                      e.currentTarget.nextElementSibling?.removeAttribute("style");
+                    }}
+                  />
+                ) : null}
+                <div className="mc-row__thumb-placeholder" style={resolveUrl(course.thumbnail_url) ? { display: "none" } : undefined}>🎓</div>
               </div>
 
               <div className="mc-row__info">

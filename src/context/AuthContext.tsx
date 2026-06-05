@@ -22,6 +22,7 @@ interface AuthContextValue {
   token: string | null;
   login: (user: AuthUser, token: string) => void;
   logout: () => void;
+  updateUser: (fields: Partial<AuthUser>) => void;
   isAuthenticated: boolean;
 }
 
@@ -50,6 +51,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const updateUser = (fields: Partial<AuthUser>) => {
+    setUser(prev => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...fields };
+      localStorage.setItem("user", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   // Keep state in sync when another tab logs in/out
   useEffect(() => {
     const sync = () => {
@@ -64,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, token, login, logout, isAuthenticated: !!token }}
+      value={{ user, token, login, logout, updateUser, isAuthenticated: !!token }}
     >
       {children}
     </AuthContext.Provider>

@@ -1,4 +1,5 @@
 import { useState, type ChangeEvent } from "react";
+import { usePlatformStats } from "../../../hooks/usePlatformStats";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { authService } from "../../../services/authService";
@@ -65,6 +66,7 @@ function getStrength(pw: string): { level: number; label: string } {
 export default function Register() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const stats = usePlatformStats();
 
   const [form, setForm] = useState<FormState>({ name: "", email: "", password: "", password_confirmation: "" });
   const [errors, setErrors] = useState<FormErrors>({});
@@ -137,45 +139,39 @@ export default function Register() {
             <div className="rg-dots" />
           </div>
 
-          <div className="rg-float-card rg-float-card--top">
-            <div className="rg-float-icon">🎓</div>
+          <div className="rg-brand">
+            <div className="rg-brand__logo">HL</div>
             <div>
-              <div className="rg-float-title">DRC Learning</div>
-              <div className="rg-float-sub">Online Platform</div>
+              <div className="rg-brand__name">Hybrid Learning</div>
+              <div className="rg-brand__sub">Learning Platform</div>
             </div>
           </div>
-
-          <div className="rg-float-card rg-float-card--mid">
-            <div className="rg-progress-label">Your progress</div>
-            <div className="rg-progress-track">
-              <div className="rg-progress-fill" style={{ width: "72%" }} />
-            </div>
-            <div className="rg-progress-pct">72% complete</div>
-          </div>
-
-          <div className="rg-pill">✓ Free forever</div>
 
           <div className="rg-left-content">
-            <div className="rg-tag">✦ Online learning</div>
-            <h2 className="rg-left-heading">Start your learning journey today</h2>
-            <p className="rg-left-desc">Join thousands of students and unlock premium courses for free.</p>
+            <div className="rg-tag">✦ Online Learning</div>
+            <h2 className="rg-left-heading">join();<br/>learn();<br/>succeed();</h2>
+            <p className="rg-left-desc">Join thousands of students and unlock premium courses on Hybrid Learning Platform.</p>
             <div className="rg-stats">
-              <div><div className="rg-stat-num">12k+</div><div className="rg-stat-lbl">Students</div></div>
-              <div><div className="rg-stat-num">340+</div><div className="rg-stat-lbl">Courses</div></div>
-              <div><div className="rg-stat-num">98%</div><div className="rg-stat-lbl">Satisfaction</div></div>
+              <div><div className="rg-stat-num">{stats?.total_students ?? "—"}</div><div className="rg-stat-lbl">Students</div></div>
+              <div><div className="rg-stat-num">{stats?.total_courses ?? "—"}</div><div className="rg-stat-lbl">Courses</div></div>
+              <div><div className="rg-stat-num">{stats?.total_instructors ?? "—"}</div><div className="rg-stat-lbl">Instructors</div></div>
             </div>
           </div>
+
+          <p className="rg-left-footer">🛡 Secure · Free forever · No credit card</p>
         </div>
 
         {/* ── Right form ── */}
         <div className="rg-right">
           <div className="rg-logo">
-            <div className="rg-logo-box">🏆</div>
-            <span className="rg-logo-name">DRC Platform</span>
+            <div className="rg-logo-box">HL</div>
+            <div>
+              <div className="rg-logo-name">Hybrid Learning</div>
+            </div>
           </div>
 
-          <h1 className="rg-title">Create account</h1>
-          <p className="rg-subtitle">Fill in your details to get started</p>
+          <h1 className="rg-title">Create account_</h1>
+          <p className="rg-subtitle">Fill in your details to start learning</p>
 
           {status === "success" && (
             <div className="rg-alert rg-alert--success">✓ {serverMessage}</div>
@@ -247,7 +243,7 @@ export default function Register() {
           </div>
 
           <button className="rg-btn" onClick={handleSubmit} disabled={status === "loading"}>
-            {status === "loading" ? <span className="rg-spinner" /> : "Create account"}
+            {status === "loading" ? <span className="rg-spinner" /> : ">_ CREATE ACCOUNT →"}
           </button>
 
           <div className="rg-divider"><span>or continue with</span></div>

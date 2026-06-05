@@ -1,9 +1,9 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { paymentService, type PaymentData } from "../../services/paymentService";
-import type { CourseDetail } from "../../services/courseService";
+import { courseService, type CourseDetail } from "../../services/courseService";
 
-type Step = "idle" | "loading" | "qr" | "verifying" | "done" | "error";
+type Step = "idle" | "loading" | "qr" | "done" | "error";
 
 interface Props {
   course: CourseDetail;
@@ -11,10 +11,22 @@ interface Props {
 
 export default function EnrollButton({ course }: Props) {
   const [step, setStep] = useState<Step>("idle");
+  const [verifying, setVerifying] = useState(false);
   const [payment, setPayment] = useState<PaymentData | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
+  const [isEnrolled, setIsEnrolled] = useState(false);
+  const [checkingEnrollment, setCheckingEnrollment] = useState(true);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) { setCheckingEnrollment(false); return; }
+    courseService.getEnrollmentStatus(course.id)
+      .then(({ data }) => setIsEnrolled(data.data?.enrolled ?? false))
+      .catch(() => {})
+      .finally(() => setCheckingEnrollment(false));
+  }, [course.id]);
 
   const stopPolling = () => {
     if (pollRef.current) {
@@ -28,11 +40,13 @@ export default function EnrollButton({ course }: Props) {
     pollRef.current = setInterval(async () => {
       try {
         const { data } = await paymentService.getStatus(paymentId);
-        const status = data.data?.status;
-        if (status === "paid") {
+        if (!data.success) return;
+        const pay = data.data;
+        setPayment(pay);
+        if (pay.status === "paid") {
           stopPolling();
           setStep("done");
-        } else if (status === "expired" || status === "failed") {
+        } else if (pay.status === "expired" || pay.status === "failed" || (typeof pay.expires_in_seconds === "number" && pay.expires_in_seconds <= 0)) {
           stopPolling();
           setErrorMsg("Payment expired or failed.");
           setStep("error");
@@ -40,27 +54,27 @@ export default function EnrollButton({ course }: Props) {
       } catch {
         // keep polling
       }
-    }, 5000);
+    }, 4000);
   };
 
   const handleVerify = async (paymentId: number) => {
     stopPolling();
-    setStep("verifying");
+    setVerifying(true);
     try {
       const { data } = await paymentService.verify(paymentId);
-      if (data.data?.status === "paid" || data.success) {
+      if (data.data?.status === "paid") {
+        setPayment(data.data);
         setStep("done");
       } else {
         setErrorMsg(data.message ?? "Payment not confirmed yet.");
-        setStep("qr");
-        if (payment) startPolling(paymentId);
+        startPolling(paymentId);
       }
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } }; message?: string };
       setErrorMsg(e.response?.data?.message ?? e.message ?? "Verification failed.");
-      setStep("qr");
-      if (payment) startPolling(paymentId);
+      startPolling(paymentId);
     }
+    setVerifying(false);
   };
 
   const handleEnroll = async () => {
@@ -77,14 +91,23 @@ export default function EnrollButton({ course }: Props) {
         setStep("error");
         return;
       }
-      const pay = data.data.payment;
-      setPayment(pay);
-      if (Number(course.price) === 0) {
-        await handleVerify(pay.id);
-      } else {
-        setStep("qr");
-        startPolling(pay.id);
+
+      // Free course → backend enrolled directly, status = "completed"
+      if (data.data.status === "completed") {
+        setStep("done");
+        return;
       }
+
+      const pay = data.data.payment;
+      if (!pay) {
+        setErrorMsg("Payment data missing.");
+        setStep("error");
+        return;
+      }
+
+      setPayment(pay);
+      setStep("qr");
+      startPolling(pay.id);
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } }; message?: string };
       setErrorMsg(e.response?.data?.message ?? e.message ?? "Network error.");
@@ -121,7 +144,7 @@ export default function EnrollButton({ course }: Props) {
         </p>
         {payment.qr_code_image ? (
           <img
-            src={`data:image/png;base64,${payment.qr_code_image}`}
+            src={payment.qr_code_image}
             alt="Payment QR Code"
             className="enroll-qr__img"
           />
@@ -133,9 +156,9 @@ export default function EnrollButton({ course }: Props) {
           <button
             className="detail-enroll-btn enroll-qr__confirm"
             onClick={() => handleVerify(payment.id)}
-            disabled={step === "verifying"}
+            disabled={verifying}
           >
-            {step === "verifying" ? "Checking..." : "I've Paid ✓"}
+            {verifying ? "Checking..." : "I've Paid ✓"}
           </button>
           <button
             className="enroll-qr__cancel"
@@ -159,6 +182,27 @@ export default function EnrollButton({ course }: Props) {
         >
           Try Again
         </button>
+      </div>
+    );
+  }
+
+  if (checkingEnrollment) {
+    return (
+      <button className="detail-enroll-btn" disabled style={{ background: "#94a3b8", boxShadow: "none", cursor: "not-allowed" }}>
+        Loading...
+      </button>
+    );
+  }
+
+  if (isEnrolled) {
+    return (
+      <div className="enroll-success">
+        <div className="enroll-success__icon">✅</div>
+        <h3 className="enroll-success__title">You're Enrolled!</h3>
+        <p className="enroll-success__sub">You have access to all course content.</p>
+        <a href={`/learn/${course.slug}`} className="enroll-success__link">
+          Continue Learning →
+        </a>
       </div>
     );
   }

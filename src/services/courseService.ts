@@ -19,9 +19,11 @@ export interface Lesson {
   id: number;
   title: string;
   type: string;
-  duration: number;
   is_preview: boolean;
+  video_url?: string;
+  content?: string;
   order: number;
+  duration: number;
 }
 
 export interface Section {
@@ -39,6 +41,7 @@ export interface CourseDetail extends Course {
 
 export interface EnrolledCourse {
   id: number;
+  course_slug?: string;
   title: string;
   thumbnail_url: string | null;
   level: string;
@@ -51,7 +54,10 @@ export const courseService = {
   getByCategory: (categorySlug: string) =>
     api.get<{ data: { courses: Course[] } }>(`/categories/${categorySlug}`),
 
-  getEnrolled: () => api.get<{ data: EnrolledCourse[] }>("/user/courses"),
+  getEnrolled: () => api.get<{ data: EnrolledCourse[] }>("/users/courses"),
+
+  getEnrollmentStatus: (courseId: number) =>
+    api.get<{ data: { enrolled: boolean } }>(`/users/courses/${courseId}/enrollment-status`),
 
   getBySlug: (slug: string) =>
     api.get<{ data: CourseDetail }>(`/courses/${slug}`),

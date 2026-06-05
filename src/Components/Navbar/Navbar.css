@@ -74,12 +74,16 @@
 .logo-icon {
   width: 36px;
   height: 36px;
-  background: #6c5ce7;
+  background: linear-gradient(135deg, #2ec4b6, #0ea5e9);
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  box-shadow: 0 3px 10px rgba(46,196,182,0.3);
 }
 
 .logo-text {
