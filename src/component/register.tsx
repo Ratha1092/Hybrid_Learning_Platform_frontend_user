@@ -215,23 +215,24 @@ export default function Register() {
     data.message || "Registration successful!"
   );
 
-  // Save token if returned
-  if (data.data?.token) {
-    localStorage.setItem("token", data.data.token);
+  const token = data.data?.token;
+  if (token) {
+    localStorage.setItem("token", token);
     window.dispatchEvent(new Event("tokenChanged"));
+
+    // Fire-and-forget: send verification email
+    fetch(`${import.meta.env.VITE_API_URL}/api/auth/email/send`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
+    }).catch(() => {});
   }
 
-  setForm({
-    name: "",
-    email: "",
-    password: "",
-    password_confirmation: "",
-  });
+  const savedEmail = form.email;
+  setForm({ name: "", email: "", password: "", password_confirmation: "" });
 
-  // Auto navigate
   setTimeout(() => {
-                  window.location.href = "/";
-  }, 1000);
+    window.location.href = `/email-pending?email=${encodeURIComponent(savedEmail)}`;
+  }, 800);
 } else {
         setStatus("error");
 

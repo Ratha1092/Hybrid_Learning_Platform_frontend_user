@@ -1,5 +1,5 @@
 
-import {Award, Bell, BookOpen, Camera, CheckCircle2, ChevronRight, Code2, DollarSign, FlaskConical, MessageSquare, PenTool, Play, Send, Search, Share2, Star, TrendingUp, Users, Video,Wifi, CirclePlay,} from 'lucide-react'
+import { BookOpen, Camera, ChevronRight, Code2, DollarSign, FlaskConical, MessageSquare, PenTool, TrendingUp, Video, Wifi } from 'lucide-react'
 
 const categories = [
   { icon: PenTool, label: 'Art & Design', count: 38 },

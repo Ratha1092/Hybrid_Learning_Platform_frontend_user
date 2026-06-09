@@ -13,6 +13,8 @@ import PageCategories from "./pages/pagecategoires";
 import PageRegister from "./pages/PageRegister";
 import Pagelogin from "./pages/Pagelogin";
 import Profile from "./pages/profile";
+import EmailPending from "./pages/EmailPending";
+import VerifyEmail from "./pages/VerifyEmail";
 
 function MainPage() {
   return (
@@ -43,6 +45,9 @@ function Home() {
         <Route path="/PageLogin" element={<Pagelogin />}/>
 
         <Route path="/profile" element={<Profile />} />
+
+        <Route path="/email-pending" element={<EmailPending />} />
+        <Route path="/verify-email/:token" element={<VerifyEmail />} />
       </Routes>
     </>
   );
