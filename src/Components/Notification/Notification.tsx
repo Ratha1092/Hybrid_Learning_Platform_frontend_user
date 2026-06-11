@@ -20,7 +20,7 @@ function getConfig(type: string) {
 }
 
 export default function Notification() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, refreshUser } = useAuth();
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
@@ -29,8 +29,12 @@ export default function Notification() {
   const fetchNotifications = async () => {
     try {
       const { data } = await notificationService.getAll();
-      setNotifications(data.data.notifications.data);
+      const list = data.data.notifications.data;
+      setNotifications(list);
       setUnreadCount(data.data.unread_count);
+      if (list.some((n) => n.type === "instructor_approved")) {
+        refreshUser();
+      }
     } catch {
       // silent
     }

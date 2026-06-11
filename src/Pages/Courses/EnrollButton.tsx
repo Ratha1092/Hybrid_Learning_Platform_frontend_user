@@ -12,6 +12,7 @@ interface Props {
 export default function EnrollButton({ course }: Props) {
   const [step, setStep] = useState<Step>("idle");
   const [verifying, setVerifying] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [payment, setPayment] = useState<PaymentData | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [isEnrolled, setIsEnrolled] = useState(false);
@@ -60,6 +61,19 @@ export default function EnrollButton({ course }: Props) {
         // keep polling
       }
     }, interval);
+  };
+
+  const handleCancel = async (paymentId: number) => {
+    stopPolling();
+    setCancelling(true);
+    try {
+      await paymentService.cancel(paymentId);
+    } catch {
+      // ignore — reset to idle regardless
+    }
+    setCancelling(false);
+    setPayment(null);
+    setStep("idle");
   };
 
   const handleVerify = async (paymentId: number) => {
@@ -157,9 +171,14 @@ export default function EnrollButton({ course }: Props) {
           <div className="enroll-qr__placeholder">QR loading...</div>
         )}
         <p className="enroll-qr__hint">Scan with Bakong / ABA / Wing app</p>
-        <p className="enroll-qr__auto">
-          <span className="enroll-qr__pulse" /> Checking payment automatically...
-        </p>
+        <div className="enroll-qr__actions">
+          <button className ="detail-enroll-btn enroll-qr__confirm"onClick={() => handleVerify(payment.id)}disabled={verifying}>
+            {verifying ? "Checking..." : "I've Paid ✓"}
+          </button>
+          <button className="enroll-qr__cancel" onClick={() => handleCancel(payment.id)} disabled={cancelling || verifying}>
+            {cancelling ? "Cancelling..." : "Cancel"}
+          </button>
+        </div>
       </div>
     );
   }
