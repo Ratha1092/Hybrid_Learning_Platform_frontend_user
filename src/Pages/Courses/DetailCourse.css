@@ -431,6 +431,20 @@
 }
 .enroll-qr__cancel:hover { background: #e2e8f0; }
 
+.enroll-qr__auto {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: 13px; color: #6b7280; margin: 10px 0 0;
+}
+.enroll-qr__pulse {
+  display: inline-block; width: 8px; height: 8px;
+  border-radius: 50%; background: #10b981; flex-shrink: 0;
+  animation: qr-pulse 1.4s ease-in-out infinite;
+}
+@keyframes qr-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.75); }
+}
+
 .enroll-error {
   background: #fef2f2;
   border: 1px solid #fca5a5;

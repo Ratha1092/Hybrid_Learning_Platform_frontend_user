@@ -258,24 +258,26 @@ export default function Profile() {
               ) : (
                 <div className="profile-courses">
                   {courses.map((course) => (
-                    <div key={course.id} className="profile-course-card" onClick={() => navigate(`/courses/${course.course_slug ?? course.id}`)}>
-                      <img
-                        src={resolveUrl(course.thumbnail_url) ?? undefined}
-                        alt={course.title}
-                        className="profile-course-thumb"
-                        onError={(e) => { e.currentTarget.style.display = "none"; }}
-                      />
+                    <div key={course.enrollment_id} className="profile-course-card" onClick={() => navigate(`/courses/${course.course_slug ?? course.course_id}`)}>
+                      {resolveUrl(course.course_thumbnail) ? (
+                        <img
+                          src={resolveUrl(course.course_thumbnail)!}
+                          alt={course.course_title}
+                          className="profile-course-thumb"
+                          onError={(e) => { e.currentTarget.style.display = "none"; }}
+                        />
+                      ) : (
+                        <div className="profile-course-thumb profile-course-thumb--placeholder">🎓</div>
+                      )}
                       <div className="profile-course-info">
-                        <h3>{course.title}</h3>
-                        <span className="profile-course-level">{course.level}</span>
-                        {course.progress !== undefined && (
-                          <div className="profile-progress">
-                            <div className="profile-progress__track">
-                              <div className="profile-progress__bar" style={{ width: `${course.progress}%` }} />
-                            </div>
-                            <span>{course.progress}%</span>
+                        <h3>{course.course_title}</h3>
+                        <span className="profile-course-level">{course.course_level}</span>
+                        <div className="profile-progress">
+                          <div className="profile-progress__track">
+                            <div className="profile-progress__bar" style={{ width: `${course.progress_percentage}%` }} />
                           </div>
-                        )}
+                          <span>{course.progress_percentage}%</span>
+                        </div>
                       </div>
                     </div>
                   ))}

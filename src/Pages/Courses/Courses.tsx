@@ -64,7 +64,8 @@ function Courses() {
       const { data } = category
         ? await courseService.getByCategory(category)
         : await courseService.getAll();
-      setCourses(category ? (data.data as unknown as { courses: Course[] }).courses ?? [] : (data.data as unknown as Course[]) ?? []);
+      const list = category ? (data.data as unknown as { courses: Course[] }).courses ?? [] : (data.data as unknown as Course[]) ?? [];
+      setCourses(list);
     } catch (err: unknown) {
       setError((err as { message?: string }).message ?? "Failed to load courses.");
     }
@@ -99,14 +100,7 @@ function Courses() {
             {loading ? "Loading..." : `${courses.length} courses available`}
           </p>
         </div>
-        <button
-          className={`btn-refresh${refreshing ? " btn-refresh--loading" : ""}`}
-          onClick={() => load(true)}
-          disabled={loading || refreshing}
-        >
-          <span className="btn-refresh__icon">↻</span>
-          Refresh
-        </button>
+     
       </div>
 
       {/* ── Error ── */}
@@ -202,8 +196,8 @@ function Courses() {
 
                 <div className="course-card__stats">
                   <span className="course-card__stat">
-                    <span className="stat-icon">❤</span>
-                    {course.likes_count ?? 0}
+                    <span className="stat-icon">👥</span>
+                    {course.students_count ?? 0}
                   </span>
                   <span className="course-card__stat-sep">·</span>
                   <span className="course-card__stat">
@@ -212,8 +206,8 @@ function Courses() {
                   </span>
                   <span className="course-card__stat-sep">·</span>
                   <span className="course-card__stat">
-                    <span className="stat-icon">👥</span>
-                    {course.students_count ?? 0}
+                    <span className="stat-icon">⭐</span>
+                    {course.reviews_count ?? 0}
                   </span>
                 </div>
 

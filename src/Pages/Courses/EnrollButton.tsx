@@ -35,8 +35,10 @@ export default function EnrollButton({ course }: Props) {
     }
   };
 
-  const startPolling = (paymentId: number) => {
+  const startPolling = (paymentId: number, hasQr = false) => {
     stopPolling();
+    // Poll fast (1s) until QR image arrives, then slow down to 4s
+    const interval = hasQr ? 2000 : 1000;
     pollRef.current = setInterval(async () => {
       try {
         const { data } = await paymentService.getStatus(paymentId);
@@ -50,11 +52,14 @@ export default function EnrollButton({ course }: Props) {
           stopPolling();
           setErrorMsg("Payment expired or failed.");
           setStep("error");
+        } else if (!hasQr && pay.qr_code_image) {
+          // QR just arrived — restart with slower interval
+          startPolling(paymentId, true);
         }
       } catch {
         // keep polling
       }
-    }, 4000);
+    }, interval);
   };
 
   const handleVerify = async (paymentId: number) => {
@@ -107,7 +112,7 @@ export default function EnrollButton({ course }: Props) {
 
       setPayment(pay);
       setStep("qr");
-      startPolling(pay.id);
+      startPolling(pay.id, !!pay.qr_code_image);
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } }; message?: string };
       setErrorMsg(e.response?.data?.message ?? e.message ?? "Network error.");
@@ -152,21 +157,9 @@ export default function EnrollButton({ course }: Props) {
           <div className="enroll-qr__placeholder">QR loading...</div>
         )}
         <p className="enroll-qr__hint">Scan with Bakong / ABA / Wing app</p>
-        <div className="enroll-qr__actions">
-          <button
-            className="detail-enroll-btn enroll-qr__confirm"
-            onClick={() => handleVerify(payment.id)}
-            disabled={verifying}
-          >
-            {verifying ? "Checking..." : "I've Paid ✓"}
-          </button>
-          <button
-            className="enroll-qr__cancel"
-            onClick={() => { stopPolling(); setStep("idle"); }}
-          >
-            Cancel
-          </button>
-        </div>
+        <p className="enroll-qr__auto">
+          <span className="enroll-qr__pulse" /> Checking payment automatically...
+        </p>
       </div>
     );
   }

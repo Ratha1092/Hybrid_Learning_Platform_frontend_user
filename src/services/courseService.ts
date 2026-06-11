@@ -10,9 +10,9 @@ export interface Course {
   level: string;
   language: string;
   duration: number;
-  likes_count?: number;
-  views_count?: number;
   students_count?: number;
+  views_count?: number;
+  reviews_count?: number;
 }
 
 export interface Lesson {
@@ -37,15 +37,19 @@ export interface CourseDetail extends Course {
   slug: string;
   description: string;
   sections: Section[];
+  is_enrolled?: boolean;
 }
 
 export interface EnrolledCourse {
-  id: number;
+  enrollment_id: number;
+  course_id: number;
   course_slug?: string;
-  title: string;
-  thumbnail_url: string | null;
-  level: string;
-  progress?: number;
+  course_title: string;
+  course_thumbnail: string | null;
+  course_level: string;
+  progress_percentage: number;
+  enrolled_at: string;
+  completed_at: string | null;
 }
 
 export const courseService = {

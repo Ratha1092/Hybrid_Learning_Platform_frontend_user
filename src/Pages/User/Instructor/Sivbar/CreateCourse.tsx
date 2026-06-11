@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { instructorService } from "../../../services/instructorService";
-import api from "../../../api/axios";
-import "./CreateCourse.css";
+import { instructorService } from "../../../../services/instructorService";
+import api from "../../../../api/axios";
+import "../css/CreateCourse.css";
 
 interface Category { id: number; name: string; slug: string; }
 
@@ -373,6 +373,15 @@ export default function CreateCourse() {
 
   return (
     <div className="cc-wrap">
+      {/* Page header */}
+      <div className="cc-header">
+        <button className="cc-header__back" onClick={() => navigate("/instructor/dashboard")}>
+          ← Back to Dashboard
+        </button>
+        <h1>Create New Course</h1>
+        <p>Fill in the details below to publish your course on the platform.</p>
+      </div>
+
       {/* Step tabs */}
       <div className="cc-tabs">
         {STEPS.map((label, i) => (
@@ -590,13 +599,12 @@ export default function CreateCourse() {
           {/* ── STEP 3: Submit ── */}
           {step === 3 && (
             <div className="cc-card">
-              <div style={{ textAlign: "center", marginBottom: 24 }}>
-                <div style={{ fontSize: 52, marginBottom: 12 }}>🚀</div>
-                <h2 style={{ margin: "0 0 8px" }}>Ready to Submit!</h2>
-                <p style={{ color: "#6b7280", fontSize: 14 }}>
+              <div className="cc-submit-hero">
+                <span className="cc-submit-hero__icon">🚀</span>
+                <h2>Ready to Submit!</h2>
+                <p>
                   <strong>{info.title}</strong><br />
-                  {sections.length} section(s) · {totalLessons} lesson(s) ·{" "}
-                  {isFree ? "Free" : `$${price}`}
+                  {sections.length} section(s) · {totalLessons} lesson(s) · {isFree ? "Free" : `$${price}`}
                 </p>
               </div>
 
@@ -609,7 +617,7 @@ export default function CreateCourse() {
               </div>
 
               <div className="cc-field">
-                <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontWeight: 500 }}>
                   <input
                     type="checkbox"
                     checked={certificateEnabled}
@@ -619,21 +627,13 @@ export default function CreateCourse() {
                 </label>
               </div>
 
-              <p style={{ color: "#6b7280", fontSize: 13, marginTop: 16, textAlign: "center" }}>
-                After submitting, admin will review and publish your course.
-              </p>
-
-              <div style={{ display: "flex", gap: 10, justifyContent: "center", marginTop: 16 }}>
+              <div className="cc-submit-actions">
                 <button className="cc-discard" onClick={() => setStep(2)}>← Back</button>
-                <button
-                  className="cc-continue"
-                  style={{ background: "#22c55e", padding: "10px 28px", fontSize: 15 }}
-                  onClick={handleSubmit}
-                  disabled={saving}
-                >
+                <button className="cc-submit-btn" onClick={handleSubmit} disabled={saving}>
                   {saving ? "Submitting..." : "✓ Submit for Review"}
                 </button>
               </div>
+              <p className="cc-submit-note">Admin will review and publish your course after submission.</p>
             </div>
           )}
         </div>
@@ -646,11 +646,13 @@ export default function CreateCourse() {
                 {!thumbnailPreview && <button className="cc-preview__play">▶</button>}
               </div>
               <div className="cc-preview__body">
+                <p className="cc-preview__label">Course Preview</p>
                 <p className="cc-preview__title">{info.title || "Your Course Title"}</p>
                 <div className="cc-preview__tags">
                   <span>{selectedCategory?.name ?? "Category"}</span>
                   <span>{info.level}</span>
                 </div>
+                <div className="cc-preview__divider" />
                 <div className="cc-preview__meta">
                   <div className="cc-preview__row"><span>Status</span><span className="cc-status-draft">Draft</span></div>
                   <div className="cc-preview__row"><span>Step</span><span>{step + 1} / {STEPS.length}</span></div>
