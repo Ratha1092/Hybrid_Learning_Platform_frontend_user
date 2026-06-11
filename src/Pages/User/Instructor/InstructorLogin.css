@@ -1,0 +1,198 @@
+/* ── Instructor Login — split card, same style as student login ── */
+.ilogin-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  font-family: "Nunito", "Inter", system-ui, sans-serif;
+  background: #f1f5f9;
+}
+
+.ilogin-card {
+  display: flex;
+  width: 100%;
+  max-width: 820px;
+  min-height: 500px;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(15,23,42,0.18);
+}
+
+/* ── Left Panel ─────────────────────────────────── */
+.ilogin-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 32px 36px;
+  background: linear-gradient(145deg, #0f172a 0%, #1e293b 55%, #1a1230 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.ilogin-left::before {
+  content: "";
+  position: absolute;
+  width: 420px; height: 420px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(168,85,247,0.1) 0%, transparent 70%);
+  top: -100px; left: -100px; pointer-events: none;
+}
+.ilogin-left::after {
+  content: "";
+  position: absolute;
+  width: 320px; height: 320px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(46,196,182,0.08) 0%, transparent 70%);
+  bottom: -60px; right: -60px; pointer-events: none;
+}
+
+.ilogin-dots {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image: radial-gradient(circle, rgba(168,85,247,0.08) 1.5px, transparent 1.5px);
+  background-size: 28px 28px;
+}
+
+.ilogin-brand {
+  display: flex; align-items: center; gap: 12px;
+  position: relative; z-index: 1;
+}
+.ilogin-brand__logo {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, #a855f7, #6366f1);
+  border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 900; color: #fff;
+  box-shadow: 0 4px 14px rgba(168,85,247,0.35);
+}
+.ilogin-brand__name { font-size: 15px; font-weight: 800; color: #f1f5f9; line-height: 1.1; }
+.ilogin-brand__sub  { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+
+.ilogin-hero { position: relative; z-index: 1; }
+.ilogin-hero__code { margin: 0 0 20px; line-height: 1.25; }
+.ilogin-hero__code span {
+  display: block; font-size: 30px; font-weight: 900;
+  font-family: "Courier New", monospace;
+}
+.ilogin-hero__code .ca { color: #a855f7; }
+.ilogin-hero__code .cb { color: #818cf8; }
+.ilogin-hero__code .cc { color: #2ec4b6; }
+.ilogin-hero__code .cd { color: #f472b6; }
+
+.ilogin-hero__desc {
+  font-size: 13px; color: #64748b; line-height: 1.6; margin: 0;
+}
+
+.ilogin-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; position: relative; z-index: 1; }
+.ilogin-stat {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px; padding: 12px;
+}
+.ilogin-stat__num { font-size: 18px; font-weight: 800; color: #f1f5f9; }
+.ilogin-stat__label { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+.ilogin-stat__trend { font-size: 10px; color: #a855f7; margin-top: 3px; }
+
+/* ── Right Panel ─────────────────────────────────── */
+.ilogin-right {
+  width: 380px; flex-shrink: 0;
+  background: #fff;
+  padding: 36px 40px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.ilogin-form-panel { width: 100%; }
+
+.ilogin-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #faf5ff; border: 1px solid #d8b4fe;
+  border-radius: 999px; padding: 5px 14px;
+  font-size: 12px; font-weight: 700; color: #7e22ce;
+  letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 18px;
+}
+
+.ilogin-title {
+  font-size: 24px; font-weight: 900; color: #0f172a;
+  margin: 0 0 4px; line-height: 1.2;
+}
+.ilogin-subtitle {
+  font-size: 13px; color: #64748b; margin: 0 0 24px; line-height: 1.5;
+}
+
+.ilogin-alert {
+  background: #fef2f2; border: 1px solid #fca5a5;
+  color: #dc2626; border-radius: 10px;
+  padding: 10px 14px; font-size: 13px; font-weight: 600;
+  margin-bottom: 18px;
+}
+
+.ilogin-form { display: flex; flex-direction: column; gap: 16px; }
+
+.ilogin-field { display: flex; flex-direction: column; gap: 6px; }
+.ilogin-label { font-size: 12px; font-weight: 700; color: #374151; }
+
+.ilogin-input-wrap { position: relative; display: flex; align-items: center; }
+
+.ilogin-input {
+  width: 100%; height: 48px; padding: 0 16px 0 44px;
+  font-size: 14px; font-family: "Nunito","Inter",system-ui,sans-serif;
+  background: #f8fafc; border: 1.5px solid #e2e8f0;
+  border-radius: 11px; color: #0f172a; outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  box-sizing: border-box;
+}
+.ilogin-input::placeholder { color: #94a3b8; }
+.ilogin-input:focus {
+  border-color: #a855f7; background: #fff;
+  box-shadow: 0 0 0 3px rgba(168,85,247,0.12);
+}
+
+.ilogin-input-icon {
+  position: absolute; left: 14px; color: #94a3b8;
+  display: flex; align-items: center; pointer-events: none;
+}
+.ilogin-input-icon svg { width: 16px; height: 16px; }
+
+.ilogin-eye {
+  position: absolute; right: 12px;
+  background: none; border: none; cursor: pointer;
+  color: #94a3b8; padding: 0; display: flex; align-items: center;
+  font-size: 15px; transition: color 0.15s;
+}
+.ilogin-eye:hover { color: #475569; }
+
+.ilogin-btn {
+  margin-top: 8px; width: 100%; height: 50px;
+  background: linear-gradient(135deg, #a855f7, #6366f1);
+  color: #fff; border: none; border-radius: 11px;
+  font-family: "Nunito","Inter",system-ui,sans-serif;
+  font-size: 14px; font-weight: 800; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 4px 16px rgba(168,85,247,0.35);
+  transition: opacity 0.15s, transform 0.1s;
+  letter-spacing: 0.4px;
+}
+.ilogin-btn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+.ilogin-btn:active:not(:disabled) { transform: translateY(0); }
+.ilogin-btn:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
+
+.ilogin-spinner {
+  width: 18px; height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff; border-radius: 50%;
+  animation: ilogin-spin 0.7s linear infinite;
+}
+@keyframes ilogin-spin { to { transform: rotate(360deg); } }
+
+.ilogin-back {
+  text-align: center; margin-top: 20px;
+  font-size: 13px; color: #94a3b8; cursor: pointer;
+  transition: color 0.15s;
+}
+.ilogin-back:hover { color: #374151; }
+
+/* ── Responsive ─────────────────────────────────── */
+@media (max-width: 680px) {
+  .ilogin-left { display: none; }
+  .ilogin-right { width: 100%; padding: 32px 24px; }
+  .ilogin-card { border-radius: 16px; max-width: 420px; }
+}

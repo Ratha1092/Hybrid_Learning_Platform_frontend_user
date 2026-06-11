@@ -1,0 +1,453 @@
+/* ── DetailCourse.css ─────────────────────────────── */
+
+/* State (loading / error) */
+.detail-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 16px;
+  font-size: 16px;
+  color: #6b7280;
+}
+.detail-state--error { color: #ef4444; }
+.detail-state button {
+  padding: 10px 20px;
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* Spinner */
+.detail-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Hero ─────────────────────────────────────────── */
+.detail-hero {
+  position: relative;
+  width: 100%;
+  height: 380px;
+  overflow: hidden;
+}
+.detail-hero__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.detail-hero__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.75));
+}
+.detail-hero__content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 40px;
+  color: #fff;
+}
+
+/* Back button */
+.detail-back {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+.detail-back:hover { background: rgba(255,255,255,0.25); }
+
+/* Hero placeholder (no image) */
+.detail-hero__placeholder {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #1e3a5f 0%, #0f1f33 100%);
+}
+.detail-hero__placeholder--beginner {
+  background: linear-gradient(145deg, #0c4a6e 0%, #0369a1 60%, #0ea5e9 100%);
+}
+.detail-hero__placeholder--intermediate {
+  background: linear-gradient(145deg, #78350f 0%, #b45309 60%, #f59e0b 100%);
+}
+.detail-hero__placeholder--advanced {
+  background: linear-gradient(145deg, #4c1d95 0%, #7c3aed 60%, #a78bfa 100%);
+}
+
+/* Badge */
+.detail-badge {
+  display: inline-block;
+  background: #2ec4b6;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+  width: fit-content;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-title {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 10px;
+  line-height: 1.2;
+}
+.detail-short-desc {
+  font-size: 15px;
+  color: rgba(255,255,255,0.85);
+  margin: 0 0 16px;
+  max-width: 680px;
+}
+.detail-meta {
+  display: flex;
+  gap: 20px;
+  font-size: 14px;
+  color: rgba(255,255,255,0.8);
+}
+
+/* ── Body ─────────────────────────────────────────── */
+.detail-page { background: #f9fafb; min-height: 100vh; }
+
+.detail-body {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 24px;
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 32px;
+  align-items: start;
+}
+
+/* ── Sections ─────────────────────────────────────── */
+.detail-section {
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px;
+  margin-bottom: 24px;
+  border: 1px solid #e5e7eb;
+}
+.detail-section h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 16px;
+}
+.detail-section p {
+  color: #6b7280;
+  line-height: 1.7;
+  font-size: 15px;
+}
+
+/* ── Section head ─────────────────────────────────── */
+.detail-section__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.detail-section__head h2 { margin: 0; }
+.detail-section__summary {
+  font-size: 13px;
+  color: #9ca3af;
+  white-space: nowrap;
+}
+
+/* ── Accordion list ───────────────────────────────── */
+.accordion-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Accordion item ───────────────────────────────── */
+.accordion {
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.accordion--open { border-color: #2ec4b6; }
+
+.accordion__header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: #f9fafb;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+  gap: 12px;
+}
+.accordion--open .accordion__header { background: #e8f9f7; }
+.accordion__header:hover { background: #f3fffe; }
+
+.accordion__left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.accordion__index {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e5e7eb;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.accordion--open .accordion__index {
+  background: #2ec4b6;
+  color: #fff;
+}
+
+.accordion__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.accordion__meta {
+  font-size: 12px;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.accordion__chevron {
+  font-size: 11px;
+  color: #9ca3af;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+.accordion--open .accordion__chevron { color: #2ec4b6; }
+
+/* ── Lesson rows ──────────────────────────────────── */
+.accordion__lessons {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border-top: 1px solid #e5e7eb;
+}
+
+.lesson-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 16px;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background 0.12s;
+}
+.lesson-row:last-child { border-bottom: none; }
+.lesson-row:hover { background: #f9fafb; }
+
+.lesson-row__icon {
+  font-size: 12px;
+  color: #9ca3af;
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+}
+
+.lesson-row__title {
+  flex: 1;
+  font-size: 13.5px;
+  color: #374151;
+}
+
+.lesson-row__right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.lesson-row__preview {
+  font-size: 11px;
+  font-weight: 700;
+  color: #2ec4b6;
+  background: #e8f9f7;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid #a7f3ed;
+}
+
+.lesson-row__dur {
+  font-size: 12px;
+  color: #9ca3af;
+  min-width: 36px;
+  text-align: right;
+}
+
+/* ── Enroll Card ──────────────────────────────────── */
+.detail-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px;
+  border: 1px solid #e5e7eb;
+  position: sticky;
+  top: 24px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+}
+.detail-card__price {
+  font-size: 36px;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 20px;
+}
+.detail-card__price--free {
+  color: #2ec4b6;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.detail-enroll-btn {
+  width: 100%;
+  padding: 14px;
+  background: #2ec4b6;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 14px rgba(46,196,182,0.35);
+}
+.detail-enroll-btn:hover { background: #1da89c; transform: translateY(-1px); box-shadow: 0 6px 18px rgba(46,196,182,0.45); }
+.detail-enroll-btn:active { transform: translateY(0); }
+
+.detail-card__info {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.detail-card__info li {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f3f4f6;
+  color: #6b7280;
+}
+.detail-card__info li:last-child { border-bottom: none; padding-bottom: 0; }
+.detail-card__info strong { color: #111827; font-weight: 600; }
+
+/* ── EnrollButton states ──────────────────────────── */
+.enroll-success {
+  text-align: center;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 12px;
+  padding: 20px 16px;
+  margin-bottom: 24px;
+}
+.enroll-success__icon { font-size: 36px; margin-bottom: 8px; }
+.enroll-success__title { font-size: 17px; font-weight: 700; color: #16a34a; margin: 0 0 6px; }
+.enroll-success__sub { font-size: 13px; color: #4b5563; margin: 0 0 14px; }
+.enroll-success__link {
+  display: inline-block;
+  padding: 10px 22px;
+  background: #16a34a;
+  color: #fff;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 14px;
+  transition: background 0.15s;
+}
+.enroll-success__link:hover { background: #15803d; }
+
+.enroll-qr {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.enroll-qr__title { font-size: 17px; font-weight: 700; color: #111827; margin: 0 0 6px; }
+.enroll-qr__meta { font-size: 13px; color: #6b7280; margin: 0 0 12px; }
+.enroll-qr__img {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  border: 3px solid #0ea5e9;
+  border-radius: 10px;
+  display: block;
+  margin: 0 auto 10px;
+}
+.enroll-qr__placeholder {
+  width: 200px; height: 200px;
+  border: 3px solid #e5e7eb;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: #9ca3af; font-size: 13px;
+  margin: 0 auto 10px;
+}
+.enroll-qr__hint { font-size: 12px; color: #9ca3af; margin: 0 0 14px; }
+.enroll-qr__actions { display: flex; flex-direction: column; gap: 8px; }
+.enroll-qr__confirm { margin-bottom: 0 !important; }
+.enroll-qr__cancel {
+  width: 100%; padding: 11px;
+  background: #f1f5f9; border: none; border-radius: 10px;
+  font-size: 14px; font-weight: 600; color: #6b7280; cursor: pointer;
+  transition: background 0.15s;
+}
+.enroll-qr__cancel:hover { background: #e2e8f0; }
+
+.enroll-error {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #dc2626;
+  margin-bottom: 4px;
+}
+
+/* ── Responsive ───────────────────────────────────── */
+@media (max-width: 768px) {
+  .detail-body {
+    grid-template-columns: 1fr;
+  }
+  .detail-hero { height: 280px; }
+  .detail-title { font-size: 22px; }
+  .detail-hero__content { padding: 20px; }
+  .detail-card { position: static; }
+}

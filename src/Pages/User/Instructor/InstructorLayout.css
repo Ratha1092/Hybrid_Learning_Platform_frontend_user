@@ -1,0 +1,143 @@
+/* ── Wrapper ─────────────────────────────────────────────────────────────────── */
+.il-wrap {
+  display: flex;
+  min-height: calc(100vh - 70px);
+  font-family: "Nunito", system-ui, sans-serif;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────────────── */
+.il-sidebar {
+  width: 200px;
+  flex-shrink: 0;
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  padding: 0 0 16px;
+  position: sticky;
+  top: 70px;
+  height: calc(100vh - 70px);
+  overflow-y: auto;
+}
+
+/* Section label */
+.il-section-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #9ca3af;
+  text-transform: uppercase;
+  padding: 16px 16px 6px;
+}
+
+/* Nav container */
+.il-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 8px;
+}
+
+/* Menu link */
+.il-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #6b7280;
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  cursor: pointer;
+}
+.il-link:hover { background: #f0fdfb; color: #1da89c; }
+.il-link--active {
+  background: #ccfaf5;
+  color: #0f766e;
+  font-weight: 700;
+}
+.il-link__icon { font-size: 15px; width: 18px; text-align: center; }
+
+/* Course setup step buttons */
+.il-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  font-family: "Nunito", system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background 0.15s, color 0.15s;
+}
+.il-step:hover { background: #f0fdfb; color: #1da89c; }
+.il-step--active { color: #0f766e; font-weight: 700; background: #f0fdfb; }
+
+.il-step__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #d1d5db;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.il-step__dot--active { background: #2ec4b6; }
+
+/* Footer */
+.il-footer {
+  margin-top: auto;
+  padding: 12px 12px 0;
+  border-top: 1px solid #f3f4f6;
+}
+.il-footer__user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 4px 0;
+}
+.il-footer__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #2ec4b6;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.il-footer__name { font-size: 12px; font-weight: 700; color: #111827; margin: 0; }
+.il-footer__role { font-size: 10px; color: #9ca3af; margin: 1px 0 0; }
+.il-footer__logout {
+  width: 100%;
+  padding: 7px;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 7px;
+  color: #ef4444;
+  font-family: "Nunito", system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.il-footer__logout:hover { background: #fee2e2; }
+
+/* ── Content area ────────────────────────────────────────────────────────────── */
+.il-content {
+  flex: 1;
+  background: #f8fafc;
+  min-height: calc(100vh - 70px);
+  overflow-y: auto;
+}

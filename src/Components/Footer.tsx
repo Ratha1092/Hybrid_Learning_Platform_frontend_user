@@ -1,0 +1,83 @@
+import { Award, Mail, Phone, MapPin, Share2, Send, CirclePlay } from "lucide-react";
+
+function Footer() {
+  return (
+    <footer className="footer">
+      <div className="container">
+        <div className="footer-grid">
+
+          {/* Brand column */}
+          <div className="footer-brand">
+            <div className="logo footer-logo">
+              <div className="logo-icon">
+                <Award size={20} />
+              </div>
+              <span className="logo-text">DRC</span>
+            </div>
+            <p className="footer-desc">
+              DRC is an interactive learning platform designed to help you grow
+              your skills with expert-led courses and hands-on practice.
+            </p>
+            <div className="social-links">
+              <a href="#" className="social-btn" aria-label="GitHub">
+                <Share2 size={15} />
+              </a>
+              <a href="#" className="social-btn" aria-label="LinkedIn">
+                <Send size={15} />
+              </a>
+              <a href="#" className="social-btn" aria-label="YouTube">
+                <CirclePlay size={15} />
+              </a>
+            </div>
+          </div>
+
+          {/* Get Help */}
+          <div className="footer-col">
+            <h4 className="footer-heading">Get Help</h4>
+            <ul className="footer-links">
+              {["Contact Us", "Latest Articles", "FAQ"].map((link) => (
+                <li key={link}><a href="#">{link}</a></li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Programs */}
+          <div className="footer-col">
+            <h4 className="footer-heading">Programs</h4>
+            <ul className="footer-links">
+              {["Art & Design", "Business", "IT & Software", "Languages", "Programming"].map((link) => (
+                <li key={link}><a href="#">{link}</a></li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact */}
+          <div className="footer-col">
+            <h4 className="footer-heading">Contact Us</h4>
+            <ul className="footer-links contact-list">
+              <li className="footer-contact-row">
+                <MapPin size={14} className="footer-contact-icon" />
+                8 Charter Street, Bldg 1295, Natalie 2219 Tower
+              </li>
+              <li className="footer-contact-row">
+                <Phone size={14} className="footer-contact-icon" />
+                +923 11 1234567
+              </li>
+              <li className="footer-contact-row">
+                <Mail size={14} className="footer-contact-icon" />
+                admin@yoursite.com
+              </li>
+            </ul>
+          </div>
+
+        </div>
+
+        <div className="footer-bottom">
+          <p>Copyright 2024 DRC &nbsp;·&nbsp; Powered by DRC</p>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+export default Footer;

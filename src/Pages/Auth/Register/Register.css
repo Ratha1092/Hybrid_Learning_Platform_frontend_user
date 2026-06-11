@@ -1,0 +1,350 @@
+/* ── Register Page — matches Login dark/teal theme ── */
+.rg-page {
+  min-height: calc(100vh - 70px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+  font-family: "Nunito", "Inter", system-ui, sans-serif;
+  background: #f1f5f9;
+}
+
+.rg-card {
+  display: flex;
+  width: 100%;
+  max-width: 860px;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(15,23,42,0.18);
+}
+
+/* ── Left Panel ─────────────────────────────────── */
+.rg-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 32px 36px;
+  background: linear-gradient(145deg, #0f172a 0%, #1e293b 60%, #0f2744 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.rg-left-bg { position: absolute; inset: 0; pointer-events: none; }
+
+.rg-circle {
+  position: absolute;
+  border-radius: 50%;
+}
+.rg-circle--1 {
+  width: 480px; height: 480px;
+  top: -140px; left: -140px;
+  background: radial-gradient(circle, rgba(46,196,182,0.11) 0%, transparent 70%);
+}
+.rg-circle--2 {
+  width: 360px; height: 360px;
+  bottom: -80px; right: -80px;
+  background: radial-gradient(circle, rgba(14,165,233,0.09) 0%, transparent 70%);
+}
+.rg-dots {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(46,196,182,0.09) 1.5px, transparent 1.5px);
+  background-size: 28px 28px;
+}
+
+/* brand top */
+.rg-brand {
+  display: flex; align-items: center; gap: 12px;
+  position: relative; z-index: 1;
+}
+.rg-brand__logo {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, #2ec4b6, #0ea5e9);
+  border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; font-weight: 900; color: #fff;
+  box-shadow: 0 4px 14px rgba(46,196,182,0.35);
+}
+.rg-brand__name { font-size: 15px; font-weight: 800; color: #f1f5f9; line-height: 1.1; }
+.rg-brand__sub  { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+
+/* left bottom content */
+.rg-left-content {
+  position: relative; z-index: 1;
+}
+.rg-left-footer {
+  font-size: 11px; color: #475569;
+  position: relative; z-index: 1;
+}
+.rg-tag {
+  display: inline-block;
+  background: rgba(46,196,182,0.1);
+  border: 1px solid rgba(46,196,182,0.2);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 11px; color: #2ec4b6;
+  margin-bottom: 16px;
+}
+.rg-left-heading {
+  font-size: 28px; font-weight: 900;
+  color: #f1f5f9; line-height: 1.25;
+  font-family: "Courier New", monospace;
+  margin-bottom: 10px;
+}
+.rg-left-desc {
+  font-size: 13px; color: #64748b;
+  line-height: 1.6; margin-bottom: 24px;
+}
+.rg-stats { display: flex; gap: 16px; }
+.rg-stat-num {
+  font-size: 18px; font-weight: 800; color: #2ec4b6;
+}
+.rg-stat-lbl { font-size: 10px; color: #64748b; margin-top: 2px; text-transform: uppercase; }
+
+/* ── Right Panel ─────────────────────────────────── */
+.rg-right {
+  width: 420px;
+  flex-shrink: 0;
+  background: #fff;
+  padding: 32px 36px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow-y: auto;
+}
+
+.rg-logo {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 20px;
+}
+.rg-logo-box {
+  width: 36px; height: 36px;
+  background: linear-gradient(135deg, #2ec4b6, #0ea5e9);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  box-shadow: 0 3px 10px rgba(46,196,182,0.3);
+}
+.rg-logo-name { font-size: 15px; font-weight: 800; color: #0f172a; }
+
+.rg-title    { font-size: 22px; font-weight: 900; color: #0f172a; margin-bottom: 3px; }
+.rg-subtitle { font-size: 13px; color: #64748b; margin-bottom: 20px; }
+
+/* alerts */
+.rg-alert {
+  padding: 10px 14px; border-radius: 10px;
+  font-size: 13px; font-weight: 600; margin-bottom: 14px;
+}
+.rg-alert--success { background: #f0fdf4; color: #16a34a; border: 1px solid #86efac; }
+.rg-alert--error   { background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; }
+
+/* fields */
+.rg-field { margin-bottom: 12px; }
+.rg-label { display: block; font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 5px; }
+
+.rg-input-row {
+  display: flex; align-items: center;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px; overflow: hidden;
+  background: #f8fafc;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.rg-input-row:focus-within {
+  border-color: #2ec4b6; background: #fff;
+  box-shadow: 0 0 0 3px rgba(46,196,182,0.12);
+}
+.rg-input-row--err { border-color: #ef4444; }
+
+.rg-input-icon { padding: 0 10px; font-size: 14px; color: #94a3b8; flex-shrink: 0; display: flex; align-items: center; }
+.rg-input {
+  flex: 1; border: none; background: transparent;
+  padding: 10px 8px 10px 0;
+  font-size: 13px; font-family: "Nunito","Inter",system-ui,sans-serif;
+  color: #0f172a; outline: none;
+}
+.rg-input::placeholder { color: #94a3b8; }
+.rg-eye {
+  padding: 0 10px; background: none; border: none;
+  cursor: pointer; color: #94a3b8;
+  display: flex; align-items: center; transition: color 0.15s;
+}
+.rg-eye:hover { color: #475569; }
+.rg-err-msg { font-size: 12px; color: #ef4444; margin-top: 4px; font-weight: 600; }
+
+/* strength */
+.rg-strength { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.rg-strength-bars { display: flex; gap: 3px; flex: 1; }
+.rg-strength-bar { height: 3px; flex: 1; border-radius: 2px; background: #e5e7eb; transition: background 0.2s; }
+.rg-strength-lbl { font-size: 11px; font-weight: 700; min-width: 44px; }
+.rg-hint { font-size: 11px; color: #94a3b8; margin-top: 5px; line-height: 1.5; }
+
+/* terms */
+.rg-terms {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 12px; color: #64748b; line-height: 1.5;
+  margin: 12px 0;
+}
+.rg-terms input { margin-top: 2px; accent-color: #2ec4b6; flex-shrink: 0; }
+.rg-terms a { color: #0f766e; text-decoration: none; font-weight: 700; }
+
+/* submit */
+.rg-btn {
+  width: 100%; padding: 12px;
+  background: linear-gradient(135deg, #2ec4b6, #0ea5e9);
+  color: #fff; border: none; border-radius: 10px;
+  font-family: "Nunito","Inter",system-ui,sans-serif;
+  font-size: 14px; font-weight: 800; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 44px;
+  box-shadow: 0 4px 14px rgba(46,196,182,0.3);
+  transition: opacity 0.15s, transform 0.1s;
+  letter-spacing: 0.4px;
+}
+.rg-btn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+.rg-btn:active:not(:disabled) { transform: translateY(0); }
+.rg-btn:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
+
+/* spinner */
+.rg-spinner {
+  width: 18px; height: 18px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff; border-radius: 50%;
+  animation: rg-spin 0.7s linear infinite;
+}
+@keyframes rg-spin { to { transform: rotate(360deg); } }
+
+/* divider */
+.rg-divider {
+  display: flex; align-items: center; gap: 10px;
+  margin: 12px 0; font-size: 12px; color: #9ca3af;
+}
+.rg-divider::before, .rg-divider::after {
+  content: ''; flex: 1; height: 1px; background: #f1f5f9;
+}
+
+/* social */
+.rg-social { display: flex; gap: 8px; }
+.rg-social-btn {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 9px; border: 1.5px solid #e2e8f0; border-radius: 10px;
+  background: transparent; cursor: pointer;
+  font-size: 12px; font-weight: 600; color: #374151;
+  transition: background 0.15s, border-color 0.15s;
+}
+.rg-social-btn:hover { background: #f8fafc; border-color: #cbd5e1; }
+
+/* footer */
+.rg-footer {
+  text-align: center; font-size: 13px;
+  color: #64748b; margin-top: 14px;
+}
+.rg-footer a { color: #0f766e; text-decoration: none; font-weight: 700; }
+.rg-footer a:hover { text-decoration: underline; }
+
+/* ── Step indicator ─────────────────────────────── */
+.rg-steps {
+  display: flex; align-items: center; gap: 0;
+  margin-bottom: 20px;
+}
+.rg-step {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; color: #94a3b8;
+}
+.rg-step--active { color: #0f172a; }
+.rg-step--done   { color: #2ec4b6; }
+.rg-step__dot {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800;
+  background: #e2e8f0; color: #94a3b8;
+  flex-shrink: 0;
+}
+.rg-step--active .rg-step__dot {
+  background: linear-gradient(135deg, #2ec4b6, #0ea5e9);
+  color: #fff;
+}
+.rg-step--done .rg-step__dot {
+  background: #2ec4b6; color: #fff;
+}
+.rg-step__line {
+  flex: 1; height: 1.5px; background: #e2e8f0; margin: 0 8px;
+}
+
+/* ── OTP boxes ───────────────────────────────────── */
+.rg-otp-boxes {
+  display: flex; gap: 8px; justify-content: center;
+  margin: 20px 0 8px;
+}
+.rg-otp-box {
+  width: 44px; height: 52px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  text-align: center;
+  font-size: 22px; font-weight: 800; color: #0f172a;
+  font-family: "Courier New", monospace;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  caret-color: transparent;
+}
+.rg-otp-box:focus {
+  border-color: #2ec4b6; background: #fff;
+  box-shadow: 0 0 0 3px rgba(46,196,182,0.15);
+}
+.rg-otp-box--filled {
+  border-color: #2ec4b6; background: #f0fdfa;
+}
+.rg-otp-box--err {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.1);
+}
+.rg-otp-box:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── OTP timer ───────────────────────────────────── */
+.rg-otp-timer {
+  text-align: center; font-size: 12px; color: #64748b;
+  margin-bottom: 14px;
+}
+.rg-otp-timer--expired { color: #ef4444; font-weight: 700; }
+
+/* ── OTP resend ──────────────────────────────────── */
+.rg-otp-resend {
+  text-align: center; margin-top: 12px; font-size: 13px;
+}
+.rg-otp-resend__btn {
+  background: none; border: none; cursor: pointer;
+  color: #0f766e; font-size: 13px; font-weight: 700;
+  text-decoration: underline; padding: 0;
+  font-family: inherit;
+}
+.rg-otp-resend__btn:hover { color: #2ec4b6; }
+.rg-otp-resend__btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.rg-otp-resend--ok { color: #16a34a; font-weight: 700; }
+
+/* ── Back button ─────────────────────────────────── */
+.rg-back-btn {
+  background: none; border: none; cursor: pointer;
+  color: #94a3b8; font-size: 12px; font-weight: 600;
+  margin-top: 10px; display: block; width: 100%; text-align: center;
+  padding: 6px 0; font-family: inherit;
+  transition: color 0.15s;
+}
+.rg-back-btn:hover { color: #64748b; }
+
+/* ── Left panel OTP info ─────────────────────────── */
+.rg-otp-info { margin-top: 4px; }
+.rg-otp-info__row {
+  font-size: 13px; color: #64748b;
+  padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.06);
+  line-height: 1.5;
+}
+.rg-otp-info__row:last-child { border-bottom: none; }
+
+/* ── Responsive ─────────────────────────────────── */
+@media (max-width: 700px) {
+  .rg-left { display: none; }
+  .rg-right { width: 100%; padding: 32px 24px; }
+  .rg-card { border-radius: 16px; }
+}

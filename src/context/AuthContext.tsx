@@ -1,100 +1,112 @@
-import { createContext, useContext, useState, type ReactNode, useCallback } from 'react';
-import { authApi, apiService, type LoginPayload, type RegisterPayload, type LoginResponse } from '../services/api';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  type ReactNode,
+} from "react";
+import api from "../api/axios";
 
-interface User {
+export interface AuthUser {
   id: number;
   name: string;
   email: string;
-  role: string;
+  role?: string;
+  instructor_status?: string | null;
+  avatar?: string | null;
+  avatar_url?: string | null;
+  created_at?: string;
 }
 
-interface AuthContextType {
-  user: User | null;
-  isLoggedIn: boolean;
-  isLoading: boolean;
-  error: string | null;
-  login: (payload: LoginPayload) => Promise<void>;
-  register: (payload: RegisterPayload) => Promise<void>;
-  logout: () => Promise<void>;
-  clearError: () => void;
+interface AuthContextValue {
+  user: AuthUser | null;
+  token: string | null;
+  login: (user: AuthUser, token: string) => void;
+  logout: () => void;
+  updateUser: (fields: Partial<AuthUser>) => void;
+  refreshUser: () => Promise<void>;
+  isAuthenticated: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    const stored = localStorage.getItem("user");
+    return stored ? (JSON.parse(stored) as AuthUser) : null;
+  });
+  const [token, setToken] = useState<string | null>(
+    () => localStorage.getItem("token")
+  );
 
-  const clearError = useCallback(() => setError(null), []);
-
-  const login = useCallback(async (payload: LoginPayload) => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response: LoginResponse = await authApi.login(payload);
-      apiService.setToken(response.token);
-      setUser(response.user);
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Login failed';
-      setError(errorMsg);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const register = useCallback(async (payload: RegisterPayload) => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response: LoginResponse = await authApi.register(payload);
-      apiService.setToken(response.token);
-      setUser(response.user);
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Registration failed';
-      setError(errorMsg);
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const logout = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      await authApi.logout();
-    } catch (err) {
-      console.error('Logout error:', err);
-    } finally {
-      apiService.clearToken();
-      setUser(null);
-      setIsLoading(false);
-    }
-  }, []);
-
-  const value: AuthContextType = {
-    user,
-    isLoggedIn: !!user,
-    isLoading,
-    error,
-    login,
-    register,
-    logout,
-    clearError,
+  const login = (newUser: AuthUser, newToken: string) => {
+    localStorage.setItem("token", newToken);
+    localStorage.setItem("user", JSON.stringify(newUser));
+    setToken(newToken);
+    setUser(newUser);
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setToken(null);
+    setUser(null);
+  };
+
+  const updateUser = (fields: Partial<AuthUser>) => {
+    setUser(prev => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...fields };
+      localStorage.setItem("user", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const refreshUser = useCallback(async () => {
+    if (!localStorage.getItem("token")) return;
+    try {
+      const { data } = await api.get<{ data: AuthUser }>("/users/me");
+      const fresh = data.data;
+      setUser(prev => {
+        if (!prev) return prev;
+        const updated = { ...prev, role: fresh.role, instructor_status: fresh.instructor_status };
+        localStorage.setItem("user", JSON.stringify(updated));
+        return updated;
+      });
+    } catch {
+      // silent — stale cache is still usable
+    }
+  }, []);
+
+  // Sync role/instructor_status on mount so cached user is never stale
+  useEffect(() => {
+    if (token) refreshUser();
+  }, [token, refreshUser]);
+
+  // Keep state in sync when another tab logs in/out
+  useEffect(() => {
+    const sync = () => {
+      const t = localStorage.getItem("token");
+      const u = localStorage.getItem("user");
+      setToken(t);
+      setUser(u ? (JSON.parse(u) as AuthUser) : null);
+    };
+    window.addEventListener("storage", sync);
+    return () => window.removeEventListener("storage", sync);
+  }, []);
+
+  return (
+    <AuthContext.Provider
+      value={{ user, token, login, logout, updateUser, refreshUser, isAuthenticated: !!token }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+export function useAuth(): AuthContextValue {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used inside <AuthProvider>");
+  return ctx;
 }
