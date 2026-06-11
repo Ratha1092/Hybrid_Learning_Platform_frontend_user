@@ -1,0 +1,85 @@
+.oauth-wrap {
+  margin-top: 20px;
+}
+
+.oauth-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.oauth-divider__line {
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+.oauth-divider__text {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+
+.oauth-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.oauth-btn {
+  width: 100%;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 11px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: "Nunito", "Inter", system-ui, sans-serif;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+  border: 1.5px solid transparent;
+}
+.oauth-btn:hover:not(:disabled) { transform: translateY(-1px); }
+.oauth-btn:active:not(:disabled) { transform: translateY(0); }
+
+.oauth-btn--github {
+  background: #0f172a;
+  color: #f1f5f9;
+  border-color: #1e293b;
+}
+.oauth-btn--github:hover {
+  background: #1e293b;
+  box-shadow: 0 4px 14px rgba(15,23,42,0.25);
+}
+
+.oauth-btn__icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* Google button rendered by GSI SDK */
+.oauth-btn--google-wrap {
+  width: 100%;
+  min-height: 46px;
+  border-radius: 11px;
+  overflow: hidden;
+}
+.oauth-btn--google-wrap > div,
+.oauth-btn--google-wrap iframe {
+  width: 100% !important;
+  border-radius: 11px;
+}
+
+.oauth-btn--google-loading {
+  background: #fff;
+  color: #475569;
+  border-color: #e2e8f0;
+  font-size: 13px;
+  gap: 8px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }

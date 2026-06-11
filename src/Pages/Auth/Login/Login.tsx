@@ -3,6 +3,7 @@ import { usePlatformStats } from "../../../hooks/usePlatformStats";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { authService } from "../../../services/authService";
+import OAuthButtons from "../../../Components/OAuthButtons/OAuthButtons";
 import "./Login.css";
 
 interface LoginForm {
@@ -225,6 +226,10 @@ export default function Login() {
           <button className="login-submit" onClick={handleSubmit} disabled={status === "loading"}>
             {status === "loading" ? <><IconSpinner />Signing in...</> : ">_ SIGN IN →"}
           </button>
+
+          <OAuthButtons
+            onError={(msg) => { setStatus("error"); setServerMessage(msg); }}
+          />
 
           <p className="login-footer">
             Don't have an account? <Link to="/PageRegister">Register</Link>

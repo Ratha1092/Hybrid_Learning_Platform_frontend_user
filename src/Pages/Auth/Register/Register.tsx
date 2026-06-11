@@ -3,6 +3,7 @@ import { usePlatformStats } from "../../../hooks/usePlatformStats";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { authService } from "../../../services/authService";
+import OAuthButtons from "../../../Components/OAuthButtons/OAuthButtons";
 import "./Register.css";
 
 interface FormState {
@@ -79,6 +80,7 @@ export default function Register() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [sendStatus, setSendStatus] = useState<Status>("idle");
+  const [sendError, setSendError] = useState("");
 
   // OTP step state
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
@@ -318,7 +320,9 @@ export default function Register() {
               <p className="rg-subtitle">Fill in your details — we'll send a code to verify your email</p>
 
               {sendStatus === "error" && (
-                <div className="rg-alert rg-alert--error">⚠ Failed to send verification code. Please try again.</div>
+                <div className="rg-alert rg-alert--error">
+                  ⚠ {sendError || "Failed to send verification code. Please try again."}
+                </div>
               )}
 
               <div className="rg-field">
@@ -384,6 +388,10 @@ export default function Register() {
               <button className="rg-btn" onClick={handleSendOtp} disabled={sendStatus === "loading" || !agreed}>
                 {sendStatus === "loading" ? <span className="rg-spinner" /> : "Send verification code →"}
               </button>
+
+              <OAuthButtons
+                onError={(msg) => { setSendStatus("error"); setSendError(msg); }}
+              />
 
               <p className="rg-footer">Already have an account? <Link to="/PageLogin">Sign in</Link></p>
             </>
