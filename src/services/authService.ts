@@ -11,6 +11,7 @@ export interface RegisterPayload {
   email: string;
   password: string;
   password_confirmation: string;
+  otp_code?: string;
 }
 
 export interface AuthResponse {
@@ -29,4 +30,10 @@ export const authService = {
     api.post<AuthResponse>("/auth/register", payload),
 
   logout: () => api.post("/auth/logout"),
+
+  sendOtp: (email: string) =>
+    api.post<{ success: boolean; message: string }>("/auth/otp/send", { email }),
+
+  verifyOtp: (email: string, code: string) =>
+    api.post<{ success: boolean; message: string; data: { verified: boolean } }>("/auth/otp/verify", { email, code }),
 };

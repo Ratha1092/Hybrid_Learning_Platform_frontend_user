@@ -39,7 +39,7 @@ function Categories() {
   const navigate = useNavigate()   // ← add this
 
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/v1/categories', {
+    fetch(`${import.meta.env.VITE_API_URL}/api/v1/categories`, {
       headers: { Accept: 'application/json' },
     })
       .then((res) => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json() })

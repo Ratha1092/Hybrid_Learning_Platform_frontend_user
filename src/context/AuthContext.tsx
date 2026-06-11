@@ -3,8 +3,10 @@ import {
   useContext,
   useState,
   useEffect,
+  useCallback,
   type ReactNode,
 } from "react";
+import api from "../api/axios";
 
 export interface AuthUser {
   id: number;
@@ -23,6 +25,7 @@ interface AuthContextValue {
   login: (user: AuthUser, token: string) => void;
   logout: () => void;
   updateUser: (fields: Partial<AuthUser>) => void;
+  refreshUser: () => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -60,6 +63,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const refreshUser = useCallback(async () => {
+    if (!localStorage.getItem("token")) return;
+    try {
+      const { data } = await api.get<{ data: AuthUser }>("/users/me");
+      const fresh = data.data;
+      setUser(prev => {
+        if (!prev) return prev;
+        const updated = { ...prev, role: fresh.role, instructor_status: fresh.instructor_status };
+        localStorage.setItem("user", JSON.stringify(updated));
+        return updated;
+      });
+    } catch {
+      // silent — stale cache is still usable
+    }
+  }, []);
+
+  // Sync role/instructor_status on mount so cached user is never stale
+  useEffect(() => {
+    if (token) refreshUser();
+  }, [token, refreshUser]);
+
   // Keep state in sync when another tab logs in/out
   useEffect(() => {
     const sync = () => {
@@ -74,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, token, login, logout, updateUser, isAuthenticated: !!token }}
+      value={{ user, token, login, logout, updateUser, refreshUser, isAuthenticated: !!token }}
     >
       {children}
     </AuthContext.Provider>

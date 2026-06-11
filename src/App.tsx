@@ -1,3 +1,4 @@
+import './App.css'
 
 import { Routes, Route } from "react-router-dom";
 
@@ -67,7 +68,6 @@ function App() {
         </Route>
         <Route path="/library" element={<Library />} />
         <Route path="/learn/:slug" element={<Learn />} />
-
       </Routes>
     </>
   );
