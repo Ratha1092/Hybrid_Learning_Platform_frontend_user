@@ -27,6 +27,7 @@ import Revenue from "./Pages/User/Instructor/Sivbar/Revenue";
 import Students from "./Pages/User/Instructor/Sivbar/Students";
 import Library from "./Pages/Library/Library";
 import Learn from "./Pages/Learn/Learn";
+import GitHubCallback from "./Pages/Auth/GitHub/GitHubCallback";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -63,6 +64,7 @@ function App() {
         <Route path="/categories" element={<PageCategories />} />
         <Route path="/PageRegister" element={<PageRegister />} />
         <Route path="/PageLogin" element={<Pagelogin />} />
+        <Route path="/auth/github/callback" element={<GitHubCallback />} />
 
         {/* Auth-required routes */}
         <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />

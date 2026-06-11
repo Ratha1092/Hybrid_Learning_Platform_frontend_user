@@ -50,7 +50,7 @@ function Courses() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState("All");
-  const [refreshing, setRefreshing] = useState(false);
+  const [, setRefreshing] = useState(false);
 
   const [searchParams] = useSearchParams();
   const category = searchParams.get("category");
