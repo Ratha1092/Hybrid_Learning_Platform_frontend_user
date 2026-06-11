@@ -19,16 +19,19 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      const url: string = error.config?.url ?? "";
-      // Only force-logout on core auth endpoints, not feature APIs that may lack permissions
-      const isCoreAuth = url.includes("/auth/") || url.includes("/instructor/") || url.includes("/user/");
-      if (isCoreAuth) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        window.location.href = "/PageLogin";
-      }
+    const status: number = error.response?.status ?? 0;
+    const url: string = error.config?.url ?? "";
+
+    const shouldLogout =
+      status === 401 ||
+      (status === 400 && url.includes("/users/me"));
+
+    if (shouldLogout) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      window.location.href = "/PageLogin";
     }
+
     return Promise.reject(error);
   }
 );

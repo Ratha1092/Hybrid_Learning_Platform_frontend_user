@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { instructorService, type DashboardStats } from "../../../services/instructorService";
-import "./InstructorDashboard.css";
+import { instructorService, type DashboardStats } from "../../../../services/instructorService";
+import "../css/InstructorDashboard.css";
 
 export default function InstructorDashboard() {
   const [data, setData] = useState<DashboardStats | null>(null);

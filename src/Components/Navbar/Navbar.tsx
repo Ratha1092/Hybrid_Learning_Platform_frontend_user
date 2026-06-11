@@ -34,7 +34,7 @@ function Navbar() {
 
           {/* ── Right Side ── */}
           <div className="navbar-right">
-            <button className="icon-btn"><Search size={18} /></button>
+            
             <Notification />
 
             {/* ── Auth ── */}

@@ -36,8 +36,10 @@ export default function EnrollButton({ course }: Props) {
     }
   };
 
-  const startPolling = (paymentId: number) => {
+  const startPolling = (paymentId: number, hasQr = false) => {
     stopPolling();
+    // Poll fast (1s) until QR image arrives, then slow down to 4s
+    const interval = hasQr ? 2000 : 1000;
     pollRef.current = setInterval(async () => {
       try {
         const { data } = await paymentService.getStatus(paymentId);
@@ -51,11 +53,14 @@ export default function EnrollButton({ course }: Props) {
           stopPolling();
           setErrorMsg("Payment expired or failed.");
           setStep("error");
+        } else if (!hasQr && pay.qr_code_image) {
+          // QR just arrived — restart with slower interval
+          startPolling(paymentId, true);
         }
       } catch {
         // keep polling
       }
-    }, 4000);
+    }, interval);
   };
 
   const handleCancel = async (paymentId: number) => {
@@ -121,7 +126,7 @@ export default function EnrollButton({ course }: Props) {
 
       setPayment(pay);
       setStep("qr");
-      startPolling(pay.id);
+      startPolling(pay.id, !!pay.qr_code_image);
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } }; message?: string };
       setErrorMsg(e.response?.data?.message ?? e.message ?? "Network error.");

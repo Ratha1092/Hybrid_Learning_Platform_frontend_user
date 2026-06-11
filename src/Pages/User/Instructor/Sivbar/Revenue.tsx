@@ -4,8 +4,8 @@ import {
   type WalletData,
   type EarningsData,
   type Transaction,
-} from "../../../services/instructorService";
-import "./Revenue.css";
+} from "../../../../services/instructorService";
+import "../css/Revenue.css";
 
 const PAYMENT_METHODS = [
   { value: "bank",   label: "🏦 Bank Transfer" },
