@@ -8,7 +8,8 @@ import Hero from "./Components/Hero";
 import Categories from "./Pages/Category/Categories";
 import Footer from "./Components/Footer";
 
-import Courses from "./Pages/Courses/Courses";
+import PageCourses from "./Pages/Courses/Page_Courses";
+import FeaturedCourses from "./Components/FeaturedCourses";
 import DetailCourse from "./Pages/Courses/DetailCourse";
 
 import PageCategories from "./Pages/Category/Pagecategoires";
@@ -46,7 +47,7 @@ function MainPage() {
     <>
       <Hero />
       <Categories />
-      <Courses />
+      <FeaturedCourses />
       <Footer />
     </>
   );
@@ -58,7 +59,7 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<MainPage />} />
-        <Route path="/courses" element={<Courses />} />
+        <Route path="/courses" element={<PageCourses />} />
         <Route path="/courses/:slug" element={<DetailCourse />} />
         <Route path="/categories" element={<PageCategories />} />
         <Route path="/PageRegister" element={<PageRegister />} />
