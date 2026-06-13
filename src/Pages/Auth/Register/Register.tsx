@@ -88,11 +88,24 @@ export default function Register() {
   const [otpError, setOtpError] = useState("");
   const [timeLeft, setTimeLeft] = useState(OTP_TTL);
   const [resendStatus, setResendStatus] = useState<"idle" | "sending" | "sent">("idle");
+  const [resendCooldown, setResendCooldown] = useState(0);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
   const submittingRef = useRef(false);
 
   const strength = getStrength(form.password);
   const strengthColor = ["", "#ef4444", "#f59e0b", "#60a5fa", "#22c55e"][strength.level];
+
+  // Resend cooldown ticker
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const id = setInterval(() => {
+      setResendCooldown((c) => {
+        if (c <= 1) { clearInterval(id); return 0; }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [resendCooldown > 0]);
 
   // Countdown timer
   useEffect(() => {
@@ -243,7 +256,8 @@ export default function Register() {
       setOtp(Array(OTP_LENGTH).fill(""));
       setOtpError("");
       setTimeLeft(OTP_TTL);
-      setTimeout(() => { setResendStatus("idle"); }, 3000);
+      setResendCooldown(180);
+      setTimeout(() => { setResendStatus("idle"); }, 2000);
       otpRefs.current[0]?.focus();
     } catch {
       setResendStatus("idle");
@@ -451,6 +465,10 @@ export default function Register() {
               <div className="rg-otp-resend">
                 {resendStatus === "sent" ? (
                   <span className="rg-otp-resend--ok">✓ New code sent!</span>
+                ) : resendCooldown > 0 ? (
+                  <span className="rg-otp-resend__cd">
+                    Resend available in <strong>{formatTime(resendCooldown)}</strong>
+                  </span>
                 ) : (
                   <button
                     className="rg-otp-resend__btn"
