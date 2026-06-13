@@ -1,3 +1,5 @@
+import "./Footer.css";
+import logo from "../assets/logo1.png";
 import { Award, Mail, Phone, MapPin, Share2, Send, CirclePlay } from "lucide-react";
 
 function Footer() {
@@ -7,12 +9,10 @@ function Footer() {
         <div className="footer-grid">
 
           {/* Brand column */}
-          <div className="footer-brand">
-            <div className="logo footer-logo">
-              <div className="logo-icon">
-                <Award size={20} />
-              </div>
-              <span className="logo-text">DRC</span>
+          <div className="footer-col">
+            <div className="footer-logo-wrap">
+              <img src={logo} alt="Hybrid Learning" className="footer-logo-img" />
+              <span className="footer-logo-name">Hybrid Learning</span>
             </div>
             <p className="footer-desc">
               DRC is an interactive learning platform designed to help you grow
@@ -73,7 +73,7 @@ function Footer() {
         </div>
 
         <div className="footer-bottom">
-          <p>Copyright 2024 DRC &nbsp;·&nbsp; Powered by DRC</p>
+          <p>Copyright 2026 DRC &nbsp;·&nbsp; Powered by DRC</p>
         </div>
       </div>
     </footer>

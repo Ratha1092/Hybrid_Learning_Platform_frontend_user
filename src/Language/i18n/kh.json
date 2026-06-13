@@ -1,0 +1,38 @@
+{
+  "nav": {
+    "home": "ទំព័រដើម",
+    "courses": "វគ្គសិក្សា",
+    "categories": "ប្រភេទ",
+    "library": "បណ្ណាល័យ",
+    "contact": "ទំនាក់ទំនង",
+    "login": "ចូល",
+    "register": "ចុះឈ្មោះ",
+    "dashboard": "ផ្ទាំងគ្រប់គ្រង",
+    "applyInstructor": "ដាក់ពាក្យជាគ្រូ"
+  },
+  "auth": {
+    "loginTitle": "សូមស្វាគមន៍",
+    "registerTitle": "បង្កើតគណនី",
+    "email": "អ៊ីមែល",
+    "password": "ពាក្យសម្ងាត់",
+    "name": "ឈ្មោះពេញ",
+    "submit": "បញ្ជូន",
+    "loginBtn": "ចូល",
+    "registerBtn": "ចុះឈ្មោះ"
+  },
+  "courses": {
+    "title": "វគ្គសិក្សា",
+    "enroll": "ចុះឈ្មោះឥឡូវ",
+    "enrolled": "បានចុះឈ្មោះ"
+  },
+  "library": {
+    "title": "បណ្ណាល័យរបស់ខ្ញុំ"
+  },
+  "profile": {
+    "edit": "កែប្រែប្រវត្តិរូប",
+    "save": "រក្សាទុកការផ្លាស់ប្តូរ"
+  },
+  "footer": {
+    "rights": "រក្សាសិទ្ធិគ្រប់យ៉ាង"
+  }
+}

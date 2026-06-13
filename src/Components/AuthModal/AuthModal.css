@@ -1,0 +1,70 @@
+/* ─── Backdrop ───────────────────────────────────────────────────── */
+.auth-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 20, 40, 0.62);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  overflow-y: auto;
+  animation: backdropIn 0.18s ease both;
+}
+
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ─── Outer wrap ─────────────────────────────────────────────────── */
+.auth-modal-wrap {
+  width: 100%;
+  max-width: 880px;
+  display: flex;
+  flex-direction: column;
+  animation: cardIn 0.24s ease both;
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+/* ─── Close button ───────────────────────────────────────────────── */
+.auth-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.88);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  color: #334155;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  transition: background 0.15s, color 0.15s;
+}
+.auth-close:hover { background: #fee2e2; color: #dc2626; }
+
+/* ─── Strip page-level wrapper layout ───────────────────────────── */
+.auth-modal-wrap .login-page,
+.auth-modal-wrap .rg-page {
+  min-height: unset !important;
+  background: none !important;
+  padding: 0 !important;
+}
+
+/* Restore full border-radius on the card */
+.auth-modal-wrap .login-card,
+.auth-modal-wrap .rg-card {
+  border-radius: 20px !important;
+}

@@ -2,6 +2,8 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 
 import Navbar from "./Components/Navbar/Navbar";
+import AuthModal from "./Components/AuthModal/AuthModal";
+import { AuthModalProvider } from "./context/AuthModalContext";
 import Hero from "./Components/Hero";
 import Categories from "./Pages/Category/Categories";
 import Footer from "./Components/Footer";
@@ -54,7 +56,7 @@ function MainPage() {
 
 function App() {
   return (
-    <>
+    <AuthModalProvider>
       <Navbar />
       <Routes>
         <Route path="/" element={<MainPage />} />
@@ -84,7 +86,7 @@ function App() {
           <Route path="students" element={<Students />} />
         </Route>
       </Routes>
-    </>
+    </AuthModalProvider>
   );
 }
 

@@ -1,0 +1,38 @@
+{
+  "nav": {
+    "home": "Home",
+    "courses": "Courses",
+    "categories": "Categories",
+    "library": "Library",
+    "contact": "Contact",
+    "login": "Login",
+    "register": "Register",
+    "dashboard": "Dashboard",
+    "applyInstructor": "Apply To Instructor"
+  },
+  "auth": {
+    "loginTitle": "Welcome Back",
+    "registerTitle": "Create Account",
+    "email": "Email",
+    "password": "Password",
+    "name": "Full Name",
+    "submit": "Submit",
+    "loginBtn": "Login",
+    "registerBtn": "Register"
+  },
+  "courses": {
+    "title": "Courses",
+    "enroll": "Enroll Now",
+    "enrolled": "Enrolled"
+  },
+  "library": {
+    "title": "My Library"
+  },
+  "profile": {
+    "edit": "Edit Profile",
+    "save": "Save Changes"
+  },
+  "footer": {
+    "rights": "All rights reserved"
+  }
+}
