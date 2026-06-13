@@ -2,6 +2,13 @@ import api from "../api/axios";
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
 // Defines the shape of data returned from backend APIs.
+export interface InstructorProfile {
+  id: number;
+  user_id: number;
+  bio: string;
+  avatar_url: string | null;
+  created_at: string;
+}
 
 export interface WalletData {
   balance: number;

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import api from "../api/axios";
 import heroImage from "../assets/image1.png";
+import "./Hero.css";
 
 interface PlatformStats {
   total_students: number;
@@ -36,12 +37,11 @@ function Hero() {
           </div>
 
           <h1 className="hero-title">
-            <span className="hero-highlight">Studying</span> Online is now
-            <br />much easier
+            <span className="hero-highlight">Studying</span> Online is now much easier
           </h1>
 
           <p className="hero-desc">
-            TOTC is an interesting platform that will teach you in a more
+            Hybrid Learning is a modern platform that will teach you in a more
             interactive and engaging way.
           </p>
 
@@ -94,7 +94,15 @@ function Hero() {
               <div className="fcc-title">User Experience Class</div>
               <div className="fcc-meta">120,674 enrolled</div>
             </div>
-            <button className="fcc-btn">Join Now</button>
+             {token ? (
+                <Link to="/courses" className="fcc-btn">
+                  Join Now
+                </Link>
+              ) : (
+                <Link to="/PageLogin" className="fcc-btn">
+                  Start Now
+                </Link>
+              )}
           </div>
 
           <div className="floating-congrats-card">
