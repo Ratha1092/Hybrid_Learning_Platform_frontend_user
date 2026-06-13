@@ -18,12 +18,22 @@ export const profileService = {
   get: async () => {
     const res = await api.get("/users/me");
     const u = res.data.data;
+    const sp = u.student_profile ?? {};
+    const ip = u.instructor_profile ?? {};
+    // For instructors, student_profile is null — read local fallback for fields not on instructor_profile
+    const localKey = `profile_extra_${u.id}`;
+    const local = JSON.parse(localStorage.getItem(localKey) ?? "{}");
     return {
       data: {
         data: {
-          ...u.student_profile,
-          name: u.name,
-          phone: u.phone,
+          bio:            sp.bio            ?? ip.bio            ?? local.bio            ?? null,
+          learning_goals: sp.learning_goals ?? local.learning_goals ?? null,
+          interests:      sp.interests      ?? local.interests      ?? [],
+          github:         sp.github         ?? ip.github         ?? local.github         ?? null,
+          linkedin:       sp.linkedin       ?? ip.linkedin       ?? local.linkedin       ?? null,
+          avatar:         sp.avatar         ?? ip.avatar         ?? null,
+          name:           u.name,
+          phone:          u.phone           ?? sp.phone          ?? null,
         } as StudentProfile,
       },
     };

@@ -106,8 +106,8 @@ function FeaturedCourses() {
         {/* ── Header ── */}
         <div className="section-header">
           <div>
-            <h2 className="section-title">Featured Courses</h2>
-            <p className="section-sub">Explore our Popular Courses</p>
+            <h2 className="fc-title">Featured Courses</h2>
+            <p className="fc-sub">Explore our Popular Courses</p>
           </div>
           <button className="btn btn-outline" onClick={() => navigate("/courses")}>
             All Courses <ChevronRight size={16} />

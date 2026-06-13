@@ -12,6 +12,7 @@ interface Props {
 export default function EnrollButton({ course }: Props) {
   const [step, setStep] = useState<Step>("idle");
   const [verifying, setVerifying] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [payment, setPayment] = useState<PaymentData | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [isEnrolled, setIsEnrolled] = useState(false);
@@ -35,26 +36,45 @@ export default function EnrollButton({ course }: Props) {
     }
   };
 
-  const startPolling = (paymentId: number) => {
+  const startPolling = (paymentId: number, hasQr = false) => {
     stopPolling();
+    // Poll fast (1s) until QR image arrives, then slow down to 4s
+    const interval = hasQr ? 2000 : 1000;
     pollRef.current = setInterval(async () => {
       try {
         const { data } = await paymentService.getStatus(paymentId);
         if (!data.success) return;
         const pay = data.data;
         setPayment(pay);
-        if (pay.status === "paid") {
+        const isPaid = ["paid", "completed", "success"].includes(pay.status ?? "");
+        if (isPaid) {
           stopPolling();
           setStep("done");
         } else if (pay.status === "expired" || pay.status === "failed" || (typeof pay.expires_in_seconds === "number" && pay.expires_in_seconds <= 0)) {
           stopPolling();
           setErrorMsg("Payment expired or failed.");
           setStep("error");
+        } else if (!hasQr && pay.qr_code_image) {
+          // QR just arrived — restart with slower interval
+          startPolling(paymentId, true);
         }
       } catch {
         // keep polling
       }
-    }, 4000);
+    }, interval);
+  };
+
+  const handleCancel = async (paymentId: number) => {
+    stopPolling();
+    setCancelling(true);
+    try {
+      await paymentService.cancel(paymentId);
+    } catch {
+      // ignore — reset to idle regardless
+    }
+    setCancelling(false);
+    setPayment(null);
+    setStep("idle");
   };
 
   const handleVerify = async (paymentId: number) => {
@@ -107,7 +127,7 @@ export default function EnrollButton({ course }: Props) {
 
       setPayment(pay);
       setStep("qr");
-      startPolling(pay.id);
+      startPolling(pay.id, !!pay.qr_code_image);
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } }; message?: string };
       setErrorMsg(e.response?.data?.message ?? e.message ?? "Network error.");
@@ -153,18 +173,11 @@ export default function EnrollButton({ course }: Props) {
         )}
         <p className="enroll-qr__hint">Scan with Bakong / ABA / Wing app</p>
         <div className="enroll-qr__actions">
-          <button
-            className="detail-enroll-btn enroll-qr__confirm"
-            onClick={() => handleVerify(payment.id)}
-            disabled={verifying}
-          >
+          <button className ="detail-enroll-btn enroll-qr__confirm"onClick={() => handleVerify(payment.id)}disabled={verifying}>
             {verifying ? "Checking..." : "I've Paid ✓"}
           </button>
-          <button
-            className="enroll-qr__cancel"
-            onClick={() => { stopPolling(); setStep("idle"); }}
-          >
-            Cancel
+          <button className="enroll-qr__cancel" onClick={() => handleCancel(payment.id)} disabled={cancelling || verifying}>
+            {cancelling ? "Cancelling..." : "Cancel"}
           </button>
         </div>
       </div>

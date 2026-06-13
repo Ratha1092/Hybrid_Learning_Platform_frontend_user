@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { instructorService, type StudentEnrollment } from "../../../services/instructorService";
-import "./Students.css";
+import { instructorService, type StudentEnrollment } from "../../../../services/instructorService";
+import "../css/Students.css";
 
 export default function Students() {
   const [students, setStudents] = useState<StudentEnrollment[]>([]);

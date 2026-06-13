@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { instructorService } from "../../../services/instructorService";
-import styles from "./InstructorRegister.module.css";
+import styles from "./Appy_to_Instructor.module.css";
 
 type QualificationType = "degree" | "certification" | "professional_experience";
 
@@ -133,8 +133,8 @@ export default function InstructorRegister() {
       <div className={styles.successWrapper}>
         <div className={styles.successCard}>
           <div className={styles.successIcon}>✓</div>
-          <h2>Application Submitted!</h2>
-          <p>Your application is under review by Admin.</p>
+          <h2> Submitted!</h2>
+          <p>wait for review and acceptance by Admin.</p>
           <p className={styles.successSub}>
             We will notify you via Email: <strong>{user?.email}</strong>
           </p>
@@ -327,7 +327,7 @@ export default function InstructorRegister() {
               Cancel
             </button>
             <button type="submit" className={styles.submitBtn} disabled={loading}>
-              {loading ? <span className={styles.spinner} /> : "Submit Application"}
+              {loading ? <span className={styles.spinner} /> : "Submit"}
             </button>
           </div>
         </form>

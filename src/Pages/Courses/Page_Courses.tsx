@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { courseService, type Course } from "../../services/courseService";
-import "./Courses.css";
+import "./Page_Courses.css";
 
 const LEVELS = ["All", "beginner", "intermediate", "advanced"];
 
@@ -50,7 +50,7 @@ function Courses() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState("All");
-  const [refreshing, setRefreshing] = useState(false);
+ 
 
   const [searchParams] = useSearchParams();
   const category = searchParams.get("category");
@@ -58,18 +58,19 @@ function Courses() {
 
   const load = async (silent = false) => {
     if (!silent) setLoading(true);
-    else setRefreshing(true);
+   
     setError(null);
     try {
       const { data } = category
         ? await courseService.getByCategory(category)
         : await courseService.getAll();
-      setCourses(category ? (data.data as unknown as { courses: Course[] }).courses ?? [] : (data.data as unknown as Course[]) ?? []);
+      const list = category ? (data.data as unknown as { courses: Course[] }).courses ?? [] : (data.data as unknown as Course[]) ?? [];
+      setCourses(list);
     } catch (err: unknown) {
       setError((err as { message?: string }).message ?? "Failed to load courses.");
     }
     setLoading(false);
-    setRefreshing(false);
+    
   };
 
   useEffect(() => { load(); }, [category]);
@@ -99,14 +100,7 @@ function Courses() {
             {loading ? "Loading..." : `${courses.length} courses available`}
           </p>
         </div>
-        <button
-          className={`btn-refresh${refreshing ? " btn-refresh--loading" : ""}`}
-          onClick={() => load(true)}
-          disabled={loading || refreshing}
-        >
-          <span className="btn-refresh__icon">↻</span>
-          Refresh
-        </button>
+     
       </div>
 
       {/* ── Error ── */}
@@ -202,8 +196,8 @@ function Courses() {
 
                 <div className="course-card__stats">
                   <span className="course-card__stat">
-                    <span className="stat-icon">❤</span>
-                    {course.likes_count ?? 0}
+                    <span className="stat-icon">👥</span>
+                    {course.students_count ?? 0}
                   </span>
                   <span className="course-card__stat-sep">·</span>
                   <span className="course-card__stat">
@@ -212,8 +206,8 @@ function Courses() {
                   </span>
                   <span className="course-card__stat-sep">·</span>
                   <span className="course-card__stat">
-                    <span className="stat-icon">👥</span>
-                    {course.students_count ?? 0}
+                    <span className="stat-icon">⭐</span>
+                    {course.reviews_count ?? 0}
                   </span>
                 </div>
 

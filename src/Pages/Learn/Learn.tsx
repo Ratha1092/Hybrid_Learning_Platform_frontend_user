@@ -164,13 +164,30 @@ export default function Learn() {
             {activeLesson.type === "video" && (
               <div className="learn-video-wrap">
                 {activeLesson.video_url ? (
-                  <iframe
-                    src={activeLesson.video_url.replace("watch?v=", "embed/")}
-                    title={activeLesson.title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="learn-video"
-                  />
+                  /youtube\.com|youtu\.be/.test(activeLesson.video_url) ? (
+                    <iframe
+                      src={activeLesson.video_url.replace("watch?v=", "embed/").replace("youtu.be/", "www.youtube.com/embed/")}
+                      title={activeLesson.title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="learn-video"
+                    />
+                  ) : /vimeo\.com/.test(activeLesson.video_url) ? (
+                    <iframe
+                      src={activeLesson.video_url.replace("vimeo.com/", "player.vimeo.com/video/")}
+                      title={activeLesson.title}
+                      allow="autoplay; fullscreen; picture-in-picture"
+                      allowFullScreen
+                      className="learn-video"
+                    />
+                  ) : (
+                    <video
+                      src={activeLesson.video_url}
+                      controls
+                      className="learn-video"
+                      style={{ background: "#000" }}
+                    />
+                  )
                 ) : (
                   <div className="learn-no-video">
                     <span>🎬</span>

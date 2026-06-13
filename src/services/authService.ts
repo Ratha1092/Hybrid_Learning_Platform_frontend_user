@@ -11,6 +11,7 @@ export interface RegisterPayload {
   email: string;
   password: string;
   password_confirmation: string;
+  otp_code?: string;
 }
 
 export interface AuthResponse {
@@ -21,6 +22,24 @@ export interface AuthResponse {
   };
 }
 
+export interface OAuthResponse {
+  success: boolean;
+  message: string;
+  data: {
+    token: string;
+    user: AuthUser;
+    is_new_user: boolean;
+  };
+}
+
+export interface GoogleOAuthPayload {
+  id_token: string;
+  provider_id: string;
+  email: string;
+  name: string;
+  avatar?: string | null;
+}
+
 export const authService = {
   login: (payload: LoginPayload) =>
     api.post<AuthResponse>("/auth/login", payload),
@@ -29,4 +48,16 @@ export const authService = {
     api.post<AuthResponse>("/auth/register", payload),
 
   logout: () => api.post("/auth/logout"),
+
+  sendOtp: (email: string) =>
+    api.post<{ success: boolean; message: string }>("/auth/otp/send", { email }),
+
+  verifyOtp: (email: string, code: string) =>
+    api.post<{ success: boolean; message: string; data: { verified: boolean } }>("/auth/otp/verify", { email, code }),
+
+  googleOAuth: (payload: GoogleOAuthPayload) =>
+    api.post<OAuthResponse>("/auth/oauth/google", payload),
+
+  githubOAuth: (code: string) =>
+    api.post<OAuthResponse>("/auth/oauth/github", { code }),
 };

@@ -43,4 +43,7 @@ export const paymentService = {
 
   verify: (payment_id: number) =>
     api.post<VerifyResponse>("/payments/verify", { payment_id }),
+
+  cancel: (payment_id: number) =>
+    api.post(`/payments/${payment_id}/cancel`),
 };
