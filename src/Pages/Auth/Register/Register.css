@@ -322,6 +322,7 @@
 .rg-otp-resend__btn:hover { color: #2ec4b6; }
 .rg-otp-resend__btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .rg-otp-resend--ok { color: #16a34a; font-weight: 700; }
+.rg-otp-resend__cd { color: #94a3b8; font-size: 12px; }
 
 /* ── Back button ─────────────────────────────────── */
 .rg-back-btn {
