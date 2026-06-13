@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { courseService, type Course } from "../../services/courseService";
-import "./Courses.css";
+import "./Page_Courses.css";
 
 const LEVELS = ["All", "beginner", "intermediate", "advanced"];
 
@@ -50,7 +50,7 @@ function Courses() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState("All");
-  const [, setRefreshing] = useState(false);
+ 
 
   const [searchParams] = useSearchParams();
   const category = searchParams.get("category");
@@ -58,7 +58,7 @@ function Courses() {
 
   const load = async (silent = false) => {
     if (!silent) setLoading(true);
-    else setRefreshing(true);
+   
     setError(null);
     try {
       const { data } = category
@@ -70,7 +70,7 @@ function Courses() {
       setError((err as { message?: string }).message ?? "Failed to load courses.");
     }
     setLoading(false);
-    setRefreshing(false);
+    
   };
 
   useEffect(() => { load(); }, [category]);

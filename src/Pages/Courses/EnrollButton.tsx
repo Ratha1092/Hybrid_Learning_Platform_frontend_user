@@ -46,7 +46,8 @@ export default function EnrollButton({ course }: Props) {
         if (!data.success) return;
         const pay = data.data;
         setPayment(pay);
-        if (pay.status === "paid") {
+        const isPaid = ["paid", "completed", "success"].includes(pay.status ?? "");
+        if (isPaid) {
           stopPolling();
           setStep("done");
         } else if (pay.status === "expired" || pay.status === "failed" || (typeof pay.expires_in_seconds === "number" && pay.expires_in_seconds <= 0)) {
