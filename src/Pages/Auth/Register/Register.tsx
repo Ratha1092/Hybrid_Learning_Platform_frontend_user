@@ -170,7 +170,7 @@ export default function Register() {
             </div>
           </div>
 
-          <h1 className="rg-title">Create account_</h1>
+          <h1 className="rg-title">Create Account</h1>
           <p className="rg-subtitle">Fill in your details to start learning</p>
 
           {status === "success" && (
@@ -243,7 +243,7 @@ export default function Register() {
           </div>
 
           <button className="rg-btn" onClick={handleSubmit} disabled={status === "loading"}>
-            {status === "loading" ? <span className="rg-spinner" /> : ">_ CREATE ACCOUNT →"}
+            {status === "loading" ? <span className="rg-spinner" /> : "Create Account"}
           </button>
 
           <div className="rg-divider"><span>or continue with</span></div>

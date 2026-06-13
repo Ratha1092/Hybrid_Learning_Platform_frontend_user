@@ -2,6 +2,8 @@
 import { Routes, Route } from "react-router-dom";
 
 import Navbar from "./Components/Navbar/Navbar";
+import AuthModal from "./Components/AuthModal/AuthModal";
+import { AuthModalProvider } from "./context/AuthModalContext";
 import Hero from "./Components/Hero";
 import Categories from "./Pages/Category/Categories";
 import Footer from "./Components/Footer";
@@ -25,13 +27,13 @@ import Revenue from "./Pages/User/Instructor/Revenue";
 import Students from "./Pages/User/Instructor/Students";
 import Library from "./Pages/Library/Library";
 import Learn from "./Pages/Learn/Learn";
+import FeaturedCourses from "./Components/FeaturedCourses";
 function MainPage() {
   return (
     <>
       <Hero />
-      
       <Categories />
-      <Courses />
+      <FeaturedCourses />
       <Footer />
     </>
   );
@@ -39,9 +41,10 @@ function MainPage() {
 
 function App() {
   return (
-    <>
+    <AuthModalProvider>
       <Navbar />
-     
+      <AuthModal />
+
       <Routes>
         <Route path="/" element={<MainPage />} />
         <Route path="/courses" element={<Courses />} />
@@ -69,7 +72,7 @@ function App() {
         <Route path="/learn/:slug" element={<Learn />} />
 
       </Routes>
-    </>
+    </AuthModalProvider>
   );
 }
 

@@ -170,8 +170,7 @@ export default function Login() {
       {/* ── Right form panel ── */}
       <div className="login-right">
         <div className="login-form-panel">
-          <div className="login-form-badge">🔐 Student Access</div>
-          <h1 className="login-title">Welcome back_</h1>
+          <h1 className="login-title">Welcome Back</h1>
           <p className="login-subtitle">Sign in to continue your learning journey</p>
 
           {status === "success" && (
@@ -223,7 +222,7 @@ export default function Login() {
           </div>
 
           <button className="login-submit" onClick={handleSubmit} disabled={status === "loading"}>
-            {status === "loading" ? <><IconSpinner />Signing in...</> : ">_ SIGN IN →"}
+            {status === "loading" ? <><IconSpinner />Signing in...</> : "Sign In"}
           </button>
 
           <p className="login-footer">
