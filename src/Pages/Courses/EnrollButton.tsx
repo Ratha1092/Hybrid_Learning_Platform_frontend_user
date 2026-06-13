@@ -231,7 +231,7 @@ export default function EnrollButton({ course }: Props) {
         ? "Processing..."
         : Number(course.price) === 0
         ? "Enroll for Free"
-        : `Enroll Now — $${course.price}`}
+        : `Buy Now — $${course.price}`}
     </button>
   );
 }
