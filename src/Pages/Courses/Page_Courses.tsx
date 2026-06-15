@@ -115,22 +115,7 @@ function Courses() {
         </div>
       )}
 
-      {/* ── Stats ── */}
-      {!loading && courses.length > 0 && (
-        <div className="stats-bar">
-          <div className="stat-card">
-            <span className="stat-card__value">{courses.length}</span>
-            <span className="stat-card__label">Total</span>
-          </div>
-          {Object.entries(levelCounts).map(([l, count]) => count > 0 && (
-            <div className="stat-card" key={l}>
-              <span className="stat-card__value">{count}</span>
-              <span className="stat-card__label">{l}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
+    
       {/* ── Filters ── */}
       <div className="filters">
         <div className="filters__search-wrap">
@@ -187,8 +172,12 @@ function Courses() {
               {/* Body */}
               <div className="course-card__body">
                 <div className="course-card__provider">
-                  <div className="course-card__avatar">DRC</div>
-                  <span className="course-card__category">{course.language}</span>
+                  <div className="course-card__avatar">
+                    {course.instructor?.name ? course.instructor.name.charAt(0).toUpperCase() : "DRC"}
+                  </div>
+                  <span className="course-card__category">
+                    {course.instructor?.name ?? course.language}
+                  </span>
                 </div>
 
                 <h3 className="course-card__title">{course.title}</h3>

@@ -13,6 +13,11 @@ export interface Course {
   students_count?: number;
   views_count?: number;
   reviews_count?: number;
+  instructor?: {
+    id: number;
+    name: string;
+    avatar?: string | null;
+  } | null;
 }
 
 export interface Lesson {
@@ -38,6 +43,11 @@ export interface CourseDetail extends Course {
   description: string;
   sections: Section[];
   is_enrolled?: boolean;
+  instructor?: {
+    id: number;
+    name: string;
+    avatar?: string | null;
+  } | null;
 }
 
 export interface EnrolledCourse {

@@ -3,7 +3,7 @@
    ───────────────────────────────────────────────────────────────────────────── */
 
 /* ── Variables ─────────────────────────────────────────────────────────────── */
-.courses-page {
+:root {
   --cp-bg:        #f5f7fb;
   --cp-surface:   #ffffff;
   --cp-border:    #e5e7eb;
@@ -28,6 +28,7 @@
   --cp-r-lg:      14px;
   --cp-r-xl:      20px;
   --cp-t:         200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --font-body:    "Nunito", system-ui, sans-serif;
 }
 
 /* ── Base ───────────────────────────────────────────────────────────────────── */
@@ -336,16 +337,15 @@
   font-weight: 700;
   padding: 3px 10px;
   border-radius: 999px;
-  background: rgba(0,0,0,0.55);
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
   color: #fff;
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(255,255,255,0.18);
+  border: none;
+  box-shadow: 0 2px 8px rgba(249,115,22,0.45);
   letter-spacing: 0.02em;
 }
 .course-card__badge--free {
-  background: var(--cp-orange);
-  border-color: transparent;
-  box-shadow: 0 2px 8px rgba(255,107,53,0.4);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 2px 8px rgba(16,185,129,0.45);
 }
 
 /* Card body — white */

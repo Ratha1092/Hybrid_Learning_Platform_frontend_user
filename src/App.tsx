@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
-
+import "./css/index.css";
 import Navbar from "./Components/Navbar/Navbar";
 import AuthModal from "./Components/AuthModal/AuthModal";
 import { AuthModalProvider } from "./context/AuthModalContext";
@@ -58,6 +58,7 @@ function App() {
   return (
     <AuthModalProvider>
       <Navbar />
+      <AuthModal />
       <Routes>
         <Route path="/" element={<MainPage />} />
         <Route path="/courses" element={<PageCourses />} />

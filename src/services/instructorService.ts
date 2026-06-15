@@ -98,6 +98,7 @@ export interface InstructorLesson {
 // Represents a course section containing lessons.
 export interface InstructorSection {
   id: number;
+  
   title: string;
   order: number;
   lessons: InstructorLesson[];
