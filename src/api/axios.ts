@@ -20,11 +20,8 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status: number = error.response?.status ?? 0;
-    const url: string = error.config?.url ?? "";
 
-    const shouldLogout =
-      status === 401 ||
-      (status === 400 && url.includes("/users/me"));
+    const shouldLogout = status === 401;
 
     if (shouldLogout) {
       localStorage.removeItem("token");
