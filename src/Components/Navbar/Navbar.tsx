@@ -1,6 +1,6 @@
 import { Search, Menu, X } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import "./Navbar.css";
 import { useAuth } from "../../context/AuthContext";
 import { useAuthModal } from "../../context/AuthModalContext";
