@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { instructorService, type InstructorCourse } from "../../../services/instructorService";
-import "./MyCourses.css";
+import { instructorService, type InstructorCourse } from "../../../../services/instructorService";
+import "../css/MyCourses.css";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 function resolveUrl(url: string | null | undefined): string | null {
@@ -20,6 +20,8 @@ export default function MyCourses() {
   const navigate = useNavigate();
   const [courses, setCourses] = useState<InstructorCourse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [submittingId, setSubmittingId] = useState<number | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const load = () => {
     setLoading(true);
@@ -40,10 +42,18 @@ export default function MyCourses() {
   };
 
   const handleSubmit = async (id: number) => {
+    if (submittingId !== null) return;
+    setSubmittingId(id);
+    setSubmitError(null);
     try {
       await instructorService.submitForReview(id);
       load();
-    } catch { /* silent */ }
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      setSubmitError(e.response?.data?.message ?? "Failed to submit. Make sure your course has at least one section and lesson.");
+    } finally {
+      setSubmittingId(null);
+    }
   };
 
   if (loading) {
@@ -62,6 +72,10 @@ export default function MyCourses() {
           + Create Course
         </button>
       </div>
+
+      {submitError && (
+        <div className="mc-error">⚠ {submitError}</div>
+      )}
 
       {courses.length === 0 ? (
         <div className="mc-empty">
@@ -111,8 +125,10 @@ export default function MyCourses() {
                   <button
                     className="mc-btn mc-btn--submit"
                     onClick={() => handleSubmit(course.id)}
+                    disabled={submittingId === course.id}
+                    style={submittingId === course.id ? { opacity: 0.6, cursor: "not-allowed" } : undefined}
                   >
-                    Submit
+                    {submittingId === course.id ? "Submitting..." : "Submit"}
                   </button>
                 )}
                 <button
