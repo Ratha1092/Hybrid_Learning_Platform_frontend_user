@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, type ChangeEvent, type KeyboardEvent, type
 import { usePlatformStats } from "../../../hooks/usePlatformStats";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
+import { useAuthModal } from "../../../context/AuthModalContext";
 import { authService } from "../../../services/authService";
 import OAuthButtons from "../../../Components/OAuthButtons/OAuthButtons";
 import "./Register.css";
@@ -63,17 +64,16 @@ function getStrength(pw: string): { level: number; label: string } {
 }
 
 const OTP_LENGTH = 6;
-const OTP_TTL = 300; // 5 minutes in seconds
+const OTP_TTL = 300;
 
 export default function Register() {
   const { login } = useAuth();
+  const { close } = useAuthModal();
   const navigate = useNavigate();
   const stats = usePlatformStats();
 
-  // Step state
   const [step, setStep] = useState<Step>("form");
 
-  // Form step state
   const [form, setForm] = useState<FormState>({ name: "", email: "", password: "", password_confirmation: "" });
   const [errors, setErrors] = useState<FormErrors>({});
   const [showPass, setShowPass] = useState(false);
@@ -82,7 +82,6 @@ export default function Register() {
   const [sendStatus, setSendStatus] = useState<Status>("idle");
   const [sendError, setSendError] = useState("");
 
-  // OTP step state
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [otpStatus, setOtpStatus] = useState<Status>("idle");
   const [otpError, setOtpError] = useState("");
@@ -95,7 +94,6 @@ export default function Register() {
   const strength = getStrength(form.password);
   const strengthColor = ["", "#ef4444", "#f59e0b", "#60a5fa", "#22c55e"][strength.level];
 
-  // Resend cooldown ticker
   useEffect(() => {
     if (resendCooldown <= 0) return;
     const id = setInterval(() => {
@@ -105,9 +103,8 @@ export default function Register() {
       });
     }, 1000);
     return () => clearInterval(id);
-  }, [resendCooldown > 0]);
+  }, [resendCooldown > 0]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Countdown timer
   useEffect(() => {
     if (step !== "otp") return;
     setTimeLeft(OTP_TTL);
@@ -123,7 +120,6 @@ export default function Register() {
   const formatTime = (s: number) =>
     `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
-  // Form validation
   const validate = (): FormErrors => {
     const e: FormErrors = {};
     if (!form.name.trim()) e.name = "Name is required.";
@@ -145,13 +141,13 @@ export default function Register() {
     setErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
-  // Step 1: send OTP
   const handleSendOtp = async () => {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) { setErrors(validationErrors); return; }
     if (!agreed) { setErrors((e) => ({ ...e, name: undefined })); return; }
 
     setSendStatus("loading");
+    setSendError("");
     try {
       await authService.sendOtp(form.email);
       setSendStatus("idle");
@@ -159,12 +155,14 @@ export default function Register() {
       setOtpError("");
       setStep("otp");
       setTimeout(() => otpRefs.current[0]?.focus(), 80);
-    } catch {
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } }).response?.data?.message
+        ?? "Failed to send verification code. Please try again.";
+      setSendError(msg);
       setSendStatus("error");
     }
   };
 
-  // OTP input handlers
   const handleOtpChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return;
     const next = [...otp];
@@ -191,9 +189,8 @@ export default function Register() {
     otpRefs.current[Math.min(digits.length, OTP_LENGTH - 1)]?.focus();
   };
 
-  // Step 2: verify OTP then register
   const handleVerify = async () => {
-    if (submittingRef.current) return; // block double-submit
+    if (submittingRef.current) return;
     const code = otp.join("");
     if (code.length < OTP_LENGTH) { setOtpError("Please enter the full 6-digit code."); return; }
 
@@ -201,12 +198,10 @@ export default function Register() {
     setOtpStatus("loading");
     setOtpError("");
 
-    // 1. Verify OTP
     let otpData: { success: boolean; message: string; data?: { verified: boolean } };
     try {
       const res = await authService.verifyOtp(form.email, code);
       otpData = res.data;
-      console.log("[OTP verify response]", otpData);
     } catch (err: unknown) {
       submittingRef.current = false;
       setOtpStatus("idle");
@@ -223,17 +218,14 @@ export default function Register() {
       return;
     }
 
-    // 2. Register — pass otp_code so the backend knows email was verified
     try {
       const { data: regData } = await authService.register({ ...form, otp_code: code });
-      console.log("[Register response]", regData);
       login(regData.data.user, regData.data.token);
       setOtpStatus("success");
-      setTimeout(() => navigate("/"), 800);
+      setTimeout(() => { close(); navigate("/"); }, 800);
     } catch (err: unknown) {
       setOtpStatus("idle");
       const errData = (err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } }).response?.data;
-      console.error("[Register error]", errData);
       let msg = errData?.message ?? "Registration failed after verification.";
       if (errData?.errors) {
         const details = Object.entries(errData.errors)
@@ -247,7 +239,6 @@ export default function Register() {
     }
   };
 
-  // Resend OTP
   const handleResend = async () => {
     setResendStatus("sending");
     try {
@@ -264,7 +255,6 @@ export default function Register() {
     }
   };
 
-  // Left panel content by step
   const leftContent = step === "form" ? (
     <>
       <div className="rg-tag">✦ Online Learning</div>
@@ -327,15 +317,14 @@ export default function Register() {
             </div>
           </div>
 
-          <h1 className="rg-title">Create Account</h1>
-          <p className="rg-subtitle">Fill in your details to start learning</p>
-
-         
+          {/* ══════════════ STEP 1 — FORM ══════════════ */}
+          {step === "form" && (
             <>
+              <h1 className="rg-title">Create account_</h1>
+              <p className="rg-subtitle">Fill in your details — we'll send a code to verify your email</p>
+
               {sendStatus === "error" && (
-                <div className="rg-alert rg-alert--error">
-                  ⚠ {sendError || "Failed to send verification code. Please try again."}
-                </div>
+                <div className="rg-alert rg-alert--error">⚠ {sendError || "Failed to send verification code. Please try again."}</div>
               )}
 
               <div className="rg-field">
@@ -402,18 +391,83 @@ export default function Register() {
                 {sendStatus === "loading" ? <span className="rg-spinner" /> : "Send verification code →"}
               </button>
 
-              <OAuthButtons
-                onError={(msg) => { setSendStatus("error"); setSendError(msg); }}
-              />
+              <OAuthButtons onError={(msg) => { setSendStatus("error"); setSendError(msg); }} />
 
-        
+              <p className="rg-footer">Already have an account? <Link to="/PageLogin">Sign in</Link></p>
+            </>
+          )}
 
+          {/* ══════════════ STEP 2 — OTP ══════════════ */}
+          {step === "otp" && (
+            <>
+              <h1 className="rg-title">Check your email_</h1>
+              <p className="rg-subtitle">
+                We sent a 6-digit code to <strong>{form.email}</strong>
+              </p>
+
+              {otpStatus === "success" && (
+                <div className="rg-alert rg-alert--success">✓ Email verified! Creating your account…</div>
+              )}
+
+              <div className="rg-otp-boxes">
+                {otp.map((digit, i) => (
+                  <input
+                    key={i}
+                    ref={(el) => { otpRefs.current[i] = el; }}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleOtpChange(i, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                    onPaste={handleOtpPaste}
+                    className={`rg-otp-box ${digit ? "rg-otp-box--filled" : ""} ${otpError ? "rg-otp-box--err" : ""}`}
+                    disabled={otpStatus === "loading" || otpStatus === "success"}
+                  />
+                ))}
+              </div>
+
+              {otpError && <p className="rg-err-msg" style={{ textAlign: "center", marginBottom: 8 }}>{otpError}</p>}
+
+              <div className="rg-otp-timer">
+                {timeLeft > 0 ? (
+                  <span>Code expires in <strong>{formatTime(timeLeft)}</strong></span>
+                ) : (
+                  <span className="rg-otp-timer--expired">Code expired</span>
+                )}
+              </div>
+
+              <button
+                className="rg-btn"
+                onClick={handleVerify}
+                disabled={otpStatus === "loading" || otpStatus === "success" || otp.join("").length < OTP_LENGTH}
+              >
+                {otpStatus === "loading" ? <span className="rg-spinner" /> : "Verify & Create Account →"}
+              </button>
+
+              <div className="rg-otp-resend">
+                {resendStatus === "sent" ? (
+                  <span className="rg-otp-resend--ok">✓ New code sent!</span>
+                ) : (
+                  <button
+                    className="rg-otp-resend__btn"
+                    onClick={handleResend}
+                    disabled={resendStatus === "sending" || resendCooldown > 0}
+                  >
+                    {resendStatus === "sending"
+                      ? "Sending…"
+                      : resendCooldown > 0
+                      ? `Resend in ${resendCooldown}s`
+                      : "Resend code"}
+                  </button>
+                )}
+              </div>
 
               <button className="rg-back-btn" onClick={() => setStep("form")}>
                 ← Back to form
               </button>
             </>
-         
+          )}
         </div>
       </div>
     </div>

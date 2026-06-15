@@ -1,6 +1,6 @@
 import "./Footer.css";
 import logo from "../assets/logo1.png";
-import { Award, Mail, Phone, MapPin, Share2, Send, CirclePlay } from "lucide-react";
+import { Mail, Phone, MapPin, Share2, Send, CirclePlay } from "lucide-react";
 
 function Footer() {
   return (
