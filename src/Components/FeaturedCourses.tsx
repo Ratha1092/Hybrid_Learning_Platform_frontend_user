@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BookOpen, ChevronRight, Clock, Star, Users } from "lucide-react";
+
 import { courseService, type Course } from "../services/courseService";
 import "./FeaturedCourses.css";
 
@@ -106,9 +107,9 @@ function FeaturedCourses() {
         {/* ── Header ── */}
         <div className="section-header">
           <div>
-            <h2 className="section-title">Featured Courses</h2>
+             <h2 className="section-title">Featured Courses</h2>
             <p className="section-sub">Explore our Popular Courses</p>
-          </div>
+         </div>
           <button className="btn btn-outline" onClick={() => navigate("/courses")}>
             All Courses <ChevronRight size={16} />
           </button>
@@ -143,15 +144,15 @@ function FeaturedCourses() {
                   <CourseImage url={course.thumbnail_url} title={course.title} />
                   <span
                     className="course-tag"
-                    style={{ background: tagColor(course.level ?? "Beginner") }}
+                    style={{ background: tagColor(course.level ??  "Beginner" ) }}
                   >
                     {course.level}
                   </span>
                 </div>
-
+ 
                 <div className="course-body">
                   <div className="course-instructor">
-                    
+                    <BookOpen size={16} />  
                      {course.language ?? ""}
                   </div>
 

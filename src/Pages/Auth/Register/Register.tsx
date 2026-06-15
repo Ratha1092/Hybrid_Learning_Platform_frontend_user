@@ -258,7 +258,6 @@ export default function Register() {
               GitHub
             </button>
           </div>
-
           <p className="rg-footer">
             Already have an account? <Link to="/PageLogin">Sign in</Link>
           </p>
