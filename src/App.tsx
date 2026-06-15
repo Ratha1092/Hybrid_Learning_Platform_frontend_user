@@ -1,5 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
 import { useAuth } from "./context/AuthContext";
+import { useAuthModal } from "./context/AuthModalContext";
 import "./css/index.css";
 import Navbar from "./Components/Navbar/Navbar";
 import AuthModal from "./Components/AuthModal/AuthModal";
@@ -14,8 +16,6 @@ import DetailCourse from "./Pages/Courses/DetailCourse";
 
 import PageCategories from "./Pages/Category/Pagecategoires";
 import StudentProfileEdit from "./Pages/User/Profile/StudentProfileEdit";
-import PageRegister from "./Pages/Auth/Register/PageRegister";
-import Pagelogin from "./Pages/Auth/Login/Pagelogin";
 import Profile from "./Pages/User/Profile/StudentProfile";
 import InstructorRegister from "./Pages/Auth/Register/Apply_to_Instructor";
 
@@ -32,12 +32,16 @@ import GitHubCallback from "./Pages/Auth/GitHub/GitHubCallback";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <>{children}</> : <Navigate to="/PageLogin" replace />;
+  const { openLogin } = useAuthModal();
+  useEffect(() => { if (!isAuthenticated) openLogin(); }, [isAuthenticated]);
+  return isAuthenticated ? <>{children}</> : <Navigate to="/" replace />;
 }
 
 function RequireInstructor({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, user } = useAuth();
-  if (!isAuthenticated) return <Navigate to="/PageLogin" replace />;
+  const { openLogin } = useAuthModal();
+  useEffect(() => { if (!isAuthenticated) openLogin(); }, [isAuthenticated]);
+  if (!isAuthenticated) return <Navigate to="/" replace />;
   const isInstructor = user?.role === "instructor" || user?.instructor_status === "approved";
   if (!isInstructor) return <Navigate to="/" replace />;
   return <>{children}</>;
@@ -64,8 +68,6 @@ function App() {
         <Route path="/courses" element={<PageCourses />} />
         <Route path="/courses/:slug" element={<DetailCourse />} />
         <Route path="/categories" element={<PageCategories />} />
-        <Route path="/PageRegister" element={<PageRegister />} />
-        <Route path="/PageLogin" element={<Pagelogin />} />
         <Route path="/auth/github/callback" element={<GitHubCallback />} />
 
         {/* Auth-required routes */}

@@ -68,7 +68,7 @@ const OTP_TTL = 300;
 
 export default function Register() {
   const { login } = useAuth();
-  const { close } = useAuthModal();
+  const { close, openLogin } = useAuthModal();
   const navigate = useNavigate();
   const stats = usePlatformStats();
 
@@ -463,9 +463,10 @@ export default function Register() {
                 )}
               </div>
 
-              <button className="rg-back-btn" onClick={() => setStep("form")}>
-                ← Back to form
-              </button>
+              <p className="rg-login-link">
+                Already have an account?{" "}
+                <button className="rg-link-btn" onClick={openLogin}>Sign in</button>
+              </p>
             </>
           )}
         </div>
