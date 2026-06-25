@@ -4,6 +4,7 @@ import "../css/InstructorLayout.css";
 
 const MENU_LINKS = [
   { to: "/instructor/dashboard",      label: "Dashboard",     icon: "⊞", end: true },
+  { to: "/instructor/courses/sections", label: "Create Sections", icon: "⊕", end: true },
   { to: "/instructor/courses/create", label: "Create Course", icon: "⊕", end: true },
   { to: "/instructor/courses",        label: "My Courses",    icon: "🎓", end: true },
   { to: "/instructor/students",       label: "Students",      icon: "👤", end: true },

@@ -18,7 +18,7 @@ import PageCategories from "./Pages/Category/Pagecategoires";
 import StudentProfileEdit from "./Pages/User/Profile/StudentProfileEdit";
 import Profile from "./Pages/User/Profile/StudentProfile";
 import InstructorRegister from "./Pages/Auth/Register/Apply_to_Instructor";
-
+import CreateSections from "./Pages/User/Instructor/Sivbar/CreateSection";
 import InstructorLayout from "./Pages/User/Instructor/Sivbar/InstructorLayout";
 import InstructorDashboard from "./Pages/User/Instructor/Sivbar/InstructorDashboard";
 import MyCourses from "./Pages/User/Instructor/Sivbar/MyCourses";
@@ -83,6 +83,7 @@ function App() {
         <Route path="/instructor" element={<RequireInstructor><InstructorLayout /></RequireInstructor>}>
           <Route path="dashboard" element={<InstructorDashboard />} />
           <Route path="courses" element={<MyCourses />} />
+          <Route path="courses/sections" element={<CreateSections />} />
           <Route path="courses/create" element={<CreateCourse />} />
           <Route path="courses/:id/edit" element={<EditCourse />} />
           <Route path="revenue" element={<Revenue />} />

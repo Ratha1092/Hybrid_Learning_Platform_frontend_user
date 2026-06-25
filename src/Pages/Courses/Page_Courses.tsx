@@ -56,29 +56,34 @@ function Courses() {
   const category = searchParams.get("category");
   const navigate = useNavigate();
 
-  const load = async (silent = false) => {
+  const load = async (currentSearch: string, silent = false) => {
     if (!silent) setLoading(true);
-   
+
     setError(null);
     try {
       const { data } = category
         ? await courseService.getByCategory(category)
-        : await courseService.getAll();
+        : await courseService.getAll(currentSearch || undefined);
       const list = category ? (data.data as unknown as { courses: Course[] }).courses ?? [] : (data.data as unknown as Course[]) ?? [];
       setCourses(list);
     } catch (err: unknown) {
       setError((err as { message?: string }).message ?? "Failed to load courses.");
     }
     setLoading(false);
-    
+
   };
 
-  useEffect(() => { load(); }, [category]);
+  useEffect(() => { load(search); }, [category]);
+
+  // Debounce search input before hitting the backend.
+  useEffect(() => {
+    const timer = setTimeout(() => load(search), 400);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const filtered = courses.filter((c) => {
-    const matchSearch = c.title.toLowerCase().includes(search.toLowerCase());
     const matchLevel = level === "All" || c.level.toLowerCase() === level.toLowerCase();
-    return matchSearch && matchLevel;
+    return matchLevel;
   });
 
   const levelCounts = LEVELS.slice(1).reduce<Record<string, number>>((acc, l) => {
@@ -111,7 +116,7 @@ function Courses() {
             <strong>Failed to load</strong>
             <p>{error}</p>
           </div>
-          <button className="error-banner__retry" onClick={() => load()}>Retry</button>
+          <button className="error-banner__retry" onClick={() => load(search)}>Retry</button>
         </div>
       )}
 
@@ -150,9 +155,9 @@ function Courses() {
         ) : filtered.length === 0 ? (
           <div className="empty-state">
             <span className="empty-state__icon">📚</span>
-            <p>No courses found</p>
+            <p>{search ? `រកមិនឃើញវគ្គសិក្សាសម្រាប់ "${search}" ទេ` : "មិនមានវគ្គសិក្សាទេ"}</p>
             <button className="empty-state__clear" onClick={() => { setSearch(""); setLevel("All"); }}>
-              Clear filters
+              សម្អាតតម្រង
             </button>
           </div>
         ) : (
