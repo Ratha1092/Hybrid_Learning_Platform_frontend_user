@@ -25,6 +25,7 @@ export default function InstructorDashboard() {
 
   const stats = [
     { label: "Total Courses", value: data.courses.total, color: "#0ea5e9", icon: "🎓" },
+    
     { label: "Published", value: data.courses.published, color: "#22c55e", icon: "✅" },
     { label: "Students", value: data.students.total_unique, color: "#a855f7", icon: "👥" },
     { label: "Revenue", value: `$${data.revenue.total_earned}`, color: "#f59e0b", icon: "💰" },

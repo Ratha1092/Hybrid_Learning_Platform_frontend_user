@@ -43,7 +43,7 @@ export default function Learn() {
 
   useEffect(() => {
     if (!localStorage.getItem("token")) {
-      navigate("/PageLogin");
+      navigate("/");
       return;
     }
     if (!slug) return;

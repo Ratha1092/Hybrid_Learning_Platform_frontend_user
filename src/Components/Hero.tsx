@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import api from "../api/axios";
 import heroImage from "../assets/image1.png";
+import { useAuth } from "../context/AuthContext";
+import { useAuthModal } from "../context/AuthModalContext";
 import "./Hero.css";
 
 interface PlatformStats {
@@ -12,7 +14,8 @@ interface PlatformStats {
 }
 
 function Hero() {
-  const token = localStorage.getItem("token");
+  const { isAuthenticated } = useAuth();
+  const { openLogin, openRegister } = useAuthModal();
   const [stats, setStats] = useState<PlatformStats | null>(null);
 
   useEffect(() => {
@@ -46,10 +49,10 @@ function Hero() {
           </p>
 
           <div className="hero-actions">
-            {token ? (
+            {isAuthenticated ? (
               <Link to="/courses" className="btn btn-white">Start Learning</Link>
             ) : (
-              <Link to="/PageRegister" className="btn btn-white">Join for free</Link>
+              <button className="btn btn-white" onClick={openRegister}>Join for free</button>
             )}
             <button className="btn btn-ghost-white">
               <span className="play-icon"><Play size={13} fill="white" /></span>
@@ -94,14 +97,14 @@ function Hero() {
               <div className="fcc-title">User Experience Class</div>
               <div className="fcc-meta">120,674 enrolled</div>
             </div>
-             {token ? (
+             {isAuthenticated ? (
                 <Link to="/courses" className="fcc-btn">
                   Join Now
                 </Link>
               ) : (
-                <Link to="/PageLogin" className="fcc-btn">
-                  Start Now
-                </Link>
+                <button className="fcc-btn" onClick={openLogin}>
+                  Join Now
+                </button>
               )}
           </div>
 

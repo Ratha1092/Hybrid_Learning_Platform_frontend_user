@@ -68,7 +68,7 @@ export default function GitHubCallback() {
       <div style={{ fontSize: 40 }}>⚠</div>
       <p style={{ color: "#dc2626", fontSize: 15, margin: 0, maxWidth: 360, textAlign: "center" }}>{errorMsg}</p>
       <button
-        onClick={() => navigate("/PageLogin")}
+        onClick={() => navigate("/")}
         style={{ marginTop: 8, padding: "10px 24px", background: "linear-gradient(135deg,#2ec4b6,#0ea5e9)", color: "#fff", border: "none", borderRadius: 10, fontWeight: 700, cursor: "pointer", fontSize: 14 }}
       >
         Back to Login

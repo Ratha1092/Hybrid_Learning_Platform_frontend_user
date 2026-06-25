@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { authService } from "../../../services/authService";
 import OAuthButtons from "../../../Components/OAuthButtons/OAuthButtons";
+import { useAuthModal } from "../../../context/AuthModalContext";
 import "./Login.css";
 
 interface LoginForm {
@@ -74,6 +75,7 @@ const IconSpinner = () => (
 
 export default function Login() {
   const { login } = useAuth();
+  const { openRegister } = useAuthModal();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from;
@@ -283,7 +285,7 @@ export default function Login() {
           />
 
           <p className="login-footer">
-            Don't have an account? <Link to="/PageRegister">Register</Link>
+            Don't have an account? <button className="login-link-btn" onClick={openRegister}>Register</button>
           </p>
 
           <div className="login-secure">

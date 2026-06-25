@@ -65,7 +65,8 @@ export interface EnrolledCourse {
 }
 
 export const courseService = {
-  getAll: () => api.get<{ data: Course[] }>("/courses"),
+  getAll: (search?: string) =>
+    api.get<{ data: Course[] }>("/courses", { params: search ? { search } : undefined }),
 
   getByCategory: (categorySlug: string) =>
     api.get<{ data: { courses: Course[] } }>(`/categories/${categorySlug}`),
