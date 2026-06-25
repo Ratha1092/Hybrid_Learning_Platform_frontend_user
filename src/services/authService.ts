@@ -52,6 +52,9 @@ export const authService = {
   sendOtp: (email: string) =>
     api.post<{ success: boolean; message: string }>("/auth/otp/send", { email }),
 
+  resendVerificationEmail: (email: string) =>
+    api.post<{ success: boolean; message: string }>("/auth/email/send", { email }),
+
   verifyOtp: (email: string, code: string) =>
     api.post<{ success: boolean; message: string; data: { verified: boolean } }>("/auth/otp/verify", { email, code }),
 

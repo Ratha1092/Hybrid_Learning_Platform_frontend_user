@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import "./css/index.css";
 import Navbar from "./Components/Navbar/Navbar";
@@ -7,6 +7,7 @@ import { AuthModalProvider } from "./context/AuthModalContext";
 import Hero from "./Components/Hero";
 import Categories from "./Pages/Category/Categories";
 import Footer from "./Components/Footer";
+import MaintenanceOverlay from "./Components/MaintenanceOverlay/MaintenanceOverlay";
 
 import PageCourses from "./Pages/Courses/Page_Courses";
 import FeaturedCourses from "./Components/FeaturedCourses";
@@ -32,7 +33,12 @@ import GitHubCallback from "./Pages/Auth/GitHub/GitHubCallback";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
-  return isAuthenticated ? <>{children}</> : <Navigate to="/PageLogin" replace />;
+  const location = useLocation();
+  return isAuthenticated ? (
+    <>{children}</>
+  ) : (
+    <Navigate to="/PageLogin" replace state={{ from: location.pathname }} />
+  );
 }
 
 function RequireInstructor({ children }: { children: React.ReactNode }) {
@@ -57,6 +63,7 @@ function MainPage() {
 function App() {
   return (
     <AuthModalProvider>
+      <MaintenanceOverlay />
       <Navbar />
       <AuthModal />
       <Routes>

@@ -16,9 +16,10 @@ function randomState() {
 
 interface Props {
   onError?: (msg: string) => void;
+  from?: string;
 }
 
-export default function OAuthButtons({ onError }: Props) {
+export default function OAuthButtons({ onError, from }: Props) {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -53,7 +54,7 @@ export default function OAuthButtons({ onError }: Props) {
               return;
             }
             login(data.data.user, data.data.token);
-            navigate("/", { replace: true });
+            navigate(from ?? "/", { replace: true });
           } catch (err: unknown) {
             const msg =
               (err as { response?: { data?: { message?: string } } }).response?.data?.message ??
@@ -89,6 +90,8 @@ export default function OAuthButtons({ onError }: Props) {
   const handleGitHub = () => {
     const state = randomState();
     sessionStorage.setItem("github_oauth_state", state);
+    if (from) sessionStorage.setItem("github_oauth_from", from);
+    else sessionStorage.removeItem("github_oauth_from");
     const params = new URLSearchParams({
       client_id: GITHUB_CLIENT_ID,
       redirect_uri: GITHUB_CALLBACK_URL,

@@ -16,10 +16,20 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+export const MAINTENANCE_EVENT = "app:maintenance";
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     const status: number = error.response?.status ?? 0;
+
+    if (status === 503) {
+      const message: string =
+        error.response?.data?.message ??
+        "The platform is currently undergoing maintenance. Please check back shortly.";
+      window.dispatchEvent(new CustomEvent(MAINTENANCE_EVENT, { detail: message }));
+      return Promise.reject(error);
+    }
 
     const shouldLogout = status === 401;
 

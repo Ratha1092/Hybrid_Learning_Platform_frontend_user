@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { courseService, type EnrolledCourse } from "../../../services/courseService";
+import { orderService, type Order } from "../../../services/orderService";
 import { useStudentProfile } from "../../../hooks/useStudentProfile";
 import "./StudentProfile.css";
 
@@ -11,7 +12,7 @@ function resolveUrl(url: string | null | undefined): string | null {
   return url.startsWith("http") ? url : `${API_BASE}${url}`;
 }
 
-type Tab = "overview" | "courses";
+type Tab = "overview" | "courses" | "orders";
 
 export default function Profile() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -21,6 +22,14 @@ export default function Profile() {
   const [courses, setCourses] = useState<EnrolledCourse[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(false);
   const [coursesError, setCoursesError] = useState(false);
+
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
+  const [ordersError, setOrdersError] = useState(false);
+  const [ordersPage, setOrdersPage] = useState(1);
+  const [ordersLastPage, setOrdersLastPage] = useState(1);
+  const [downloadingOrderId, setDownloadingOrderId] = useState<number | null>(null);
+  const [orderDownloadError, setOrderDownloadError] = useState<{ id: number; message: string } | null>(null);
 
   const { profile: studentProfile, loading: loadingProfile } = useStudentProfile();
 
@@ -42,6 +51,51 @@ export default function Profile() {
     };
     fetchCourses();
   }, [isAuthenticated, tab]);
+
+  const fetchOrders = useCallback(async (page: number) => {
+    setLoadingOrders(true);
+    setOrdersError(false);
+    try {
+      const { data } = await orderService.list(page);
+      setOrders(data.data.data ?? []);
+      setOrdersLastPage(data.data.last_page ?? 1);
+      setOrdersPage(data.data.current_page ?? page);
+    } catch {
+      setOrdersError(true);
+    }
+    setLoadingOrders(false);
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated || tab !== "orders") return;
+    fetchOrders(1);
+  }, [isAuthenticated, tab, fetchOrders]);
+
+  const handleDownloadReceipt = async (order: Order) => {
+    setDownloadingOrderId(order.id);
+    setOrderDownloadError(null);
+    try {
+      await orderService.downloadReceipt(order.id, order.order_number);
+    } catch (err: unknown) {
+      let msg = "Failed to download receipt.";
+      const e = err as { response?: { data?: unknown }; message?: string };
+      const data = e.response?.data;
+      if (data instanceof Blob) {
+        try {
+          const parsed = JSON.parse(await data.text()) as { message?: string };
+          msg = parsed.message ?? msg;
+        } catch {
+          // keep default message
+        }
+      } else if (data && typeof data === "object" && "message" in data) {
+        msg = (data as { message?: string }).message ?? msg;
+      } else if (e.message) {
+        msg = e.message;
+      }
+      setOrderDownloadError({ id: order.id, message: msg });
+    }
+    setDownloadingOrderId(null);
+  };
 
   const handleLogout = () => {
     logout();
@@ -156,6 +210,13 @@ export default function Profile() {
             >
               My Courses
               {courses.length > 0 && <span className="profile-count">{courses.length}</span>}
+            </button>
+            <button
+              className={`profile-tab${tab === "orders" ? " profile-tab--active" : ""}`}
+              onClick={() => setTab("orders")}
+            >
+              Orders
+              {orders.length > 0 && <span className="profile-count">{orders.length}</span>}
             </button>
           </div>
 
@@ -282,6 +343,103 @@ export default function Profile() {
                     </div>
                   ))}
                 </div>
+              )}
+            </>
+          )}
+
+          {/* ── Tab: Orders ── */}
+          {tab === "orders" && (
+            <>
+              <div className="profile-courses-header">
+                <h2 className="profile-section-title">
+                  Orders
+                  {orders.length > 0 && <span className="profile-count">{orders.length}</span>}
+                </h2>
+              </div>
+
+              {loadingOrders ? (
+                <div className="profile-state">
+                  <div className="profile-spinner" />
+                  <p>Loading orders...</p>
+                </div>
+              ) : ordersError ? (
+                <div className="profile-empty">
+                  <p>Failed to load your orders. Please try again.</p>
+                  <button onClick={() => fetchOrders(ordersPage)}>Retry</button>
+                </div>
+              ) : orders.length === 0 ? (
+                <div className="profile-empty">
+                  <div className="profile-empty-icon">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 2v4M15 2v4M3 8h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" />
+                    </svg>
+                  </div>
+                  <p>You haven't placed any orders yet.</p>
+                  <button onClick={() => navigate("/courses")}>Browse Courses</button>
+                </div>
+              ) : (
+                <>
+                  <div className="profile-orders">
+                    {orders.map((order) => (
+                      <div key={order.id} className="profile-order-card">
+                        <div className="profile-order-main">
+                          <div className="profile-order-header">
+                            <span className="profile-order-number">#{order.order_number}</span>
+                            <span className={`profile-order-status profile-order-status--${order.status}`}>
+                              {order.status}
+                            </span>
+                          </div>
+                          <p className="profile-order-date">
+                            {new Date(order.created_at).toLocaleDateString("en-US", {
+                              month: "long",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </p>
+                          <ul className="profile-order-items">
+                            {order.items.map((item) => (
+                              <li key={item.id}>{item.course_title}</li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        <div className="profile-order-side">
+                          {!!order.discount_amount && (
+                            <span className="profile-order-discount">
+                              -${Number(order.discount_amount).toFixed(2)} off
+                            </span>
+                          )}
+                          <span className="profile-order-amount">
+                            ${Number(order.final_amount ?? order.total_amount ?? 0).toFixed(2)}
+                          </span>
+                          <button
+                            className="profile-order-receipt-btn"
+                            onClick={() => handleDownloadReceipt(order)}
+                            disabled={order.payment_status !== "paid" || downloadingOrderId === order.id}
+                            title={order.payment_status !== "paid" ? "Receipt available once paid" : undefined}
+                          >
+                            {downloadingOrderId === order.id ? "Downloading..." : "Download Receipt"}
+                          </button>
+                          {orderDownloadError?.id === order.id && (
+                            <p className="profile-order-error">⚠ {orderDownloadError.message}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {ordersLastPage > 1 && (
+                    <div className="profile-orders-pagination">
+                      <button disabled={ordersPage <= 1} onClick={() => fetchOrders(ordersPage - 1)}>
+                        ← Previous
+                      </button>
+                      <span>Page {ordersPage} of {ordersLastPage}</span>
+                      <button disabled={ordersPage >= ordersLastPage} onClick={() => fetchOrders(ordersPage + 1)}>
+                        Next →
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </>
           )}

@@ -26,6 +26,8 @@ interface CourseData {
   title: string;
   slug: string;
   sections: SectionItem[];
+  access_expired?: boolean;
+  access_expires_at?: string | null;
 }
 
 export default function Learn() {
@@ -158,6 +160,12 @@ export default function Learn() {
 
       {/* ── Main content ── */}
       <main className="learn-main">
+        {course.access_expired && (
+          <div className="learn-expired-banner">
+            <span>⏳ Your access to this course has expired.</span>
+            <button onClick={() => navigate(`/courses/${course.slug}`)}>Renew Access</button>
+          </div>
+        )}
         {activeLesson ? (
           <>
             {/* Video */}
@@ -188,6 +196,11 @@ export default function Learn() {
                       style={{ background: "#000" }}
                     />
                   )
+                ) : course.access_expired && !activeLesson.is_preview ? (
+                  <div className="learn-no-video">
+                    <span>⏳</span>
+                    <p>Your access has expired. Renew to keep watching.</p>
+                  </div>
                 ) : (
                   <div className="learn-no-video">
                     <span>🎬</span>
