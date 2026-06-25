@@ -25,7 +25,7 @@ export default function Profile() {
   const { profile: studentProfile, loading: loadingProfile } = useStudentProfile();
 
   useEffect(() => {
-    if (!isAuthenticated) navigate("/PageLogin");
+    if (!isAuthenticated) navigate("/");
   }, [isAuthenticated, navigate]);
 
   useEffect(() => {

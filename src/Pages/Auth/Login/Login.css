@@ -293,12 +293,20 @@
   font-size: 14px;
   color: #64748b;
 }
-.login-footer a {
+.login-footer a, .login-link-btn {
   color: #0f766e;
   font-weight: 700;
   text-decoration: none;
 }
-.login-footer a:hover { text-decoration: underline; }
+.login-link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: inherit;
+  font-family: inherit;
+}
+.login-footer a:hover, .login-link-btn:hover { text-decoration: underline; }
 
 .login-secure {
   display: flex;

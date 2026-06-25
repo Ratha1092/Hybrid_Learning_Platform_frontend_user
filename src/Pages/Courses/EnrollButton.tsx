@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { paymentService, type PaymentData } from "../../services/paymentService";
 import { courseService, type CourseDetail } from "../../services/courseService";
+import { useAuthModal } from "../../context/AuthModalContext";
 
 type Step = "idle" | "loading" | "qr" | "done" | "error";
 
@@ -18,7 +18,7 @@ export default function EnrollButton({ course }: Props) {
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [checkingEnrollment, setCheckingEnrollment] = useState(true);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const navigate = useNavigate();
+  const { openLogin } = useAuthModal();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -99,7 +99,7 @@ export default function EnrollButton({ course }: Props) {
 
   const handleEnroll = async () => {
     if (!localStorage.getItem("token")) {
-      navigate("/PageLogin");
+      openLogin();
       return;
     }
     setStep("loading");

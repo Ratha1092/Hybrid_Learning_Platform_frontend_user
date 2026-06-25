@@ -26,7 +26,7 @@ api.interceptors.response.use(
     if (shouldLogout) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      window.location.href = "/PageLogin";
+      window.location.href = "/";
     }
 
     return Promise.reject(error);

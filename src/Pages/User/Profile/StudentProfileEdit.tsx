@@ -24,7 +24,7 @@ export default function StudentProfileEdit() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!isAuthenticated) { navigate("/PageLogin"); return; }
+    if (!isAuthenticated) { navigate("/"); return; }
 
     profileService.get().then(({ data }) => {
       const p = data.data;
