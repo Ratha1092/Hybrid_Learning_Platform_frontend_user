@@ -1,6 +1,6 @@
 import { useState, type ChangeEvent } from "react";
 import { usePlatformStats } from "../../../hooks/usePlatformStats";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { authService } from "../../../services/authService";
 import OAuthButtons from "../../../Components/OAuthButtons/OAuthButtons";
@@ -75,7 +75,7 @@ const IconSpinner = () => (
 
 export default function Login() {
   const { login } = useAuth();
-  const { openRegister } = useAuthModal();
+  const { openRegister, close } = useAuthModal();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from;
@@ -119,7 +119,9 @@ export default function Login() {
       login(data.data.user, data.data.token);
       setStatus("success");
       setServerMessage(data.message || "Login successful!");
-      setTimeout(() => navigate(from ?? "/", { replace: true }), 1000);
+      const redirectTo = sessionStorage.getItem("authRedirectTo") ?? from ?? "/";
+      sessionStorage.removeItem("authRedirectTo");
+      setTimeout(() => { close(); navigate(redirectTo, { replace: true }); }, 1000);
     } catch (err: unknown) {
       setStatus("error");
       const res = (err as { response?: { data?: { message?: string; errors?: Record<string, string | string[]> } } }).response;
@@ -281,6 +283,7 @@ export default function Login() {
 
           <OAuthButtons
             from={from}
+            onSuccess={close}
             onError={(msg) => { setStatus("error"); setServerMessage(msg); }}
           />
 

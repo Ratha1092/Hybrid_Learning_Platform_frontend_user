@@ -1,15 +1,18 @@
 import { useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { createPortal } from "react-dom";
 import { paymentService, type PaymentData } from "../../services/paymentService";
 import type { CourseDetail } from "../../services/courseService";
 import { couponService, type CouponValidation } from "../../services/couponService";
 import { orderService } from "../../services/orderService";
+import { billingService, type BillingAddress } from "../../services/billingService";
+import { useAuthModal } from "../../context/AuthModalContext";
 
 type Step = "idle" | "loading" | "review" | "qr" | "done" | "error";
 type CouponStatus = "idle" | "checking" | "valid" | "invalid";
 type ReceiptStatus = "idle" | "downloading" | "error";
 
 const PENDING_ENROLL_KEY = "pendingEnrollCourseId";
+const MODAL_STEPS: Step[] = ["loading", "review", "qr", "done", "error"];
 
 interface OrderInfo {
   id: number;
@@ -24,7 +27,7 @@ interface Props {
 
 export default function EnrollButton({ course }: Props) {
   const [step, setStep] = useState<Step>("idle");
-  const [verifying, setVerifying] = useState(false);
+  const [justEnrolled, setJustEnrolled] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [payment, setPayment] = useState<PaymentData | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
@@ -36,13 +39,16 @@ export default function EnrollButton({ course }: Props) {
   const [couponError, setCouponError] = useState("");
   const [receiptStatus, setReceiptStatus] = useState<ReceiptStatus>("idle");
   const [receiptError, setReceiptError] = useState("");
+  const [billingAddresses, setBillingAddresses] = useState<BillingAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<number | undefined>(undefined);
+  const [showAddressSelect, setShowAddressSelect] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const { openLogin } = useAuthModal();
 
   const isEnrolled = !!course.is_enrolled;
   const isExpired = !!course.access_expired;
-  const hasActiveAccess = isEnrolled && !isExpired;
+  const hasActiveAccess = (isEnrolled && !isExpired) || justEnrolled;
+  const modalOpen = MODAL_STEPS.includes(step);
 
   // Resume an enrollment/renewal that was interrupted by a login/register redirect.
   useEffect(() => {
@@ -53,6 +59,19 @@ export default function EnrollButton({ course }: Props) {
     handleEnroll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasActiveAccess, course.id]);
+
+  // Lock scroll + Escape key while the checkout modal is open
+  useEffect(() => {
+    if (!modalOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") closeModal(); };
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modalOpen, step, payment]);
 
   const stopPolling = () => {
     if (pollRef.current) {
@@ -102,32 +121,12 @@ export default function EnrollButton({ course }: Props) {
     setStep("idle");
   };
 
-  const handleVerify = async (paymentId: number) => {
-    stopPolling();
-    setVerifying(true);
-    try {
-      const { data } = await paymentService.verify(paymentId);
-      if (data.data?.status === "paid") {
-        setPayment(data.data);
-        setStep("done");
-      } else {
-        setErrorMsg(data.message ?? "Payment not confirmed yet.");
-        startPolling(paymentId);
-      }
-    } catch (err: unknown) {
-      const e = err as { response?: { data?: { message?: string } }; message?: string };
-      setErrorMsg(e.response?.data?.message ?? e.message ?? "Verification failed.");
-      startPolling(paymentId);
-    }
-    setVerifying(false);
-  };
-
   const doCheckout = async (couponCode?: string) => {
     setStep("loading");
     setErrorMsg("");
     setCheckoutError("");
     try {
-      const { data } = await paymentService.checkout(course.id, couponCode);
+      const { data } = await paymentService.checkout(course.id, couponCode, selectedAddressId);
       if (!data.success) {
         const msg = data.message ?? "Failed to create order.";
         if (couponCode) { setCheckoutError(msg); setStep("review"); }
@@ -166,10 +165,10 @@ export default function EnrollButton({ course }: Props) {
     }
   };
 
-  const handleEnroll = () => {
+  const handleEnroll = async () => {
     if (!localStorage.getItem("token")) {
       sessionStorage.setItem(PENDING_ENROLL_KEY, String(course.id));
-      navigate("/PageLogin", { state: { from: location.pathname } });
+      openLogin();
       return;
     }
     if (Number(course.price) === 0) {
@@ -177,6 +176,16 @@ export default function EnrollButton({ course }: Props) {
       return;
     }
     setCheckoutError("");
+    setStep("loading");
+    try {
+      const { data } = await billingService.getAddresses();
+      const addrs = data.data ?? [];
+      setBillingAddresses(addrs);
+      const def = addrs.find(a => a.is_default);
+      setSelectedAddressId(def?.id);
+    } catch {
+      // Non-blocking — checkout works without a billing address
+    }
     setStep("review");
   };
 
@@ -236,197 +245,273 @@ export default function EnrollButton({ course }: Props) {
     }
   };
 
-  if (step === "done") {
-    return (
-      <div className="enroll-success">
-        <div className="enroll-success__icon">🎉</div>
-        <h3 className="enroll-success__title">Enrolled Successfully!</h3>
-        <p className="enroll-success__sub">You can now access all course content.</p>
-        {!!orderInfo?.discount_amount && (
-          <p className="enroll-success__discount">
-            You saved ${Number(orderInfo.discount_amount).toFixed(2)}!
-          </p>
-        )}
-        <a href={`/learn/${course.slug}`} className="enroll-success__link">
-          Start Learning →
-        </a>
-        {orderInfo && (
-          <div className="enroll-success__receipt">
-            <button
-              className="enroll-success__receipt-btn"
-              onClick={handleDownloadReceipt}
-              disabled={receiptStatus === "downloading"}
-            >
-              {receiptStatus === "downloading" ? "Downloading..." : "Download Receipt"}
-            </button>
-            {receiptStatus === "error" && <p className="enroll-error">⚠ {receiptError}</p>}
+  // Closing the popup mid-payment cancels it on the backend; closing after
+  // success marks the course as enrolled inline instead of reverting to "Buy Now".
+  const closeModal = () => {
+    if (step === "qr" && payment) {
+      handleCancel(payment.id);
+      return;
+    }
+    if (step === "done") {
+      setJustEnrolled(true);
+    }
+    setStep("idle");
+  };
+
+  function renderModalBody() {
+    if (step === "loading") {
+      return (
+        <div className="enroll-loading">
+          <div className="enroll-loading__spinner" />
+          <p>Preparing checkout…</p>
+        </div>
+      );
+    }
+
+    if (step === "review") {
+      const price = Number(course.price);
+      const total = couponStatus === "valid" && couponResult ? Number(couponResult.final_amount) : price;
+
+      return (
+        <div className="enroll-review">
+          <h3 className="enroll-review__title">Review Order</h3>
+          <div className="enroll-review__row">
+            <span>Course price</span>
+            <span>${price.toFixed(2)}</span>
           </div>
-        )}
-      </div>
-    );
-  }
-
-  if (step === "review") {
-    const price = Number(course.price);
-    const total = couponStatus === "valid" && couponResult ? Number(couponResult.final_amount) : price;
-
-    return (
-      <div className="enroll-review">
-        <h3 className="enroll-review__title">Review Order</h3>
-        <div className="enroll-review__row">
-          <span>Course price</span>
-          <span>${price.toFixed(2)}</span>
-        </div>
-        {couponStatus === "valid" && couponResult && (
-          <>
-            <div className="enroll-review__row enroll-review__row--discount">
-              <span>Discount ({couponResult.code})</span>
-              <span>-${Number(couponResult.discount_amount).toFixed(2)}</span>
-            </div>
-            <div className="enroll-review__row enroll-review__row--total">
-              <span>Total</span>
-              <span>${Number(couponResult.final_amount).toFixed(2)}</span>
-            </div>
-          </>
-        )}
-
-        <div className="enroll-review__coupon">
-          <input
-            type="text"
-            placeholder="Coupon code"
-            value={couponInput}
-            onChange={(e) => handleCouponInputChange(e.target.value)}
-            className="enroll-review__coupon-input"
-            disabled={couponStatus === "checking"}
-          />
-          <button
-            type="button"
-            className="enroll-review__coupon-btn"
-            onClick={handleApplyCoupon}
-            disabled={!couponInput.trim() || couponStatus === "checking"}
-          >
-            {couponStatus === "checking" ? "Checking..." : "Apply"}
-          </button>
-        </div>
-        {couponStatus === "valid" && <p className="enroll-review__coupon-ok">✓ Coupon applied</p>}
-        {couponStatus === "invalid" && <p className="enroll-review__coupon-err">⚠ {couponError}</p>}
-
-        {checkoutError && <div className="enroll-error">⚠ {checkoutError}</div>}
-
-        <button className="detail-enroll-btn" onClick={handleContinueToPayment}>
-          Continue to Payment — ${total.toFixed(2)}
-        </button>
-        <button className="enroll-qr__cancel" onClick={() => setStep("idle")}>
-          Cancel
-        </button>
-      </div>
-    );
-  }
-
-  if (step === "qr" && payment) {
-    const expiresIn = payment.expires_at
-      ? Math.max(0, Math.floor((new Date(payment.expires_at).getTime() - Date.now()) / 60000))
-      : null;
-
-    return (
-      <div className="enroll-qr">
-        <h3 className="enroll-qr__title">Scan to Pay</h3>
-        <p className="enroll-qr__meta">
-          Amount: <strong>${Number(payment.amount).toFixed(2)}</strong>
-          {expiresIn !== null && (
-            <> · Expires in <strong>{expiresIn} min</strong></>
+          {couponStatus === "valid" && couponResult && (
+            <>
+              <div className="enroll-review__row enroll-review__row--discount">
+                <span>Discount ({couponResult.code})</span>
+                <span>-${Number(couponResult.discount_amount).toFixed(2)}</span>
+              </div>
+              <div className="enroll-review__row enroll-review__row--total">
+                <span>Total</span>
+                <span>${Number(couponResult.final_amount).toFixed(2)}</span>
+              </div>
+            </>
           )}
-        </p>
-        {payment.qr_code_image ? (
-          <img
-            src={payment.qr_code_image}
-            alt="Payment QR Code"
-            className="enroll-qr__img"
-          />
-        ) : (
-          <div className="enroll-qr__placeholder">QR loading...</div>
-        )}
-        <p className="enroll-qr__hint">Scan with Bakong / ABA / Wing app</p>
-        <div className="enroll-qr__actions">
-          <button className ="detail-enroll-btn enroll-qr__confirm"onClick={() => handleVerify(payment.id)}disabled={verifying}>
-            {verifying ? "Checking..." : "I've Paid ✓"}
+
+          <div className="enroll-review__coupon">
+            <input
+              type="text"
+              placeholder="Coupon code"
+              value={couponInput}
+              onChange={(e) => handleCouponInputChange(e.target.value)}
+              className="enroll-review__coupon-input"
+              disabled={couponStatus === "checking"}
+            />
+            <button
+              type="button"
+              className="enroll-review__coupon-btn"
+              onClick={handleApplyCoupon}
+              disabled={!couponInput.trim() || couponStatus === "checking"}
+            >
+              {couponStatus === "checking" ? "Checking..." : "Apply"}
+            </button>
+          </div>
+          {couponStatus === "valid" && <p className="enroll-review__coupon-ok">✓ Coupon applied</p>}
+          {couponStatus === "invalid" && <p className="enroll-review__coupon-err">⚠ {couponError}</p>}
+
+          {/* Billing address */}
+          {billingAddresses.length > 0 ? (
+            <div className="enroll-review__billing">
+              <span className="enroll-review__billing-label">Billing address</span>
+              {showAddressSelect ? (
+                <select
+                  className="enroll-review__billing-select"
+                  value={selectedAddressId ?? ""}
+                  onChange={e => {
+                    setSelectedAddressId(Number(e.target.value) || undefined);
+                    setShowAddressSelect(false);
+                  }}
+                >
+                  {billingAddresses.map(a => (
+                    <option key={a.id} value={a.id}>
+                      {a.name} — {a.city}, {a.country}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className="enroll-review__billing-row">
+                  <span className="enroll-review__billing-text">
+                    {(() => {
+                      const addr = billingAddresses.find(a => a.id === selectedAddressId)
+                        ?? billingAddresses.find(a => a.is_default)
+                        ?? billingAddresses[0];
+                      return addr ? `${addr.name}, ${addr.city}, ${addr.country}` : "—";
+                    })()}
+                  </span>
+                  <button type="button" className="enroll-review__billing-change" onClick={() => setShowAddressSelect(true)}>
+                    Change
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="enroll-review__billing-note">No billing address saved — invoice will use account details.</p>
+          )}
+
+          {checkoutError && <div className="enroll-error">⚠ {checkoutError}</div>}
+
+          <button className="detail-enroll-btn" onClick={handleContinueToPayment}>
+            Continue to Payment — ${total.toFixed(2)}
           </button>
-          <button className="enroll-qr__cancel" onClick={() => handleCancel(payment.id)} disabled={cancelling || verifying}>
-            {cancelling ? "Cancelling..." : "Cancel"}
+          <button className="enroll-qr__cancel" onClick={closeModal}>
+            Cancel
           </button>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  if (step === "error") {
-    return (
-      <div>
-        <div className="enroll-error">⚠ {errorMsg}</div>
-        <button
-          className="detail-enroll-btn"
-          onClick={() => setStep("idle")}
-          style={{ marginTop: 8 }}
-        >
-          Try Again
-        </button>
-      </div>
-    );
-  }
+    if (step === "qr" && payment) {
+      const expiresIn = payment.expires_at
+        ? Math.max(0, Math.floor((new Date(payment.expires_at).getTime() - Date.now()) / 60000))
+        : null;
 
-  if (hasActiveAccess) {
-    return (
-      <div className="enroll-success">
-        <div className="enroll-success__icon">✅</div>
-        <h3 className="enroll-success__title">You're Enrolled!</h3>
-        <p className="enroll-success__sub">You have access to all course content.</p>
-        {course.access_expires_at && (
-          <p className="enroll-success__expiry">
-            Access expires on{" "}
-            {new Date(course.access_expires_at).toLocaleDateString("en-US", {
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            })}
+      return (
+        <div className="enroll-qr">
+          <h3 className="enroll-qr__title">Scan to Pay</h3>
+          <p className="enroll-qr__meta">
+            Amount: <strong>${Number(payment.amount).toFixed(2)}</strong>
+            {expiresIn !== null && (
+              <> · Expires in <strong>{expiresIn} min</strong></>
+            )}
           </p>
-        )}
-        <a href={`/learn/${course.slug}`} className="enroll-success__link">
-          Continue Learning →
-        </a>
-      </div>
-    );
+          {payment.qr_code_image ? (
+            <img
+              src={payment.qr_code_image}
+              alt="Payment QR Code"
+              className="enroll-qr__img"
+            />
+          ) : (
+            <div className="enroll-qr__placeholder">QR loading...</div>
+          )}
+          <p className="enroll-qr__hint">Scan with Bakong / ABA / Wing app</p>
+          <p className="enroll-qr__auto">
+            <span className="enroll-qr__pulse" /> Waiting for payment confirmation…
+          </p>
+          <div className="enroll-qr__actions">
+            <button className="enroll-qr__cancel" onClick={() => handleCancel(payment.id)} disabled={cancelling}>
+              {cancelling ? "Cancelling..." : "Cancel"}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    if (step === "done") {
+      return (
+        <div className="enroll-success">
+          <div className="enroll-success__icon">🎉</div>
+          <h3 className="enroll-success__title">Enrolled Successfully!</h3>
+          <p className="enroll-success__sub">You can now access all course content.</p>
+          {!!orderInfo?.discount_amount && (
+            <p className="enroll-success__discount">
+              You saved ${Number(orderInfo.discount_amount).toFixed(2)}!
+            </p>
+          )}
+          <a href={`/learn/${course.slug}`} className="enroll-success__link">
+            Start Learning →
+          </a>
+          {orderInfo && (
+            <div className="enroll-success__receipt">
+              <button
+                className="enroll-success__receipt-btn"
+                onClick={handleDownloadReceipt}
+                disabled={receiptStatus === "downloading"}
+              >
+                {receiptStatus === "downloading" ? "Downloading..." : "Download Receipt"}
+              </button>
+              {receiptStatus === "error" && <p className="enroll-error">⚠ {receiptError}</p>}
+            </div>
+          )}
+          <button className="enroll-modal__done-close" onClick={closeModal}>
+            Done
+          </button>
+        </div>
+      );
+    }
+
+    if (step === "error") {
+      return (
+        <div>
+          <div className="enroll-error">⚠ {errorMsg}</div>
+          <button
+            className="detail-enroll-btn"
+            onClick={() => setStep("idle")}
+            style={{ marginTop: 8 }}
+          >
+            Try Again
+          </button>
+        </div>
+      );
+    }
+
+    return null;
   }
 
-  if (isEnrolled && isExpired) {
-    return (
-      <div className="enroll-expired">
-        <div className="enroll-expired__icon">⏳</div>
-        <h3 className="enroll-expired__title">Access Expired</h3>
-        <p className="enroll-expired__sub">Renew to keep learning and regain access to all course content.</p>
+  return (
+    <>
+      {hasActiveAccess ? (
+        <div className="enroll-success">
+          <div className="enroll-success__icon">✅</div>
+          <h3 className="enroll-success__title">You're Enrolled!</h3>
+          <p className="enroll-success__sub">You have access to all course content.</p>
+          {course.access_expires_at && (
+            <p className="enroll-success__expiry">
+              Access expires on{" "}
+              {new Date(course.access_expires_at).toLocaleDateString("en-US", {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </p>
+          )}
+          <a href={`/learn/${course.slug}`} className="enroll-success__link">
+            Start Learning →
+          </a>
+        </div>
+      ) : isEnrolled && isExpired ? (
+        <div className="enroll-expired">
+          <div className="enroll-expired__icon">⏳</div>
+          <h3 className="enroll-expired__title">Access Expired</h3>
+          <p className="enroll-expired__sub">Renew to keep learning and regain access to all course content.</p>
+          <button
+            className="detail-enroll-btn"
+            onClick={handleEnroll}
+            disabled={step === "loading"}
+            style={step === "loading" ? { background: "#94a3b8", boxShadow: "none", cursor: "not-allowed" } : undefined}
+          >
+            {step === "loading" ? "Processing..." : `Renew Access — $${course.price}`}
+          </button>
+        </div>
+      ) : (
         <button
           className="detail-enroll-btn"
           onClick={handleEnroll}
           disabled={step === "loading"}
           style={step === "loading" ? { background: "#94a3b8", boxShadow: "none", cursor: "not-allowed" } : undefined}
         >
-          {step === "loading" ? "Processing..." : `Renew Access — $${course.price}`}
+          {step === "loading"
+            ? "Processing..."
+            : Number(course.price) === 0
+            ? "Enroll for Free"
+            : `Buy Now — $${course.price}`}
         </button>
-      </div>
-    );
-  }
+      )}
 
-  return (
-    <button
-      className="detail-enroll-btn"
-      onClick={handleEnroll}
-      disabled={step === "loading"}
-      style={step === "loading" ? { background: "#94a3b8", boxShadow: "none", cursor: "not-allowed" } : undefined}
-    >
-      {step === "loading"
-        ? "Processing..."
-        : Number(course.price) === 0
-        ? "Enroll for Free"
-        : `Buy Now — $${course.price}`}
-    </button>
+      {modalOpen && createPortal(
+        <div className="enroll-modal-backdrop" onClick={(e) => { if (e.target === e.currentTarget) closeModal(); }}>
+          <div className="enroll-modal-wrap">
+            <button className="enroll-modal__close" onClick={closeModal} aria-label="Close" disabled={cancelling}>✕</button>
+            <div className="enroll-modal__card">
+              {renderModalBody()}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
   );
 }

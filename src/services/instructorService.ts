@@ -65,10 +65,21 @@ export interface DashboardStats {
   }[];
 }
 
+// Represents a standalone section (course_id is null until attached).
+export interface StandaloneSection {
+  id: number;
+  title: string;
+  sort_order: number;
+  course_id: null;
+  lessons_count: number;
+  created_at?: string;
+}
+
 // Represents an instructor course.
 export interface InstructorCourse {
   id: number;
   title: string;
+  slug?: string;
   short_description?: string;
   description?: string;
   status: string;
@@ -108,6 +119,23 @@ export interface InstructorSection {
 // Centralized API methods for instructor-related actions.
 
 export const instructorService = {
+  // ── Standalone sections ──────────────────────────────────────────────────
+
+  // Create a standalone section with no course attached.
+  createStandaloneSection: (title: string, sort_order?: number) =>
+    api.post<{ data: StandaloneSection }>("/instructor/sections", { title, sort_order }),
+
+  // List the instructor's standalone sections (course_id = null).
+  getStandaloneSections: () =>
+    api.get<{ data: StandaloneSection[] }>("/instructor/sections/standalone"),
+
+  // Attach one or more standalone sections to a course.
+  attachSections: (courseId: number | string, section_ids: number[]) =>
+    api.post<{ success: boolean; data: { course_id: number; attached_count: number } }>(
+      `/instructor/courses/${courseId}/attach-sections`,
+      { section_ids }
+    ),
+
   // Submit application to become an instructor.
   apply: (formData: FormData) =>
     api.post("/users/instructor/apply", formData, {

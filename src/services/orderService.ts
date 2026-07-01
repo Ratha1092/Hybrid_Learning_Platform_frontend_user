@@ -24,7 +24,12 @@ export interface Order {
   total_amount?: number;
   discount_amount?: number;
   final_amount?: number;
+  tax_amount?: number | null;
   coupon_code?: string | null;
+  invoice_id?: number | null;
+  invoice_number?: string | null;
+  receipt_id?: number | null;
+  receipt_number?: string | null;
   items: OrderItem[];
   payment?: OrderPayment | null;
   created_at: string;

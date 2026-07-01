@@ -1,162 +1,211 @@
-/* ─── Variables ───────────────────────────────────────────────── */
-
-/* ─── Shell ───────────────────────────────────────────────────── */
+/* ── Footer ── dark ink theme matching Navbar ── */
 .footer {
-  background: #49BBBD;
-  color: rgba(255, 255, 255, 0.58);
-  position: relative;
-  padding-bottom: 0;
+  background: #17191F;
+  color: rgba(255, 255, 255, 0.5);
   font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-.footer::before {
-  content: "";
-  display: block;
-  height: 3px;
-  background: linear-gradient(90deg, var(--footer-teal), var(--footer-orange));
-}
-
-.footer > .container {
-  max-width: 1160px;
+.footer-inner {
+  max-width: 1440px;
   margin: 0 auto;
-  padding: 64px 24px 0;
+  padding: 60px 32px 0;
 }
 
-/* ─── Grid ────────────────────────────────────────────────────── */
+/* ── Grid ── */
 .footer-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1.6fr;
-  gap: 48px;
-  padding-bottom: 52px;
+  grid-template-columns: 2fr 1fr 1fr 1.4fr;
+  gap: 40px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* ─── Logo ────────────────────────────────────────────────────── */
-.footer-logo-wrap {
-  display: flex;
+/* ── Brand column ── */
+.footer-logo {
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  gap: 10px;
+  text-decoration: none;
+  margin-bottom: 16px;
 }
 
-.footer-logo-img {
+.footer-logo-mark {
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  object-fit: contain;
-  flex-shrink: 0;
-}
-
-.footer-logo-name {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #000000;
-  letter-spacing: -0.3px;
-}
-
-/* ─── Description ─────────────────────────────────────────────── */
-.footer-desc {
-  font-size: 13.5px;
-  line-height: 1.82;
-  color: rgba(0, 0, 0, 0.46);
-  max-width: 280px;
-}
-
-/* ─── Social ──────────────────────────────────────────────────── */
-.social-links {
-  display: flex;
-  gap: 8px;
-  margin-top: 22px;
-}
-
-.social-btn {
-  width: 38px;
-  height: 38px;
-  background: rgba(255, 255, 255, 0.07);
-  border-radius: 10px;
+  background: #E0922E;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.55);
-  transition: all 0.2s;
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  flex-shrink: 0;
+  overflow: hidden;
 }
 
-.social-btn:hover {
-  background: var(--footer-teal);
-  color: white;
-  border-color: var(--footer-teal);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(46, 196, 182, 0.35);
+.footer-logo-mark img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
 }
 
-/* ─── Column Headings ─────────────────────────────────────────── */
-.footer-heading {
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 1.6px;
-  color: white;
+.footer-logo-text {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+.footer-logo-w1 { color: #ffffff; }
+.footer-logo-w2 { color: #E0922E; }
+
+.footer-desc {
+  font-size: 0.83rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.45);
   margin-bottom: 20px;
-  text-transform: uppercase;
+  max-width: 280px;
 }
 
-/* ─── Links ───────────────────────────────────────────────────── */
+.footer-socials {
+  display: flex;
+  gap: 10px;
+}
+
+.footer-social {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.5);
+  text-decoration: none;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.footer-social:hover {
+  border-color: #E0922E;
+  color: #E0922E;
+  background: rgba(224, 146, 46, 0.08);
+}
+
+/* ── Columns ── */
+.footer-heading {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffffff;
+  margin-bottom: 16px;
+}
+
+/* ── Collapsible columns (Explore / Programs) ──
+   <details>/<summary> — native accordion on mobile, forced-open static heading on desktop. */
+.footer-col--collapsible > summary.footer-heading {
+  cursor: default;
+  list-style: none;
+}
+.footer-col--collapsible > summary.footer-heading::-webkit-details-marker { display: none; }
+.footer-col--collapsible > summary.footer-heading::marker { content: ""; }
+
 .footer-links {
+  list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 11px;
-  list-style: none;
-  padding: 0;
-  margin: 0;
+  gap: 10px;
 }
 
-.footer-links li a {
-  font-size: 13.5px;
-  color: rgba(255, 255, 255, 0.48);
-  font-weight: 500;
+.footer-links a,
+.footer-links li {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
   text-decoration: none;
-  transition: color 0.18s, padding-left 0.18s;
+  transition: color 0.15s;
+  cursor: pointer;
 }
 
-.footer-links li a:hover {
-  color: var(--footer-teal);
-  padding-left: 4px;
-}
+.footer-links a:hover { color: rgba(255, 255, 255, 0.9); }
 
-/* ─── Contact ─────────────────────────────────────────────────── */
-.contact-list li {
-  font-size: 13.5px;
-  color: rgba(255, 255, 255, 0.46);
-  line-height: 1.78;
-}
-
-.footer-contact-row {
+/* ── Contact column ── */
+.footer-links--contact li {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: 10px;
+  line-height: 1.5;
 }
 
-.footer-contact-icon {
+.footer-links--contact svg {
   flex-shrink: 0;
   margin-top: 3px;
-  color: var(--footer-teal);
-  opacity: 0.7;
+  color: rgba(255, 255, 255, 0.3);
 }
 
-/* ─── Bottom Bar ──────────────────────────────────────────────── */
+/* ── Bottom bar ── */
 .footer-bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-  padding: 22px 0;
-  text-align: center;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.26);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
-/* ─── Responsive ──────────────────────────────────────────────── */
-@media (max-width: 1024px) {
-  .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+.footer-copy {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.footer-bottom-links {
+  display: flex;
+  gap: 20px;
+}
+
+.footer-bottom-links a {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.35);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.footer-bottom-links a:hover { color: rgba(255, 255, 255, 0.7); }
+
+/* ── Responsive ── */
+@media (max-width: 960px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+  .footer-col--brand { grid-column: span 2; }
 }
 
 @media (max-width: 600px) {
-  .footer-grid { grid-template-columns: 1fr; gap: 28px; }
-  .footer-desc { max-width: 100%; }
+  .footer-inner { padding: 32px 16px 0; }
+  .footer-grid { grid-template-columns: 1fr; gap: 10px; padding-bottom: 8px; }
+  .footer-col--brand { grid-column: span 1; margin-bottom: 4px; }
+  .footer-bottom { flex-direction: column; align-items: flex-start; gap: 10px; padding: 16px 0; }
+  .footer-bottom-links { flex-wrap: wrap; gap: 12px; }
+
+  /* Collapsible Explore/Programs — starts closed, tap to expand */
+  .footer-col--collapsible {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 16px 0;
+  }
+  .footer-col--collapsible > summary.footer-heading {
+    cursor: pointer;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .footer-col--collapsible > summary.footer-heading::after {
+    content: "+";
+    font-size: 1.05rem;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.4);
+  }
+  .footer-col--collapsible[open] > summary.footer-heading::after {
+    content: "\2212";
+  }
+  .footer-col--collapsible .footer-links {
+    margin-top: 14px;
+  }
 }

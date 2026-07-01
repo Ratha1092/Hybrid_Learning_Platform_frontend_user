@@ -226,7 +226,10 @@ export default function Register() {
       const { data: regData } = await authService.register({ ...form, otp_code: code });
       login(regData.data.user, regData.data.token);
       setOtpStatus("success");
-      setTimeout(() => { close(); navigate(from ?? "/", { replace: true }); }, 800);
+      const redirectTo = sessionStorage.getItem("authRedirectTo") ?? from ?? "/";
+      sessionStorage.removeItem("authRedirectTo");
+      close();
+      setTimeout(() => navigate(redirectTo, { replace: true }), 800);
     } catch (err: unknown) {
       setOtpStatus("idle");
       const res = (err as { response?: { status?: number; data?: { message?: string; errors?: Record<string, string[]> } } }).response;
@@ -402,7 +405,7 @@ export default function Register() {
                 {sendStatus === "loading" ? <span className="rg-spinner" /> : "Send verification code →"}
               </button>
 
-              <OAuthButtons from={from} onError={(msg) => { setSendStatus("error"); setSendError(msg); }} />
+              <OAuthButtons from={from} onSuccess={close} onError={(msg) => { setSendStatus("error"); setSendError(msg); }} />
 
               <p className="rg-footer">Already have an account? <Link to="/PageLogin">Sign in</Link></p>
             </>

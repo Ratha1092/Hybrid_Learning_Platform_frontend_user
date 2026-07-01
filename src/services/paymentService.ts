@@ -38,10 +38,11 @@ interface VerifyResponse {
 }
 
 export const paymentService = {
-  checkout: (course_id: number, coupon_code?: string) =>
+  checkout: (course_id: number, coupon_code?: string, billing_address_id?: number) =>
     api.post<CheckoutResponse>("/orders", {
       course_id,
       ...(coupon_code ? { coupon_code } : {}),
+      ...(billing_address_id ? { billing_address_id } : {}),
     }),
 
   getStatus: (id: number) =>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { instructorService } from "../../../../services/instructorService";
+import { instructorService, type StandaloneSection } from "../../../../services/instructorService";
 import api from "../../../../api/axios";
 import "../css/CreateCourse.css";
 
@@ -176,9 +176,31 @@ interface CurriculumStepProps {
 }
 
 function CurriculumStep({ courseId, sections, setSections, onNext, onBack }: CurriculumStepProps) {
+  const navigate = useNavigate();
   const [newTitle, setNewTitle] = useState("");
   const [addingSection, setAddingSection] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  // ── Section Library state ──
+  const [library, setLibrary] = useState<StandaloneSection[]>([]);
+  const [loadingLib, setLoadingLib] = useState(true);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [attaching, setAttaching] = useState(false);
+  const [attachErr, setAttachErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    instructorService.getStandaloneSections()
+      .then(({ data }) => setLibrary(data.data ?? []))
+      .catch(() => {})
+      .finally(() => setLoadingLib(false));
+  }, []);
+
+  const toggleId = (id: number) =>
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
 
   const handleAddSection = async () => {
     if (!newTitle.trim()) return;
@@ -199,8 +221,24 @@ function CurriculumStep({ courseId, sections, setSections, onNext, onBack }: Cur
     } catch { /* silent */ }
   };
 
+  const handleContinue = async () => {
+    if (selectedIds.size > 0) {
+      setAttaching(true);
+      setAttachErr(null);
+      try {
+        await instructorService.attachSections(courseId, [...selectedIds]);
+      } catch {
+        setAttachErr("Failed to attach sections. Please try again.");
+        setAttaching(false);
+        return;
+      }
+      setAttaching(false);
+    }
+    onNext();
+  };
+
   const totalLessons = sections.reduce((sum, s) => sum + s.lessons.length, 0);
-  const canProceed = sections.length > 0 && totalLessons > 0;
+  const canProceed = sections.length > 0 || selectedIds.size > 0;
 
   return (
     <div className="cc-card">
@@ -208,15 +246,74 @@ function CurriculumStep({ courseId, sections, setSections, onNext, onBack }: Cur
         <span className="cc-card__icon">🎬</span>
         <h2>Curriculum</h2>
         <span style={{ marginLeft: "auto", fontSize: 13, color: "#9ca3af" }}>
-          {sections.length} sections · {totalLessons} lessons
+          {sections.length + selectedIds.size} sections · {totalLessons} lessons
         </span>
       </div>
-      <p className="cc-subtitle">Add sections, then add lessons inside each section.</p>
+      <p className="cc-subtitle">Attach sections from your library, or create new ones directly below.</p>
+
+      {/* ── Section Library picker ── */}
+      <div className="cur-library">
+        <div className="cur-library__head">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 5.5C7 5 9.5 5.4 12 7c2.5-1.6 5-2 8-1.5V18c-3-.5-5.5-.1-8 1.5-2.5-1.6-5-2-8-1.5Z"/>
+          </svg>
+          <h3>Attach from Section Library</h3>
+          {!loadingLib && library.length > 0 && (
+            <span className="cur-library__count">{selectedIds.size} selected</span>
+          )}
+        </div>
+
+        {loadingLib ? (
+          <div className="cur-library__loading">
+            <div className="cur-lib-spinner" />
+          </div>
+        ) : library.length === 0 ? (
+          <div className="cur-library__empty">
+            <p>No standalone sections yet.</p>
+            <button className="cur-lib-link" onClick={() => navigate("/instructor/courses/sections")}>
+              Build sections in Section Library →
+            </button>
+          </div>
+        ) : (
+          <div className="cur-library__list">
+            {library.map((s) => (
+              <label
+                key={s.id}
+                className={`cur-lib-item${selectedIds.has(s.id) ? " cur-lib-item--selected" : ""}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedIds.has(s.id)}
+                  onChange={() => toggleId(s.id)}
+                />
+                <div className="cur-lib-item__info">
+                  <span className="cur-lib-item__title">{s.title}</span>
+                  <span className="cur-lib-item__meta">
+                    {s.lessons_count === 0 ? "No lessons yet" : `${s.lessons_count} lesson${s.lessons_count !== 1 ? "s" : ""}`}
+                  </span>
+                </div>
+                {selectedIds.has(s.id) && (
+                  <span className="cur-lib-item__check">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20 6 9 17l-5-5"/>
+                    </svg>
+                  </span>
+                )}
+              </label>
+            ))}
+          </div>
+        )}
+
+        {attachErr && <p className="cur-library__err">⚠ {attachErr}</p>}
+      </div>
+
+      {/* ── Divider ── */}
+      <div className="cur-divider"><span>or create sections directly</span></div>
 
       {err && <div className="cc-error" style={{ marginBottom: 16 }}>⚠ {err}</div>}
 
       {sections.length === 0 && (
-        <div className="cur-empty">No sections yet. Add your first section below.</div>
+        <div className="cur-empty">No sections created yet.</div>
       )}
 
       <div className="cur-sections">
@@ -262,11 +359,11 @@ function CurriculumStep({ courseId, sections, setSections, onNext, onBack }: Cur
         <button className="cc-discard" onClick={onBack}>← Back</button>
         <button
           className="cc-continue"
-          onClick={onNext}
-          disabled={!canProceed}
+          onClick={handleContinue}
+          disabled={!canProceed || attaching}
           style={{ opacity: canProceed ? 1 : 0.4 }}
         >
-          Continue to Pricing →
+          {attaching ? "Attaching…" : "Continue to Pricing →"}
         </button>
       </div>
     </div>

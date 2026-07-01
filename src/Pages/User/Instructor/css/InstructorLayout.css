@@ -1,143 +1,151 @@
-/* ── Wrapper ─────────────────────────────────────────────────────────────────── */
-.il-wrap {
-  display: flex;
-  min-height: calc(100vh - 70px);
-  font-family: "Nunito", system-ui, sans-serif;
+/* ── Instructor Layout ───────────────────────────────────────────────────── */
+
+.il-page {
+  min-height: 100vh;
+  background: var(--pt-paper);
+  overflow-x: hidden;
 }
 
-/* ── Sidebar ─────────────────────────────────────────────────────────────────── */
+.il-wrap {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 236px 1fr;
+  gap: 0 32px;
+  padding: 40px 32px 80px;
+  align-items: start;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────────── */
 .il-sidebar {
-  width: 200px;
-  flex-shrink: 0;
-  background: #ffffff;
-  border-right: 1px solid #e5e7eb;
+  position: sticky;
+  top: 80px;
   display: flex;
   flex-direction: column;
-  padding: 0 0 16px;
-  position: sticky;
-  top: 70px;
-  height: calc(100vh - 70px);
-  overflow-y: auto;
+  gap: 2px;
+  background: transparent;
+  min-width: 0;
 }
 
-/* Section label */
 .il-section-label {
+  font-family: var(--pt-font-mono, "JetBrains Mono", monospace);
   font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  color: #9ca3af;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--pt-faint, #9C988C);
   text-transform: uppercase;
-  padding: 16px 16px 6px;
+  padding: 4px 14px 10px;
 }
 
-/* Nav container */
 .il-nav {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 0 8px;
 }
 
-/* Menu link */
 .il-link {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  border-radius: 8px;
-  font-size: 13.5px;
-  font-weight: 500;
-  color: #6b7280;
-  text-decoration: none;
-  transition: background 0.15s, color 0.15s;
-  cursor: pointer;
-}
-.il-link:hover { background: #f0fdfb; color: #1da89c; }
-.il-link--active {
-  background: #ccfaf5;
-  color: #0f766e;
-  font-weight: 700;
-}
-.il-link__icon { font-size: 15px; width: 18px; text-align: center; }
-
-/* Course setup step buttons */
-.il-step {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  font-family: "Nunito", system-ui, sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  color: #6b7280;
-  cursor: pointer;
+  gap: 12px;
   width: 100%;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--pt-muted, #6C6A61);
+  text-decoration: none;
+  cursor: pointer;
   text-align: left;
   transition: background 0.15s, color 0.15s;
 }
-.il-step:hover { background: #f0fdfb; color: #1da89c; }
-.il-step--active { color: #0f766e; font-weight: 700; background: #f0fdfb; }
 
-.il-step__dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #d1d5db;
+.il-link:hover {
+  background: var(--pt-line, #E7E3D9);
+  color: var(--pt-text, #1B1D23);
+}
+
+.il-link--active {
+  background: var(--pt-ink, #17191F) !important;
+  color: #fff !important;
+}
+
+.il-link__icon {
+  width: 18px;
+  height: 18px;
   flex-shrink: 0;
-  transition: background 0.15s;
-}
-.il-step__dot--active { background: #2ec4b6; }
-
-/* Footer */
-.il-footer {
-  margin-top: auto;
-  padding: 12px 12px 0;
-  border-top: 1px solid #f3f4f6;
-}
-.il-footer__user {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-  padding: 4px 0;
-}
-.il-footer__avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #2ec4b6;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  font-size: 14px;
+  color: inherit;
 }
-.il-footer__name { font-size: 12px; font-weight: 700; color: #111827; margin: 0; }
-.il-footer__role { font-size: 10px; color: #9ca3af; margin: 1px 0 0; }
-.il-footer__logout {
-  width: 100%;
-  padding: 7px;
-  background: #fef2f2;
-  border: 1px solid #fca5a5;
-  border-radius: 7px;
-  color: #ef4444;
-  font-family: "Nunito", system-ui, sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.il-footer__logout:hover { background: #fee2e2; }
 
-/* ── Content area ────────────────────────────────────────────────────────────── */
+.il-link--active .il-link__icon {
+  color: var(--pt-gold, #E0922E);
+}
+
+.il-link__icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ── Sidebar divider ── */
+.il-sidebar-div {
+  height: 1px;
+  background: var(--pt-line, #E7E3D9);
+  margin: 10px 0;
+}
+
+/* ── Content area ────────────────────────────────────────────────────────── */
 .il-content {
-  flex: 1;
-  background: #f8fafc;
-  min-height: calc(100vh - 70px);
-  overflow-y: auto;
+  min-width: 0;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .il-wrap {
+    grid-template-columns: 200px 1fr;
+    gap: 0 20px;
+    padding: 32px 20px 60px;
+  }
+}
+
+@media (max-width: 768px) {
+  .il-wrap {
+    grid-template-columns: 1fr;
+    padding: 0 0 80px;
+  }
+
+  .il-sidebar {
+    position: static;
+    padding: 14px 16px 0;
+  }
+
+  .il-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 6px;
+    padding-bottom: 6px;
+    scrollbar-width: none;
+  }
+
+  .il-nav::-webkit-scrollbar { display: none; }
+
+  .il-link {
+    flex-shrink: 0;
+    width: auto;
+    padding: 7px 12px;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    border-radius: 8px;
+  }
+
+  .il-link__icon { width: 15px; height: 15px; }
+
+  .il-content { padding: 0 16px; }
+
+  .il-section-label { display: none; }
 }

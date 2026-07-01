@@ -10,14 +10,18 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  border: none;
-  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.06);
   cursor: pointer;
-  border-radius: 50%;
-  color: #374151;
-  transition: background 0.15s;
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.75);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
-.notif-bell:hover { background: #f3f4f6; }
+.notif-bell:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+}
 
 /* ── Badge ───────────────────────────────────── */
 .notif-badge {
@@ -36,7 +40,7 @@
   align-items: center;
   justify-content: center;
   pointer-events: none;
-  box-shadow: 0 0 0 2px #fff;
+  box-shadow: 0 0 0 2px #17191F;
 }
 
 /* ── Dropdown ────────────────────────────────── */

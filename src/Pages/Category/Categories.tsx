@@ -1,7 +1,7 @@
 import './Categories.css'
 import { useEffect, useState } from 'react'
 import { ChevronRight, BookOpen, Code2, PenTool, FlaskConical, Camera, DollarSign, Video, Award, TrendingUp, Users, MessageSquare } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { categoryService, type Category } from '../../services/categoryService'
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -28,6 +28,8 @@ function Categories() {
   const [loading, setLoading]       = useState(true)
   const [error, setError]           = useState<string | null>(null)
   const navigate = useNavigate()
+  const location = useLocation()
+  const isOnCategoriesPage = location.pathname === '/categories'
 
   useEffect(() => {
     categoryService.getAll()
@@ -64,9 +66,11 @@ function Categories() {
             <h2 className="section-title">Top Categories</h2>
             <p className="section-sub">Explore our Popular Categories</p>
           </div>
-          <button className="btn btn-outline" onClick={() => navigate('/categories')}>
-            All Categories <ChevronRight size={16} />
-          </button>
+          {!isOnCategoriesPage && (
+            <button className="btn btn-outline" onClick={() => navigate('/categories')}>
+              All Categories <ChevronRight size={16} />
+            </button>
+          )}
         </div>
 
         <div className="categories-grid">

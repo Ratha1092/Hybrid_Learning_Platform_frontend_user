@@ -1,0 +1,34 @@
+/* ── Design token layer for profile/dashboard pages ─────── */
+/* Warm "paper" palette matching the reference designs       */
+:root {
+  --pt-paper:    #F2F0EA;
+  --pt-card:     #FFFFFF;
+  --pt-warm:     #FBFAF6;
+  --pt-line:     #E7E3D9;
+  --pt-line-2:   #DCD7CA;
+
+  --pt-text:     #1B1D23;
+  --pt-muted:    #6C6A61;
+  --pt-faint:    #9C988C;
+
+  --pt-gold:     #E0922E;
+  --pt-gold-6:   #C97E1F;
+  --pt-gold-s:   #FAF0DF;
+  --pt-gold-l:   #F0DCBC;
+
+  --pt-pine:     #27695A;
+  --pt-pine-s:   #E4F0EC;
+  --pt-pine-l:   #CFE5DE;
+
+  --pt-ink:      #17191F;
+  --pt-ink-2:    #22242C;
+  --pt-ink-3:    #2E313A;
+
+  --pt-rose:     #C0503F;
+  --pt-rose-s:   #FBECE9;
+
+  --pt-ease:     cubic-bezier(.2,.7,.2,1);
+
+  --pt-font-disp: "Bricolage Grotesque", system-ui, sans-serif;
+  --pt-font-mono: "JetBrains Mono", monospace;
+}
