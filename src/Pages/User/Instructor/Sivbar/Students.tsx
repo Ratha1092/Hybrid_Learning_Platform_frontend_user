@@ -95,7 +95,7 @@ export default function Students() {
                   <td className="st-course">{s.course_title}</td>
                   <td>
                     <div className="st-progress">
-                      <div className="st-progress__bar" style={{ width: `${s.progress_percentage ?? s.progress ?? 0}%` }} />
+                      <div className="st-progress__bar" style={{ "--w": `${s.progress_percentage ?? s.progress ?? 0}%` } as React.CSSProperties} />
                       <span>{s.progress_percentage ?? s.progress ?? 0}%</span>
                     </div>
                   </td>

@@ -1,0 +1,84 @@
+/* ── Categories standalone page ── */
+
+.pc-hero {
+  background: linear-gradient(135deg, #49BBBD 0%, #3aabac 100%);
+  padding: 48px 0 40px;
+}
+
+.pc-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.pc-bc-link {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.75);
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s;
+}
+
+.pc-bc-link:hover { color: #fff; }
+
+.pc-bc-sep { color: rgba(255, 255, 255, 0.5); }
+
+.pc-title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.pc-subtitle {
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* ── Body ── */
+.pc-body {
+  background: #f8fafc;
+  min-height: 60vh;
+  padding: 40px 0 80px;
+}
+
+.pc-count {
+  font-size: 0.875rem;
+  color: #94a3b8;
+  margin-bottom: 24px;
+}
+
+/* ── States ── */
+.pc-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 300px;
+  color: #94a3b8;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.pc-state--error { color: #dc2626; }
+
+.pc-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #49BBBD;
+  border-radius: 50%;
+  animation: pc-spin 0.7s linear infinite;
+}
+
+@keyframes pc-spin {
+  to { transform: rotate(360deg); }
+}

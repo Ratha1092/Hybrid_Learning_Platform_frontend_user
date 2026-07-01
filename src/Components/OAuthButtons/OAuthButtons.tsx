@@ -16,54 +16,74 @@ function randomState() {
 
 interface Props {
   onError?: (msg: string) => void;
+  onSuccess?: () => void;
+  from?: string;
 }
 
-export default function OAuthButtons({ onError }: Props) {
+// google.accounts.id.initialize() must run at most once per page load — calling it
+// again every time OAuthButtons remounts (e.g. switching the Login/Register modal)
+// triggers GSI's "called multiple times" warning and can point it at a stale callback.
+let googleInitialized = false;
+
+export default function OAuthButtons({ onError, onSuccess, from }: Props) {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [googleLoading, setGoogleLoading] = useState(false);
   const googleBtnRef = useRef<HTMLDivElement>(null);
 
+  // The GSI callback below is registered once and reused across remounts, so it
+  // must always act on the currently mounted instance's props/state rather than
+  // a closure captured at the first mount.
+  const latestRef = useRef({ onError, onSuccess, from, login, navigate, setGoogleLoading });
+  latestRef.current = { onError, onSuccess, from, login, navigate, setGoogleLoading };
+
   // Initialise Google Identity Services once the SDK is ready
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return;
 
-    const init = () => {
+    const renderBtn = () => {
       if (typeof google === "undefined" || !googleBtnRef.current) return;
-      google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: async (response) => {
-          setGoogleLoading(true);
-          try {
-            const payload = JSON.parse(atob(response.credential.split(".")[1])) as {
-              sub: string;
-              email: string;
-              name: string;
-              picture?: string;
-            };
-            const { data } = await authService.googleOAuth({
-              id_token: response.credential,
-              provider_id: payload.sub,
-              email: payload.email,
-              name: payload.name,
-              avatar: payload.picture ?? null,
-            });
-            if (!data.success) {
-              onError?.(data.message || "Google sign-in failed.");
-              return;
+
+      if (!googleInitialized) {
+        google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: async (response) => {
+            const { onError, onSuccess, from, login, navigate, setGoogleLoading } = latestRef.current;
+            setGoogleLoading(true);
+            try {
+              const payload = JSON.parse(atob(response.credential.split(".")[1])) as {
+                sub: string;
+                email: string;
+                name: string;
+                picture?: string;
+              };
+              const { data } = await authService.googleOAuth({
+                id_token: response.credential,
+                provider_id: payload.sub,
+                email: payload.email,
+                name: payload.name,
+                avatar: payload.picture ?? null,
+              });
+              if (!data.success) {
+                onError?.(data.message || "Google sign-in failed.");
+                return;
+              }
+              login(data.data.user, data.data.token);
+              onSuccess?.();
+              navigate(from ?? "/", { replace: true });
+            } catch (err: unknown) {
+              const msg =
+                (err as { response?: { data?: { message?: string } } }).response?.data?.message ??
+                "Google sign-in failed. Please try again.";
+              onError?.(msg);
+            } finally {
+              setGoogleLoading(false);
             }
-            login(data.data.user, data.data.token);
-            navigate("/", { replace: true });
-          } catch (err: unknown) {
-            const msg =
-              (err as { response?: { data?: { message?: string } } }).response?.data?.message ??
-              "Google sign-in failed. Please try again.";
-            onError?.(msg);
-          } finally {
-            setGoogleLoading(false);
-          }
-        },
-      });
+          },
+        });
+        googleInitialized = true;
+      }
+
       google.accounts.id.renderButton(googleBtnRef.current, {
         type: "standard",
         theme: "outline",
@@ -75,13 +95,13 @@ export default function OAuthButtons({ onError }: Props) {
 
     // SDK may already be loaded or still loading
     if (typeof google !== "undefined") {
-      init();
+      renderBtn();
     } else {
       const existing = document.querySelector<HTMLScriptElement>(
         'script[src*="accounts.google.com/gsi/client"]'
       );
       if (existing) {
-        existing.addEventListener("load", init, { once: true });
+        existing.addEventListener("load", renderBtn, { once: true });
       }
     }
   }, []);
@@ -89,6 +109,8 @@ export default function OAuthButtons({ onError }: Props) {
   const handleGitHub = () => {
     const state = randomState();
     sessionStorage.setItem("github_oauth_state", state);
+    if (from) sessionStorage.setItem("github_oauth_from", from);
+    else sessionStorage.removeItem("github_oauth_from");
     const params = new URLSearchParams({
       client_id: GITHUB_CLIENT_ID,
       redirect_uri: GITHUB_CALLBACK_URL,

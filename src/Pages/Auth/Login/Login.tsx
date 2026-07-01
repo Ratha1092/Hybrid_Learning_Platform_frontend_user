@@ -1,6 +1,6 @@
 import { useState, type ChangeEvent } from "react";
 import { usePlatformStats } from "../../../hooks/usePlatformStats";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { authService } from "../../../services/authService";
 import OAuthButtons from "../../../Components/OAuthButtons/OAuthButtons";
@@ -18,6 +18,9 @@ interface LoginErrors {
 }
 
 type Status = "idle" | "loading" | "success" | "error";
+type ResendStatus = "idle" | "sending" | "sent" | "error";
+
+const VERIFY_EMAIL_MESSAGE = "Please verify your email address before logging in.";
 
 const IconMail = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
@@ -72,8 +75,10 @@ const IconSpinner = () => (
 
 export default function Login() {
   const { login } = useAuth();
-  const { openRegister } = useAuthModal();
+  const { openRegister, close } = useAuthModal();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as { from?: string } | null)?.from;
 
   const stats = usePlatformStats();
   const [form, setForm] = useState<LoginForm>({ email: "", password: "" });
@@ -81,6 +86,8 @@ export default function Login() {
   const [status, setStatus] = useState<Status>("idle");
   const [serverMessage, setServerMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [resendStatus, setResendStatus] = useState<ResendStatus>("idle");
 
   const validate = (): LoginErrors => {
     const e: LoginErrors = {};
@@ -104,25 +111,46 @@ export default function Login() {
 
     setStatus("loading");
     setServerMessage("");
+    setNeedsVerification(false);
+    setResendStatus("idle");
 
     try {
       const { data } = await authService.login(form);
       login(data.data.user, data.data.token);
       setStatus("success");
       setServerMessage(data.message || "Login successful!");
-      setTimeout(() => navigate("/"), 1000);
+      const redirectTo = sessionStorage.getItem("authRedirectTo") ?? from ?? "/";
+      sessionStorage.removeItem("authRedirectTo");
+      setTimeout(() => { close(); navigate(redirectTo, { replace: true }); }, 1000);
     } catch (err: unknown) {
       setStatus("error");
       const res = (err as { response?: { data?: { message?: string; errors?: Record<string, string | string[]> } } }).response;
+      let emailMessage: string | undefined;
       if (res?.data?.errors) {
         const apiErrors: LoginErrors = {};
         Object.keys(res.data.errors).forEach((key) => {
           const val = res.data!.errors![key];
-          (apiErrors as Record<string, string>)[key] = Array.isArray(val) ? val[0] : val;
+          const message = Array.isArray(val) ? val[0] : val;
+          (apiErrors as Record<string, string>)[key] = message;
+          if (key === "email") emailMessage = message;
         });
         setErrors(apiErrors);
       }
+      if (emailMessage === VERIFY_EMAIL_MESSAGE) {
+        setNeedsVerification(true);
+      }
       setServerMessage(res?.data?.message || "Login failed. Please try again.");
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!form.email.trim()) return;
+    setResendStatus("sending");
+    try {
+      await authService.resendVerificationEmail(form.email);
+      setResendStatus("sent");
+    } catch {
+      setResendStatus("error");
     }
   };
 
@@ -187,6 +215,31 @@ export default function Login() {
             </div>
           )}
 
+          {needsVerification && (
+            <div className="login-alert login-alert--error" style={{ marginTop: -8 }}>
+              {resendStatus === "sent" ? (
+                <span>✓ Verification email sent. Please check your inbox.</span>
+              ) : (
+                <button
+                  type="button"
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: 0,
+                    font: "inherit",
+                    color: "inherit",
+                    textDecoration: "underline",
+                    cursor: "pointer",
+                  }}
+                  onClick={handleResendVerification}
+                  disabled={resendStatus === "sending"}
+                >
+                  {resendStatus === "sending" ? "Sending..." : "Resend verification email"}
+                </button>
+              )}
+            </div>
+          )}
+
           <div className="login-fields">
             <div>
               <label className="login-field-label">Email address *</label>
@@ -229,6 +282,8 @@ export default function Login() {
           </button>
 
           <OAuthButtons
+            from={from}
+            onSuccess={close}
             onError={(msg) => { setStatus("error"); setServerMessage(msg); }}
           />
 

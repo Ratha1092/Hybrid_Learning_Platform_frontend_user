@@ -1,4 +1,6 @@
 import api from "../api/axios";
+import type { EnrolledCourse } from "./courseService";
+import type { BillingAddress } from "./billingService";
 
 export interface StudentProfile {
   id?: number;
@@ -7,10 +9,33 @@ export interface StudentProfile {
   user_id?: number;
   bio?: string | null;
   avatar?: string | null;
+  avatar_url?: string | null;
   learning_goals?: string | null;
   interests?: string[];
   github?: string | null;
   linkedin?: string | null;
+}
+
+export interface DashboardData {
+  profile: StudentProfile & {
+    email?: string;
+    role?: string;
+    created_at?: string;
+  };
+  courses: EnrolledCourse[];
+  addresses: BillingAddress[];
+  notifications: Array<{
+    id: number;
+    type: string;
+    message: string;
+    read_at: string | null;
+    created_at: string;
+  }>;
+  stats: {
+    enrolled_courses: number;
+    completed_courses: number;
+    unread_notifications: number;
+  };
 }
 
 export const profileService = {
@@ -20,7 +45,6 @@ export const profileService = {
     const u = res.data.data;
     const sp = u.student_profile ?? {};
     const ip = u.instructor_profile ?? {};
-    // For instructors, student_profile is null — read local fallback for fields not on instructor_profile
     const localKey = `profile_extra_${u.id}`;
     const local = JSON.parse(localStorage.getItem(localKey) ?? "{}");
     return {
@@ -41,4 +65,20 @@ export const profileService = {
 
   update: (payload: Partial<StudentProfile>) =>
     api.put<{ data: StudentProfile; message: string }>("/users/profile", payload),
+
+  uploadAvatar: (file: File) => {
+    const form = new FormData();
+    form.append("avatar", file);
+    return api.post<{ data: { avatar_url: string }; message: string }>(
+      "/users/avatar",
+      form,
+      { headers: { "Content-Type": "multipart/form-data" } },
+    );
+  },
+
+  removeAvatar: () =>
+    api.delete<{ message: string }>("/users/avatar"),
+
+  getDashboard: () =>
+    api.get<{ data: DashboardData }>("/users/profile/dashboard"),
 };

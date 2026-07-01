@@ -75,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const fresh = data.data;
       setUser(prev => {
         if (!prev) return prev;
-        const updated = { ...prev, role: fresh.role, instructor_status: fresh.instructor_status };
+        const updated = { ...prev, role: fresh.role, instructor_status: fresh.instructor_status, avatar_url: fresh.avatar_url ?? prev.avatar_url };
         localStorage.setItem("user", JSON.stringify(updated));
         return updated;
       });

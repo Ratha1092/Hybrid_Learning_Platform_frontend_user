@@ -43,6 +43,8 @@ export interface CourseDetail extends Course {
   description: string;
   sections: Section[];
   is_enrolled?: boolean;
+  access_expired?: boolean;
+  access_expires_at?: string | null;
   instructor?: {
     id: number;
     name: string;
@@ -70,9 +72,6 @@ export const courseService = {
     api.get<{ data: { courses: Course[] } }>(`/categories/${categorySlug}`),
 
   getEnrolled: () => api.get<{ data: EnrolledCourse[] }>("/users/courses"),
-
-  getEnrollmentStatus: (courseId: number) =>
-    api.get<{ data: { enrolled: boolean } }>(`/users/courses/${courseId}/enrollment-status`),
 
   getBySlug: (slug: string) =>
     api.get<{ data: CourseDetail }>(`/courses/${slug}`),

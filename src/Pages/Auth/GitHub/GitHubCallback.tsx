@@ -39,7 +39,9 @@ export default function GitHubCallback() {
           return;
         }
         login(data.data.user, data.data.token);
-        navigate("/", { replace: true });
+        const from = sessionStorage.getItem("github_oauth_from");
+        sessionStorage.removeItem("github_oauth_from");
+        navigate(from || "/", { replace: true });
       })
       .catch((err: unknown) => {
         const msg = (err as { response?: { data?: { message?: string } } })

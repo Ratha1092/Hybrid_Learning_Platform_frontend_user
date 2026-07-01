@@ -26,6 +26,8 @@ interface CourseData {
   title: string;
   slug: string;
   sections: SectionItem[];
+  access_expired?: boolean;
+  access_expires_at?: string | null;
 }
 
 export default function Learn() {
@@ -38,6 +40,7 @@ export default function Learn() {
   const [error, setError] = useState<string | null>(null);
   const [completedIds, setCompletedIds] = useState<Set<number>>(new Set());
   const [openSections, setOpenSections] = useState<Set<number>>(new Set([0]));
+  const [completeError, setCompleteError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!localStorage.getItem("token")) {
@@ -47,10 +50,24 @@ export default function Learn() {
     if (!slug) return;
 
     api.get<{ data: CourseData }>(`/courses/${slug}`)
-      .then(({ data }) => {
-        setCourse(data.data);
-        const first = data.data.sections?.[0]?.lessons?.[0];
+      .then(async ({ data }) => {
+        const courseData = data.data;
+        setCourse(courseData);
+        const first = courseData.sections?.[0]?.lessons?.[0];
         if (first) setActiveLesson(first);
+
+        // Load saved progress for all lessons in parallel
+        const allLessons = courseData.sections?.flatMap(s => s.lessons) ?? [];
+        const results = await Promise.allSettled(
+          allLessons.map(l => api.get<{ data: { is_completed: boolean } }>(`/lessons/${l.id}/progress`))
+        );
+        const done = new Set<number>();
+        results.forEach((r, i) => {
+          if (r.status === "fulfilled" && r.value.data.data?.is_completed) {
+            done.add(allLessons[i].id);
+          }
+        });
+        setCompletedIds(done);
       })
       .catch(() => setError("Failed to load course."))
       .finally(() => setLoading(false));
@@ -58,17 +75,21 @@ export default function Learn() {
 
   const handleSelectLesson = (lesson: LessonItem) => {
     setActiveLesson(lesson);
+    setCompleteError(null);
   };
 
   const handleComplete = async (lessonId: number) => {
+    // Optimistic update — mark immediately so the UI responds
+    setCompletedIds((prev) => new Set([...prev, lessonId]));
+    setCompleteError(null);
     try {
       await api.post(`/lessons/${lessonId}/progress`, {
-        completed: true,
-        progress_percentage: 100,
+        is_completed: true,
       });
-      setCompletedIds((prev) => new Set([...prev, lessonId]));
     } catch {
-      // silent
+      // Roll back and show error
+      setCompletedIds((prev) => { const next = new Set(prev); next.delete(lessonId); return next; });
+      setCompleteError("Could not save progress. Please try again.");
     }
   };
 
@@ -158,6 +179,12 @@ export default function Learn() {
 
       {/* ── Main content ── */}
       <main className="learn-main">
+        {course.access_expired && (
+          <div className="learn-expired-banner">
+            <span>⏳ Your access to this course has expired.</span>
+            <button onClick={() => navigate(`/courses/${course.slug}`)}>Renew Access</button>
+          </div>
+        )}
         {activeLesson ? (
           <>
             {/* Video */}
@@ -188,6 +215,11 @@ export default function Learn() {
                       style={{ background: "#000" }}
                     />
                   )
+                ) : course.access_expired && !activeLesson.is_preview ? (
+                  <div className="learn-no-video">
+                    <span>⏳</span>
+                    <p>Your access has expired. Renew to keep watching.</p>
+                  </div>
                 ) : (
                   <div className="learn-no-video">
                     <span>🎬</span>
@@ -222,16 +254,19 @@ export default function Learn() {
                 <h2 className="learn-lesson-title">{activeLesson.title}</h2>
                 <span className="learn-lesson-type">{activeLesson.type}</span>
               </div>
-              {!completedIds.has(activeLesson.id) ? (
-                <button
-                  className="learn-complete-btn"
-                  onClick={() => handleComplete(activeLesson.id)}
-                >
-                  ✓ Mark as Complete
-                </button>
-              ) : (
-                <span className="learn-completed-badge">✓ Completed</span>
-              )}
+              <div className="learn-complete-wrap">
+                {completeError && <span className="learn-complete-error">{completeError}</span>}
+                {!completedIds.has(activeLesson.id) ? (
+                  <button
+                    className="learn-complete-btn"
+                    onClick={() => handleComplete(activeLesson.id)}
+                  >
+                    ✓ Mark as Complete
+                  </button>
+                ) : (
+                  <span className="learn-completed-badge">✓ Completed</span>
+                )}
+              </div>
             </div>
           </>
         ) : (

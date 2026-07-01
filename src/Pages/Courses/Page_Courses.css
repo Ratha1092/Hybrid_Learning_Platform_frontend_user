@@ -443,11 +443,12 @@
 }
 .stat-icon { font-size: 0.78rem; }
 
-/* Footer: View More right-aligned */
+/* Footer: Copy btn left, View More right */
 .course-card__footer {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
+  gap: 8px;
   margin-top: auto;
 }
 
@@ -471,6 +472,34 @@
   background: var(--cp-teal-dark);
   transform: translateY(-1px);
   box-shadow: 0 4px 14px rgba(46,196,182,0.45);
+}
+
+/* Copy link button */
+.course-card__copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  background: transparent;
+  border: 1.5px solid var(--cp-border);
+  border-radius: 8px;
+  color: var(--cp-text-2);
+  font-family: var(--cp-font);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+  white-space: nowrap;
+}
+.course-card__copy-btn:hover {
+  background: var(--cp-border);
+  border-color: var(--cp-border-h);
+  color: var(--cp-text);
+}
+.course-card__copy-btn--copied {
+  background: #e8f9f7;
+  border-color: #a7e8e3;
+  color: var(--cp-teal-dark);
 }
  
 /* ── Status badges ──────────────────────────────────────────────────────────── */

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, type ChangeEvent, type KeyboardEvent, type ClipboardEvent } from "react";
 import { usePlatformStats } from "../../../hooks/usePlatformStats";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { useAuthModal } from "../../../context/AuthModalContext";
 import { authService } from "../../../services/authService";
@@ -70,6 +70,8 @@ export default function Register() {
   const { login } = useAuth();
   const { close, openLogin } = useAuthModal();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as { from?: string } | null)?.from;
   const stats = usePlatformStats();
 
   const [step, setStep] = useState<Step>("form");
@@ -81,6 +83,7 @@ export default function Register() {
   const [agreed, setAgreed] = useState(false);
   const [sendStatus, setSendStatus] = useState<Status>("idle");
   const [sendError, setSendError] = useState("");
+  const [registrationDisabled, setRegistrationDisabled] = useState("");
 
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [otpStatus, setOtpStatus] = useState<Status>("idle");
@@ -159,6 +162,7 @@ export default function Register() {
       const msg = (err as { response?: { data?: { message?: string } } }).response?.data?.message
         ?? "Failed to send verification code. Please try again.";
       setSendError(msg);
+      setErrors((e) => ({ ...e, email: msg }));
       setSendStatus("error");
     }
   };
@@ -222,10 +226,20 @@ export default function Register() {
       const { data: regData } = await authService.register({ ...form, otp_code: code });
       login(regData.data.user, regData.data.token);
       setOtpStatus("success");
-      setTimeout(() => { close(); navigate("/"); }, 800);
+      const redirectTo = sessionStorage.getItem("authRedirectTo") ?? from ?? "/";
+      sessionStorage.removeItem("authRedirectTo");
+      close();
+      setTimeout(() => navigate(redirectTo, { replace: true }), 800);
     } catch (err: unknown) {
       setOtpStatus("idle");
-      const errData = (err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } }).response?.data;
+      const res = (err as { response?: { status?: number; data?: { message?: string; errors?: Record<string, string[]> } } }).response;
+      const errData = res?.data;
+
+      if (res?.status === 400) {
+        setRegistrationDisabled(errData?.message ?? "Registration is currently disabled.");
+        return;
+      }
+
       let msg = errData?.message ?? "Registration failed after verification.";
       if (errData?.errors) {
         const details = Object.entries(errData.errors)
@@ -391,7 +405,7 @@ export default function Register() {
                 {sendStatus === "loading" ? <span className="rg-spinner" /> : "Send verification code →"}
               </button>
 
-              <OAuthButtons onError={(msg) => { setSendStatus("error"); setSendError(msg); }} />
+              <OAuthButtons from={from} onSuccess={close} onError={(msg) => { setSendStatus("error"); setSendError(msg); }} />
 
               <p className="rg-footer">Already have an account? <Link to="/PageLogin">Sign in</Link></p>
             </>
@@ -407,6 +421,10 @@ export default function Register() {
 
               {otpStatus === "success" && (
                 <div className="rg-alert rg-alert--success">✓ Email verified! Creating your account…</div>
+              )}
+
+              {registrationDisabled && (
+                <div className="rg-alert rg-alert--error">⚠ {registrationDisabled}</div>
               )}
 
               <div className="rg-otp-boxes">
@@ -440,7 +458,7 @@ export default function Register() {
               <button
                 className="rg-btn"
                 onClick={handleVerify}
-                disabled={otpStatus === "loading" || otpStatus === "success" || otp.join("").length < OTP_LENGTH}
+                disabled={otpStatus === "loading" || otpStatus === "success" || !!registrationDisabled || otp.join("").length < OTP_LENGTH}
               >
                 {otpStatus === "loading" ? <span className="rg-spinner" /> : "Verify & Create Account →"}
               </button>

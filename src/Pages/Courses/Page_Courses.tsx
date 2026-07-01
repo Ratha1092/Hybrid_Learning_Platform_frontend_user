@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { courseService, type Course } from "../../services/courseService";
 import "./Page_Courses.css";
@@ -50,11 +50,23 @@ function Courses() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState("All");
+  const [copiedId, setCopiedId] = useState<number | null>(null);
+
+  const handleCopyLink = async (e: React.MouseEvent, course: Course) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}/courses/${course.slug ?? course.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedId(course.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch { /* clipboard unavailable */ }
+  };
  
 
   const [searchParams] = useSearchParams();
   const category = searchParams.get("category");
   const navigate = useNavigate();
+  const isMounted = useRef(false);
 
   const load = async (currentSearch: string, silent = false) => {
     if (!silent) setLoading(true);
@@ -75,8 +87,9 @@ function Courses() {
 
   useEffect(() => { load(search); }, [category]);
 
-  // Debounce search input before hitting the backend.
+  // Debounce search — skip the first render since the effect above already loaded.
   useEffect(() => {
+    if (!isMounted.current) { isMounted.current = true; return; }
     const timer = setTimeout(() => load(search), 400);
     return () => clearTimeout(timer);
   }, [search]);
@@ -206,6 +219,17 @@ function Courses() {
                 </div>
 
                 <div className="course-card__footer">
+                  <button
+                    className={`course-card__copy-btn${copiedId === course.id ? " course-card__copy-btn--copied" : ""}`}
+                    onClick={(e) => handleCopyLink(e, course)}
+                    title="Copy course link"
+                  >
+                    {copiedId === course.id ? (
+                      <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg> Copied!</>
+                    ) : (
+                      <><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Copy</>
+                    )}
+                  </button>
                   <button
                     className="course-card__view-btn"
                     onClick={(e) => { e.stopPropagation(); navigate(`/courses/${course.slug ?? course.id}`); }}
