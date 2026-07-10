@@ -2,18 +2,11 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_URL}/api/v1`,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
   },
-});
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
 });
 
 export const MAINTENANCE_EVENT = "app:maintenance";
@@ -31,10 +24,7 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    const shouldLogout = status === 401;
-
-    if (shouldLogout) {
-      localStorage.removeItem("token");
+    if (status === 401) {
       localStorage.removeItem("user");
       window.location.href = "/";
     }

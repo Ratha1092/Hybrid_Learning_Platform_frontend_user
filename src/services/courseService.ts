@@ -13,6 +13,8 @@ export interface Course {
   students_count?: number;
   views_count?: number;
   reviews_count?: number;
+  sections_count?: number;
+  category?: { id: number; name: string; slug: string } | null;
   instructor?: {
     id: number;
     name: string;
@@ -67,6 +69,11 @@ export interface EnrolledCourse {
 export const courseService = {
   getAll: (search?: string) =>
     api.get<{ data: Course[] }>("/courses", { params: search ? { search } : undefined }),
+
+  getByInstructor: (instructorId: number, search?: string) =>
+    api.get<{ data: Course[] }>("/courses", {
+      params: { instructor_id: instructorId, ...(search ? { search } : {}) },
+    }),
 
   getByCategory: (categorySlug: string) =>
     api.get<{ data: { courses: Course[] } }>(`/categories/${categorySlug}`),

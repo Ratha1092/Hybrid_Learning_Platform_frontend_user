@@ -1,12 +1,12 @@
 .oauth-wrap {
-  margin-top: 20px;
+  margin-top: 12px;
 }
 
 .oauth-divider {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 .oauth-divider__line {
   flex: 1;
@@ -15,7 +15,7 @@
 }
 .oauth-divider__text {
   font-size: 12px;
-  color: #94a3b8;
+  color: #64748b;
   font-weight: 600;
   white-space: nowrap;
   letter-spacing: 0.3px;
@@ -23,24 +23,27 @@
 
 .oauth-btns {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 10px;
+  align-items: stretch;
 }
 
 .oauth-btn {
-  width: 100%;
-  height: 46px;
+  flex: 1;
+  min-width: 0;
+  height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  border-radius: 11px;
-  font-size: 14px;
+  gap: 8px;
+  border-radius: 12px;
+  font-size: 13.5px;
   font-weight: 700;
-  font-family: "Nunito", "Inter", system-ui, sans-serif;
+  font-family: "DM Sans", system-ui, sans-serif;
   cursor: pointer;
   transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
   border: 1.5px solid transparent;
+  white-space: nowrap;
 }
 .oauth-btn:hover:not(:disabled) { transform: translateY(-1px); }
 .oauth-btn:active:not(:disabled) { transform: translateY(0); }
@@ -55,31 +58,56 @@
   box-shadow: 0 4px 14px rgba(15,23,42,0.25);
 }
 
+.oauth-btn--google {
+  background: #ffffff;
+  color: #3c4043;
+  border-color: #dadce0;
+  width: 100%;
+}
+.oauth-btn--google:hover:not(:disabled) {
+  background: #f8f9fa;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  border-color: #c6c6c6;
+}
+.oauth-btn--google:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Wrapper positions the real (invisible) SDK button on top of our styled button */
+.oauth-btn-google-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+/* The SDK iframe sits over our button at opacity ~0 so clicks reach it */
+.oauth-btn-google-overlay {
+  position: absolute;
+  inset: 0;
+  opacity: 0.001;
+  overflow: hidden;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.oauth-btn-google-overlay > div,
+.oauth-btn-google-overlay iframe {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 42px;
+}
+
 .oauth-btn__icon {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
 }
 
-/* Google button rendered by GSI SDK */
-.oauth-btn--google-wrap {
-  width: 100%;
-  min-height: 46px;
-  border-radius: 11px;
-  overflow: hidden;
-}
-.oauth-btn--google-wrap > div,
-.oauth-btn--google-wrap iframe {
-  width: 100% !important;
-  border-radius: 11px;
-}
-
-.oauth-btn--google-loading {
-  background: #fff;
-  color: #475569;
-  border-color: #e2e8f0;
-  font-size: 13px;
-  gap: 8px;
-}
-
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Dark mode ─────────────────────────────────── */
+html.dark .oauth-divider__line { background: #334155; }
+html.dark .oauth-btn--github   { background: #1e293b; border-color: #334155; }
+html.dark .oauth-btn--github:hover { background: #273548; }
+html.dark .oauth-btn--google   { background: #1e293b; color: #e2e8f0; border-color: #334155; }
+html.dark .oauth-btn--google:hover:not(:disabled) { background: #273548; border-color: #475569; }

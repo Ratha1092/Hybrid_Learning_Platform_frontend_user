@@ -16,8 +16,8 @@ export default function GitHubCallback() {
     const code = params.get("code");
     const returnedState = params.get("state");
 
-    const savedState = sessionStorage.getItem("github_oauth_state");
-    sessionStorage.removeItem("github_oauth_state");
+    const savedState = localStorage.getItem("github_oauth_state");
+    localStorage.removeItem("github_oauth_state");
 
     if (!code) {
       setState("error");
@@ -31,16 +31,17 @@ export default function GitHubCallback() {
       return;
     }
 
-    authService.githubOAuth(code)
+    authService.csrf()
+      .then(() => authService.githubOAuth(code))
       .then(({ data }) => {
         if (!data.success) {
           setState("error");
           setErrorMsg(data.message || "GitHub login failed.");
           return;
         }
-        login(data.data.user, data.data.token);
-        const from = sessionStorage.getItem("github_oauth_from");
-        sessionStorage.removeItem("github_oauth_from");
+        login(data.data.user);
+        const from = localStorage.getItem("github_oauth_from");
+        localStorage.removeItem("github_oauth_from");
         navigate(from || "/", { replace: true });
       })
       .catch((err: unknown) => {

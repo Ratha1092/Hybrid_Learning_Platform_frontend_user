@@ -1,34 +1,61 @@
 /* ── Design token layer for profile/dashboard pages ─────── */
-/* Warm "paper" palette matching the reference designs       */
+/* Blue-system palette matching the app-wide design           */
 :root {
-  --pt-paper:    #F2F0EA;
+  --pt-paper:    #EEF1F6;
   --pt-card:     #FFFFFF;
-  --pt-warm:     #FBFAF6;
-  --pt-line:     #E7E3D9;
-  --pt-line-2:   #DCD7CA;
+  --pt-warm:     #f8fafc;
+  --pt-line:     #e2e8f0;
+  --pt-line-2:   #cbd5e1;
 
-  --pt-text:     #1B1D23;
-  --pt-muted:    #6C6A61;
-  --pt-faint:    #9C988C;
+  --pt-text:     #0f172a;
+  --pt-muted:    #64748b;
+  --pt-faint:    #94a3b8;
 
-  --pt-gold:     #E0922E;
-  --pt-gold-6:   #C97E1F;
-  --pt-gold-s:   #FAF0DF;
-  --pt-gold-l:   #F0DCBC;
+  /* Primary accent: blue (replaces warm gold) */
+  --pt-gold:     #2563EB;
+  --pt-gold-6:   #1d4ed8;
+  --pt-gold-s:   #eff6ff;
+  --pt-gold-l:   #bfdbfe;
 
-  --pt-pine:     #27695A;
-  --pt-pine-s:   #E4F0EC;
-  --pt-pine-l:   #CFE5DE;
+  /* Success: green */
+  --pt-pine:     #16a34a;
+  --pt-pine-s:   #dcfce7;
+  --pt-pine-l:   #bbf7d0;
 
-  --pt-ink:      #17191F;
-  --pt-ink-2:    #22242C;
-  --pt-ink-3:    #2E313A;
+  --pt-ink:      #0f172a;
+  --pt-ink-2:    #1e293b;
+  --pt-ink-3:    #334155;
 
-  --pt-rose:     #C0503F;
-  --pt-rose-s:   #FBECE9;
+  --pt-rose:     #ef4444;
+  --pt-rose-s:   #fee2e2;
 
   --pt-ease:     cubic-bezier(.2,.7,.2,1);
 
-  --pt-font-disp: "Bricolage Grotesque", system-ui, sans-serif;
-  --pt-font-mono: "JetBrains Mono", monospace;
+  --pt-font-disp: "Plus Jakarta Sans", system-ui, sans-serif;
+  --pt-font-mono: "DM Sans", system-ui, sans-serif;
+}
+
+/* ── Dark mode token overrides ──────────────────── */
+html.dark {
+  --pt-paper:  #0f172a;
+  --pt-card:   #1e293b;
+  --pt-warm:   #1a2638;
+  --pt-line:   #334155;
+  --pt-line-2: #3f4f68;
+
+  --pt-text:   #f1f5f9;
+  --pt-muted:  #94a3b8;
+  --pt-faint:  #64748b;
+
+  --pt-gold-s: rgba(37,99,235,0.12);
+  --pt-gold-l: rgba(37,99,235,0.22);
+
+  --pt-pine-s: rgba(22,163,74,0.12);
+  --pt-pine-l: rgba(22,163,74,0.22);
+
+  --pt-ink:   #f8fafc;
+  --pt-ink-2: #e2e8f0;
+  --pt-ink-3: #cbd5e1;
+
+  --pt-rose-s: rgba(239,68,68,0.12);
 }

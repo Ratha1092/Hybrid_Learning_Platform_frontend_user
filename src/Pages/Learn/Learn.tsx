@@ -1,7 +1,16 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../api/axios";
+import { classifyVideoUrl } from "../../utils/videoUrl";
 import "./Learn.css";
+
+function buildYouTubeEmbed(url: string): string {
+  return url.replace("watch?v=", "embed/").replace("youtu.be/", "www.youtube.com/embed/");
+}
+
+function buildVimeoEmbed(url: string): string {
+  return url.replace("vimeo.com/", "player.vimeo.com/video/");
+}
 
 interface LessonItem {
   id: number;
@@ -43,10 +52,6 @@ export default function Learn() {
   const [completeError, setCompleteError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!localStorage.getItem("token")) {
-      navigate("/");
-      return;
-    }
     if (!slug) return;
 
     api.get<{ data: CourseData }>(`/courses/${slug}`)
@@ -190,42 +195,53 @@ export default function Learn() {
             {/* Video */}
             {activeLesson.type === "video" && (
               <div className="learn-video-wrap">
-                {activeLesson.video_url ? (
-                  /youtube\.com|youtu\.be/.test(activeLesson.video_url) ? (
+                {(() => {
+                  const kind = classifyVideoUrl(activeLesson.video_url);
+                  if (kind === "youtube") return (
                     <iframe
-                      src={activeLesson.video_url.replace("watch?v=", "embed/").replace("youtu.be/", "www.youtube.com/embed/")}
+                      src={buildYouTubeEmbed(activeLesson.video_url!)}
                       title={activeLesson.title}
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
                       className="learn-video"
                     />
-                  ) : /vimeo\.com/.test(activeLesson.video_url) ? (
+                  );
+                  if (kind === "vimeo") return (
                     <iframe
-                      src={activeLesson.video_url.replace("vimeo.com/", "player.vimeo.com/video/")}
+                      src={buildVimeoEmbed(activeLesson.video_url!)}
                       title={activeLesson.title}
                       allow="autoplay; fullscreen; picture-in-picture"
                       allowFullScreen
                       className="learn-video"
                     />
-                  ) : (
+                  );
+                  if (kind === "direct") return (
                     <video
-                      src={activeLesson.video_url}
+                      src={activeLesson.video_url!}
                       controls
                       className="learn-video"
                       style={{ background: "#000" }}
                     />
-                  )
-                ) : course.access_expired && !activeLesson.is_preview ? (
-                  <div className="learn-no-video">
-                    <span>⏳</span>
-                    <p>Your access has expired. Renew to keep watching.</p>
-                  </div>
-                ) : (
-                  <div className="learn-no-video">
-                    <span>🎬</span>
-                    <p>No video URL provided for this lesson.</p>
-                  </div>
-                )}
+                  );
+                  if (activeLesson.video_url) return (
+                    <div className="learn-no-video">
+                      <span>🚫</span>
+                      <p>Invalid video URL.</p>
+                    </div>
+                  );
+                  if (course.access_expired && !activeLesson.is_preview) return (
+                    <div className="learn-no-video">
+                      <span>⏳</span>
+                      <p>Your access has expired. Renew to keep watching.</p>
+                    </div>
+                  );
+                  return (
+                    <div className="learn-no-video">
+                      <span>🎬</span>
+                      <p>No video URL provided for this lesson.</p>
+                    </div>
+                  );
+                })()}
               </div>
             )}
 

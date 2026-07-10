@@ -178,3 +178,30 @@
   font-family: "Nunito", system-ui, sans-serif; font-weight: 600;
 }
 .ec-thumb-remove:hover { text-decoration: underline; }
+
+/* ── Dark mode ─────────────────────────────────── */
+html.dark .ec-page         { color: #f1f5f9; }
+html.dark .ec-back         { background: #1e293b; color: #94a3b8; border-color: #334155; }
+html.dark .ec-back:hover   { background: #273548; }
+html.dark .ec-title        { color: #f1f5f9; }
+html.dark .ec-tabs         { border-bottom-color: #334155; }
+html.dark .ec-tab          { color: #64748b; }
+html.dark .ec-tab:hover    { color: #e2e8f0; }
+html.dark .ec-tab--active  { color: #2ec4b6; border-bottom-color: #2ec4b6; }
+html.dark .ec-card         { background: #1e293b; box-shadow: 0 2px 10px rgba(0,0,0,0.4); }
+html.dark .ec-field label  { color: #94a3b8; }
+html.dark .ec-field input,
+html.dark .ec-field select,
+html.dark .ec-field textarea {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+html.dark .ec-field input:focus,
+html.dark .ec-field select:focus,
+html.dark .ec-field textarea:focus {
+  border-color: #2ec4b6;
+  box-shadow: 0 0 0 3px rgba(46,196,182,0.15);
+}
+html.dark .curr-spinner,
+html.dark .ec-spinner { border-color: #334155; border-top-color: #2ec4b6; }
