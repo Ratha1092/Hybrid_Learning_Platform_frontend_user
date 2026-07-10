@@ -1,43 +1,53 @@
-import { Search, Menu, X } from "lucide-react";
+import { GraduationCap, Menu, X, ChevronDown, LogOut, User, Settings, Users, Sun, Moon } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
-import "./Navbar.css";
+import SearchBar from "../Search/SearchBar";
 import { useAuth } from "../../context/AuthContext";
 import { useAuthModal } from "../../context/AuthModalContext";
 import { useSettings } from "../../context/SettingsContext";
 import Notification from "../Notification/Notification";
 import { useLanguage } from "../../context/LanguageContext";
-import fallbackLogo from "../../assets/logo1.png";
-
-const API_BASE = import.meta.env.VITE_API_URL ?? "";
-function resolveLogoUrl(url: string | undefined): string {
-  if (!url) return fallbackLogo;
-  return url.startsWith("http") ? url : `${API_BASE}${url}`;
-}
+import { useTheme } from "../../context/ThemeContext";
 
 function Navbar() {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
   const { lang, t, toggleLang } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
   const { openLogin, openRegister } = useAuthModal();
   const { settings } = useSettings();
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [avatarBroken, setAvatarBroken] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const siteName = settings.site_name || "Digital Learning";
-  const logoUrl = resolveLogoUrl(settings.logo_url);
-
+  const siteName = settings.site_name || "Hybrid Learning";
   const nameParts = siteName.split(" ");
   const brandFirst = nameParts[0];
   const brandRest = nameParts.slice(1).join(" ");
 
-  const userNameParts = user?.name?.split(" ") ?? [];
-  const lastName = userNameParts.length > 1 ? userNameParts[userNameParts.length - 1] : userNameParts[0] ?? "";
   const initial = (user?.name?.charAt(0) ?? "U").toUpperCase();
+  const showAvatarImg = !!user?.avatar_url && !avatarBroken;
 
   const isStudent = isAuthenticated && user?.role !== "instructor" && user?.instructor_status !== "verified";
   const isInstructor = isAuthenticated && (user?.role === "instructor" || user?.instructor_status === "verified");
+
+  const navLinks = [
+    { to: "/home",       label: t("nav.home") },
+    { to: "/courses",    label: t("nav.courses") },
+    { to: "/instructors", label: t("nav.instructors") },
+    { to: "/library",    label: t("nav.library") },
+    { to: "/contact",    label: t("nav.contact") },
+  ];
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -49,304 +59,271 @@ function Navbar() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Retry the image whenever the URL itself changes (e.g. refreshUser() resolves a working one).
   useEffect(() => { setAvatarBroken(false); }, [user?.avatar_url]);
 
   const closeMenu = () => setMenuOpen(false);
-
-  const handleLogout = () => {
-    setDropdownOpen(false);
-    logout();
-    navigate("/");
-  };
-
-  const navLinks = [
-    { to: "/home",       label: t("nav.home") },
-    { to: "/courses",    label: t("nav.courses") },
-    { to: "/categories", label: t("nav.categories") },
-    { to: "/library",    label: t("nav.library") },
-    { to: "/contact",    label: t("nav.contact") },
-  ];
-
-  const [avatarBroken, setAvatarBroken] = useState(false);
-  const showAvatarImg = !!user?.avatar_url && !avatarBroken;
+  const handleLogout = () => { setDropdownOpen(false); logout(); navigate("/"); };
 
   return (
-    <nav className="navbar">
-      <div className="navbar-inner">
+    <header
+      className={`sticky top-0 z-50 w-full transition-all duration-300 ${
+        scrolled ? "glass shadow-soft dark:bg-slate-900/90 dark:border-b dark:border-slate-800" : "bg-transparent"
+      }`}
+    >
+      <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
+        <div className="flex h-16 items-center justify-between gap-4">
 
-        {/* ── Logo ── */}
-        <NavLink to="/" className="navbar-logo" onClick={closeMenu}>
-          <div className="navbar-logo-mark">
-            <img src={logoUrl} alt={siteName} className="navbar-logo-img" />
-          </div>
-          <span className="navbar-logo-text">
-            <span className="navbar-logo-word1">{brandFirst}</span>
-            {brandRest && <span className="navbar-logo-word2"> {brandRest}</span>}
-          </span>
-        </NavLink>
+          {/* ── Logo ── */}
+          <NavLink to="/" className="flex items-center gap-2.5 shrink-0" onClick={closeMenu}>
+            <span className="grid h-9 w-9 place-items-center rounded-xl grad-blue text-white shadow-glow">
+              <GraduationCap className="h-5 w-5" strokeWidth={2.4} />
+            </span>
+            <span className="font-display text-lg font-extrabold ink">
+              {brandFirst}<span className="brand-blue">{brandRest ? ` ${brandRest}` : ""}</span>
+            </span>
+          </NavLink>
 
-        {/* ── Desktop Nav Links ── */}
-        <ul className="navbar-links">
-          {navLinks.map(({ to, label }) => (
-            <li key={to}>
-              <NavLink
-                to={to}
-                end={to === "/home"}
-                className={({ isActive }) =>
-                  isActive ? "navbar-link navbar-link--active" : "navbar-link"
-                }
-                onClick={closeMenu}
-              >
-                {label}
-              </NavLink>
-            </li>
-          ))}
-        </ul>
-
-        {/* ── Search ── */}
-        {isAuthenticated && (
-          <div className="navbar-search">
-            <Search size={15} className="navbar-search-icon" />
-            <input
-              className="navbar-search-input"
-              type="text"
-              placeholder="Search courses, topics…"
-            />
-          </div>
-        )}
-
-        {/* ── Become an Instructor (desktop, logged-in students only) ── */}
-        {isStudent && user?.instructor_status !== "pending" && (
-          <button
-            className="navbar-become-instructor-btn"
-            onClick={() => navigate("/instructor/register")}
-          >
-            Become an Instructor
-          </button>
-        )}
-
-        <div className="navbar-right">
-          {/* Language toggle */}
-          <button className="navbar-lang-btn" onClick={toggleLang} title="Toggle language">
-            <img
-              src={`https://flagcdn.com/w20/${lang === "en" ? "kh" : "gb"}.png`}
-              alt={lang.toUpperCase()}
-            />
-            <span>{lang === "kh" ? "EN" : "KH"}</span>
-          </button>
-
-          {/* Notification */}
-          {isAuthenticated && <Notification />}
-
-          {/* Auth */}
-          {!isAuthenticated ? (
-            <div className="navbar-auth">
-              <button className="navbar-btn-ghost" onClick={openLogin}>{t("nav.login")}</button>
-              <button className="navbar-btn-primary" onClick={openRegister}>{t("nav.register")}</button>
-            </div>
-          ) : (
-            <div className="navbar-auth">
-              {/* Instructor dashboard */}
-              {isInstructor && (
-                <NavLink to="/instructor/dashboard">
-                  <button className="navbar-btn-secondary">{t("nav.dashboard")}</button>
-                </NavLink>
-              )}
-
-              {/* Student dashboard button — sits right before the profile pill */}
-              {isStudent && (
-                <button
-                  className="navbar-dashboard-btn"
-                  onClick={(e) => {
-                    const btn = e.currentTarget;
-                    btn.classList.remove("navbar-dashboard-btn--clicked");
-                    void btn.offsetWidth; // force reflow to restart animation
-                    btn.classList.add("navbar-dashboard-btn--clicked");
-                    navigate("/profile");
-                  }}
-                >
-                  <svg className="navbar-dash-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-                    <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-                    <rect x="3" y="14" width="7" height="7" rx="1.5"/>
-                    <rect x="14" y="14" width="7" height="7" rx="1.5"/>
-                  </svg>
-                  Dashboard
-                </button>
-              )}
-
-              {/* Profile dropdown */}
-              <div className="navbar-profile-wrap" ref={dropdownRef}>
-                <button
-                  className="navbar-profile-btn"
-                  onClick={() => setDropdownOpen(v => !v)}
-                  aria-expanded={dropdownOpen}
-                >
-                  <div className="navbar-avatar">
-                    {showAvatarImg ? (
-                      <img src={user!.avatar_url!} alt={user!.name} onError={() => setAvatarBroken(true)} />
-                    ) : (
-                      <span>{initial}</span>
-                    )}
-                  </div>
-                  <span className="navbar-username">{lastName}</span>
-                  <svg
-                    className={`navbar-chevron${dropdownOpen ? " navbar-chevron--up" : ""}`}
-                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                  >
-                    <polyline points="6 9 12 15 18 9"/>
-                  </svg>
-                </button>
-
-                {dropdownOpen && (
-                  <div className="navbar-dropdown">
-                    <div className="navbar-dd-user">
-                      <div className="navbar-dd-avatar">
-                        {showAvatarImg ? (
-                          <img src={user!.avatar_url!} alt={user!.name} onError={() => setAvatarBroken(true)} />
-                        ) : (
-                          <span>{initial}</span>
-                        )}
-                      </div>
-                      <div className="navbar-dd-info">
-                        <span className="navbar-dd-name">{user?.name ?? "—"}</span>
-                        <span className="navbar-dd-email">{user?.email ?? "—"}</span>
-                      </div>
-                    </div>
-
-                    <div className="navbar-dd-sep" />
-
-                    <button
-                      className="navbar-dd-item"
-                      onClick={() => { setDropdownOpen(false); navigate("/profile/edit"); }}
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                      </svg>
-                      Edit profile
-                    </button>
-
-                    <button
-                      className="navbar-dd-item"
-                      onClick={() => { setDropdownOpen(false); navigate("/profile"); }}
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="3"/>
-                        <path d="M19.4 13a7.8 7.8 0 0 0 0-2l2-1.5-2-3.4-2.3 1a7.6 7.6 0 0 0-1.7-1l-.4-2.6h-4l-.4 2.6a7.6 7.6 0 0 0-1.7 1l-2.3-1-2 3.4L4.6 11a7.8 7.8 0 0 0 0 2l-2 1.5 2 3.4 2.3-1a7.6 7.6 0 0 0 1.7 1l.4 2.6h4l.4-2.6a7.6 7.6 0 0 0 1.7-1l2.3 1 2-3.4L19.4 13Z"/>
-                      </svg>
-                      Account settings
-                    </button>
-
-                    {isStudent && user?.instructor_status !== "pending" && (
-                      <>
-                        <button
-                          className="navbar-dd-item navbar-dd-item--instructor"
-                          onClick={() => { setDropdownOpen(false); navigate("/instructor/register"); }}
-                        >
-                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                            <circle cx="9" cy="7" r="4"/>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                          </svg>
-                          Become an Instructor
-                        </button>
-                      </>
-                    )}
-
-                    {user?.instructor_status === "pending" && (
-                      <div className="navbar-dd-item navbar-dd-item--pending">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
-                        </svg>
-                        Application pending
-                      </div>
-                    )}
-
-                    <div className="navbar-dd-sep" />
-
-                    <button className="navbar-dd-item navbar-dd-item--logout" onClick={handleLogout}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                        <polyline points="16 17 21 12 16 7"/>
-                        <line x1="21" y1="12" x2="9" y2="12"/>
-                      </svg>
-                      Log out
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Hamburger */}
-          <button className="navbar-hamburger" onClick={() => setMenuOpen(v => !v)} aria-label="Toggle menu">
-            {menuOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
-        </div>
-      </div>
-
-      {/* ── Mobile Menu ── */}
-      {menuOpen && (
-        <div className="navbar-mobile-menu">
-          <ul className="navbar-mobile-links">
+          {/* ── Desktop Nav Links ── */}
+          <ul className="hidden items-center gap-1 lg:flex">
             {navLinks.map(({ to, label }) => (
               <li key={to}>
                 <NavLink
                   to={to}
                   end={to === "/home"}
                   className={({ isActive }) =>
-                    isActive ? "navbar-mobile-link navbar-mobile-link--active" : "navbar-mobile-link"
+                    `group relative flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold transition-colors hover:text-slate-900 dark:hover:text-slate-100 ${
+                      isActive ? "text-blue-500" : "text-slate-600 dark:text-slate-300"
+                    }`
                   }
                   onClick={closeMenu}
                 >
-                  {label}
+                  {({ isActive }) => (
+                    <>
+                      {label}
+                      <span
+                        className={`absolute inset-x-3 -bottom-0.5 h-0.5 origin-left rounded-full grad-blue transition-transform duration-300 ${
+                          isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
+                        }`}
+                      />
+                    </>
+                  )}
                 </NavLink>
               </li>
             ))}
-            {isStudent && (
-              <li>
-                <NavLink
-                  to="/profile"
-                  className={({ isActive }) =>
-                    isActive ? "navbar-mobile-link navbar-mobile-link--active" : "navbar-mobile-link"
-                  }
-                  onClick={closeMenu}
-                >
-                  Dashboard
-                </NavLink>
-              </li>
-            )}
-            {isStudent && user?.instructor_status !== "pending" && (
-              <li>
-                <NavLink
-                  to="/instructor/register"
-                  className={({ isActive }) =>
-                    isActive ? "navbar-mobile-link navbar-mobile-link--active" : "navbar-mobile-link"
-                  }
-                  onClick={closeMenu}
-                >
-                  Become an Instructor
-                </NavLink>
-              </li>
-            )}
           </ul>
-          <div className="navbar-mobile-footer">
+
+          {/* ── Right side ── */}
+          <div className="flex items-center gap-3">
+            {/* Search */}
+            <SearchBar />
+
+            {/* Notifications */}
+            {isAuthenticated && <Notification />}
+
+            {/* Language toggle */}
+            <button
+              className="hidden h-9 items-center gap-1.5 rounded-full border border-slate-200 bg-white/60 px-2.5 text-xs font-semibold text-slate-600 shadow-e1 transition-colors hover:bg-white sm:flex dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300 dark:hover:bg-slate-800"
+              onClick={toggleLang}
+              title="Toggle language"
+            >
+              <img
+                src={`https://flagcdn.com/w20/${lang === "en" ? "kh" : "gb"}.png`}
+                alt={lang.toUpperCase()}
+                className="h-3.5 w-5 rounded-sm object-cover"
+              />
+              <span>{lang === "kh" ? "EN" : "KH"}</span>
+            </button>
+
+            {/* Theme toggle */}
+            <button
+              onClick={toggleTheme}
+              title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              className="hidden h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white/60 text-slate-600 shadow-e1 transition-colors hover:bg-white dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300 dark:hover:bg-slate-800 sm:flex"
+            >
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+
+            {/* Divider */}
+            <div className="hidden h-5 w-px bg-slate-200 dark:bg-slate-700 sm:block" />
+
+            {/* Auth */}
             {!isAuthenticated ? (
               <>
-                <button className="navbar-btn-ghost navbar-btn--full" onClick={() => { openLogin(); closeMenu(); }}>{t("nav.login")}</button>
-                <button className="navbar-btn-primary navbar-btn--full" onClick={() => { openRegister(); closeMenu(); }}>{t("nav.register")}</button>
+                <button
+                  onClick={openLogin}
+                  className="hidden text-sm font-semibold text-slate-600 transition-colors hover:text-slate-900 sm:block"
+                >
+                  {t("nav.login")}
+                </button>
+                <button
+                  onClick={openRegister}
+                  className="hidden h-10 rounded-xl bg-brand px-5 text-sm font-semibold text-white shadow-glow transition-transform hover:-translate-y-0.5 hover:bg-blue-700 sm:inline-flex items-center"
+                >
+                  {t("nav.register")}
+                </button>
               </>
             ) : (
-              <button className="navbar-btn-primary navbar-btn--full" onClick={() => { navigate("/profile/edit"); closeMenu(); }}>Edit Profile</button>
+              <>
+                {/* Dashboard link — all authenticated users */}
+                {isAuthenticated && (
+                  <NavLink
+                    to={isInstructor ? "/instructor/dashboard" : "/profile"}
+                    className="hidden h-9 items-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold ink shadow-e1 transition-colors hover:border-blue-300 hover:text-blue-600 md:inline-flex dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-500 dark:hover:text-blue-400"
+                  >
+                    Dashboard
+                  </NavLink>
+                )}
+
+                {/* Profile dropdown */}
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-2.5 py-1.5 shadow-e1 transition-colors hover:border-blue-200 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-500"
+                    onClick={() => setDropdownOpen(v => !v)}
+                    aria-expanded={dropdownOpen}
+                  >
+                    <div className="grid h-7 w-7 place-items-center overflow-hidden rounded-lg bg-blue-100 text-sm font-bold text-blue-600">
+                      {showAvatarImg ? (
+                        <img src={user!.avatar_url!} alt={user!.name} className="h-7 w-7 object-cover" onError={() => setAvatarBroken(true)} />
+                      ) : (
+                        <span>{initial}</span>
+                      )}
+                    </div>
+                    <span className="hidden max-w-[80px] truncate text-sm font-semibold ink sm:block">
+                      {user?.name?.split(" ")[0] ?? ""}
+                    </span>
+                    <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+                  </button>
+
+                  {dropdownOpen && (
+                    <div className="absolute right-0 top-full z-50 mt-2 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card dark:border-slate-700 dark:bg-slate-900">
+                      {/* User info */}
+                      <div className="flex items-center gap-3 px-4 py-3.5 border-b border-slate-100 dark:border-slate-800">
+                        <div className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-xl bg-blue-100 text-sm font-bold text-blue-600">
+                          {showAvatarImg ? (
+                            <img src={user!.avatar_url!} alt={user!.name} className="h-9 w-9 object-cover" onError={() => setAvatarBroken(true)} />
+                          ) : (
+                            <span>{initial}</span>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-[13px] font-bold ink">{user?.name ?? "—"}</p>
+                          <p className="truncate text-[11.5px] text-slate-400">{user?.email ?? "—"}</p>
+                        </div>
+                      </div>
+
+                      <div className="p-1.5">
+                        {isStudent && (
+                          <button
+                            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                            onClick={() => { setDropdownOpen(false); navigate("/profile"); }}
+                          >
+                            <User className="h-4 w-4 text-slate-400" /> Dashboard
+                          </button>
+                        )}
+                        <button
+                          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                          onClick={() => { setDropdownOpen(false); navigate("/profile/edit"); }}
+                        >
+                          <Settings className="h-4 w-4 text-slate-400" /> Account settings
+                        </button>
+                        {isStudent && user?.instructor_status !== "pending" && (
+                          <button
+                            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50"
+                            onClick={() => { setDropdownOpen(false); navigate("/instructor/register"); }}
+                          >
+                            <Users className="h-4 w-4" /> Become an Instructor
+                          </button>
+                        )}
+                        {user?.instructor_status === "pending" && (
+                          <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-amber-600">
+                            <span className="h-4 w-4 text-center">⏳</span> Application pending
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="border-t border-slate-100 dark:border-slate-800 p-1.5">
+                        <button
+                          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-red-500 transition-colors hover:bg-red-50"
+                          onClick={handleLogout}
+                        >
+                          <LogOut className="h-4 w-4" /> Log out
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
+
+            {/* Hamburger */}
+            <button
+              onClick={() => setMenuOpen(v => !v)}
+              className="grid h-10 w-10 place-items-center rounded-xl text-slate-600 hover:bg-slate-100 lg:hidden focus-ring"
+              aria-label="Toggle menu"
+            >
+              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         </div>
-      )}
-    </nav>
+
+        {/* ── Mobile Menu ── */}
+        {menuOpen && (
+          <div className="pb-4 lg:hidden">
+            <div className="rounded-2xl border border-slate-200 bg-white p-2 shadow-soft dark:border-slate-700 dark:bg-slate-900">
+              <ul className="flex flex-col">
+                {navLinks.map(({ to, label }) => (
+                  <li key={to}>
+                    <NavLink
+                      to={to}
+                      end={to === "/home"}
+                      className={({ isActive }) =>
+                        `block rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors ${
+                          isActive ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400" : "text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+                        }`
+                      }
+                      onClick={closeMenu}
+                    >
+                      {label}
+                    </NavLink>
+                  </li>
+                ))}
+                {isAuthenticated && (
+                  <li>
+                    <NavLink to={isInstructor ? "/instructor/dashboard" : "/profile"} className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50" onClick={closeMenu}>
+                      Dashboard
+                    </NavLink>
+                  </li>
+                )}
+              </ul>
+
+              <div className="mt-2 flex items-center gap-2 border-t border-slate-100 dark:border-slate-800 pt-2">
+                <button
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                  onClick={toggleLang}
+                >
+                  <img src={`https://flagcdn.com/w20/${lang === "en" ? "kh" : "gb"}.png`} alt="" className="h-3.5 w-5 rounded-sm object-cover" />
+                  {lang === "kh" ? "EN" : "KH"}
+                </button>
+                {!isAuthenticated ? (
+                  <>
+                    <button className="flex-1 rounded-lg border border-slate-200 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50" onClick={() => { openLogin(); closeMenu(); }}>
+                      {t("nav.login")}
+                    </button>
+                    <button className="flex-1 rounded-lg bg-brand py-2.5 text-sm font-semibold text-white hover:bg-blue-700" onClick={() => { openRegister(); closeMenu(); }}>
+                      {t("nav.register")}
+                    </button>
+                  </>
+                ) : (
+                  <button className="flex-1 rounded-lg border border-red-200 py-2.5 text-sm font-semibold text-red-500 hover:bg-red-50" onClick={() => { handleLogout(); closeMenu(); }}>
+                    Log out
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </header>
   );
 }
 

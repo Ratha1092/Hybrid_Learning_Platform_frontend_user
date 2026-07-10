@@ -73,6 +73,7 @@ export default function InstructorLayout() {
       <div className="il-wrap">
         {/* ── Sidebar ── */}
         <aside className="il-sidebar">
+          <p className="il-section-label">Instructor</p>
           <nav className="il-nav">
             {MENU_LINKS.map((l) => (
               <NavLink

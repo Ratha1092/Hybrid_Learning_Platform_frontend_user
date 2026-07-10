@@ -79,7 +79,6 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from;
-
   const stats = usePlatformStats();
   const [form, setForm] = useState<LoginForm>({ email: "", password: "" });
   const [errors, setErrors] = useState<LoginErrors>({});
@@ -115,8 +114,9 @@ export default function Login() {
     setResendStatus("idle");
 
     try {
+      await authService.csrf();
       const { data } = await authService.login(form);
-      login(data.data.user, data.data.token);
+      login(data.data.user);
       setStatus("success");
       setServerMessage(data.message || "Login successful!");
       const redirectTo = sessionStorage.getItem("authRedirectTo") ?? from ?? "/";

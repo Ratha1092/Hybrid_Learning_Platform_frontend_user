@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import { useAuthModal } from "./context/AuthModalContext";
@@ -6,10 +6,19 @@ import "./css/index.css";
 import Navbar from "./Components/Navbar/Navbar";
 import AuthModal from "./Components/AuthModal/AuthModal";
 import { AuthModalProvider } from "./context/AuthModalContext";
+import { ThemeProvider } from "./context/ThemeContext";
+import { WishlistProvider } from "./context/WishlistContext";
 import Hero from "./Components/Hero";
 import Categories from "./Pages/Category/Categories";
 import Footer from "./Components/Footer";
 import MaintenanceOverlay from "./Components/MaintenanceOverlay/MaintenanceOverlay";
+import LearningPath from "./Components/LearningPath/LearningPath";
+import BecomeInstructor from "./Components/BecomeInstructor/BecomeInstructor";
+import Stats from "./Components/Stats/Stats";
+import TopInstructors from "./Components/TopInstructors/TopInstructors";
+import Testimonials from "./Components/Testimonials/Testimonials";
+import Faq from "./Components/Faq/Faq";
+import FinalCta from "./Components/FinalCta/FinalCta";
 
 import PageCourses from "./Pages/Courses/Page_Courses";
 import FeaturedCourses from "./Components/FeaturedCourses";
@@ -29,6 +38,8 @@ import Revenue from "./Pages/User/Instructor/Sivbar/Revenue";
 import Students from "./Pages/User/Instructor/Sivbar/Students";
 import Library from "./Pages/Library/Library";
 import Learn from "./Pages/Learn/Learn";
+import Contact from "./Pages/Contact/Contact";
+import Instructors from "./Pages/Instructors/Instructors";
 import GitHubCallback from "./Pages/Auth/GitHub/GitHubCallback";
 import Login from "./Pages/Auth/Login/Login";
 import Register from "./Pages/Auth/Register/Register";
@@ -107,6 +118,13 @@ function MainPage() {
       <Hero />
       <Categories />
       <FeaturedCourses />
+      <LearningPath />
+      <BecomeInstructor />
+      <Stats />
+      <TopInstructors />
+      <Testimonials />
+      <Faq />
+      <FinalCta />
       <Footer />
     </>
   );
@@ -115,21 +133,25 @@ function MainPage() {
 function PageTransition({ children }: { children: React.ReactNode }) {
   const location = useLocation();
 
-  // React Router doesn't reset scroll on navigation like a classic MPA does —
-  // without this, a new page renders wherever the previous page was scrolled to.
-  useEffect(() => {
-    window.scrollTo(0, 0);
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
   }, [location.pathname]);
 
   return (
-    <div key={location.pathname} className="page-transition">
+    <div className="page-transition">
       {children}
     </div>
   );
 }
 
+function WithFooter({ children }: { children: React.ReactNode }) {
+  return <>{children}<Footer /></>;
+}
+
 function App() {
   return (
+    <ThemeProvider>
+    <WishlistProvider>
     <AuthModalProvider>
       <MaintenanceOverlay />
       <Navbar />
@@ -138,9 +160,11 @@ function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/home" element={<MainPage />} />
-          <Route path="/courses" element={<PageCourses />} />
-          <Route path="/courses/:slug" element={<DetailCourse />} />
-          <Route path="/categories" element={<PageCategories />} />
+          <Route path="/courses" element={<WithFooter><PageCourses /></WithFooter>} />
+          <Route path="/courses/:slug" element={<WithFooter><DetailCourse /></WithFooter>} />
+          <Route path="/categories" element={<WithFooter><PageCategories /></WithFooter>} />
+          <Route path="/instructors" element={<WithFooter><Instructors /></WithFooter>} />
+          <Route path="/contact" element={<WithFooter><Contact /></WithFooter>} />
           <Route path="/auth/github/callback" element={<GitHubCallback />} />
           <Route path="/PageLogin" element={<LoginPage />} />
           <Route path="/PageRegister" element={<RegisterPage />} />
@@ -148,11 +172,11 @@ function App() {
           {/* Auth-required routes */}
           <Route path="/profile" element={<RequireStudent><Profile /></RequireStudent>} />
           <Route path="/profile/edit" element={<RequireStudent><StudentProfileEdit /></RequireStudent>} />
-          <Route path="/library" element={<RequireAuth><Library /></RequireAuth>} />
+          <Route path="/library" element={<RequireAuth><WithFooter><Library /></WithFooter></RequireAuth>} />
           <Route path="/learn/:slug" element={<RequireAuth><Learn /></RequireAuth>} />
 
           {/* Instructor auth (no sidebar) */}
-          <Route path="/instructor/register" element={<InstructorRegister />} />
+          <Route path="/instructor/register" element={<WithFooter><InstructorRegister /></WithFooter>} />
 
           {/* Instructor dashboard — requires instructor role */}
           <Route path="/instructor" element={<RequireInstructor><InstructorLayout /></RequireInstructor>}>
@@ -167,6 +191,8 @@ function App() {
         </Routes>
       </PageTransition>
     </AuthModalProvider>
+    </WishlistProvider>
+    </ThemeProvider>
   );
 }
 

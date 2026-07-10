@@ -1,6 +1,13 @@
 /* ── DetailCourse.css ─────────────────────────────── */
 
-/* State (loading / error) */
+/* ── Page shell ── */
+.detail-page {
+  background: #EEF1F6;
+  min-height: 100vh;
+  font-family: "DM Sans", sans-serif;
+}
+
+/* ── State (loading / error) ── */
 .detail-state {
   display: flex;
   flex-direction: column;
@@ -17,39 +24,39 @@
   align-items: center;
   gap: 6px;
   padding: 11px 24px;
-  background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+  background: #2563EB;
   color: #fff;
   border: none;
   border-radius: 50px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
-  box-shadow: 0 4px 14px rgba(59,130,246,0.35);
+  box-shadow: 0 4px 14px rgba(37,99,235,0.35);
   transition: transform 0.15s, box-shadow 0.18s, filter 0.15s;
 }
 .detail-state button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(59,130,246,0.45);
+  box-shadow: 0 6px 20px rgba(37,99,235,0.45);
   filter: brightness(1.07);
 }
 .detail-state button:active { transform: translateY(0); }
 
-/* Spinner */
+/* ── Spinner ── */
 .detail-spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #e5e7eb;
-  border-top-color: #3b82f6;
+  border: 4px solid #e2e8f0;
+  border-top-color: #2563EB;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── Hero ─────────────────────────────────────────── */
+/* ── Hero ── */
 .detail-hero {
   position: relative;
   width: 100%;
-  min-height: 380px;
+  min-height: 400px;
   overflow: hidden;
 }
 .detail-hero__img {
@@ -62,28 +69,29 @@
 .detail-hero__overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.75));
+  background: linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0.78));
 }
-/* In normal flow (not absolute) so the hero auto-grows to fit long titles —
-   padding-top always clears the absolutely-positioned back button above it. */
+
 .detail-hero__content {
   position: relative;
   z-index: 1;
   box-sizing: border-box;
-  min-height: 380px;
+  min-height: 400px;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: 40px;
-  padding-top: 76px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 48px 24px;
+  padding-top: 80px;
   color: #fff;
 }
 
-/* Back button — absolute on the hero, easy to spot */
+/* Back button */
 .detail-back {
   position: absolute;
   top: 20px;
-  left: 20px;
+  left: 24px;
   z-index: 2;
   display: inline-flex;
   align-items: center;
@@ -92,8 +100,8 @@
   background: rgba(255, 255, 255, 0.96);
   border: 1.5px solid rgba(255, 255, 255, 0.6);
   border-radius: 10px;
-  color: #17191f;
-  font-family: var(--cp-font, "Nunito", system-ui, sans-serif);
+  color: #0f172a;
+  font-family: "DM Sans", sans-serif;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -111,7 +119,7 @@
 .detail-hero__placeholder {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, #1e3a5f 0%, #0f1f33 100%);
+  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
 }
 .detail-hero__placeholder--beginner {
   background: linear-gradient(145deg, #0c4a6e 0%, #0369a1 60%, #0ea5e9 100%);
@@ -120,40 +128,46 @@
   background: linear-gradient(145deg, #78350f 0%, #b45309 60%, #f59e0b 100%);
 }
 .detail-hero__placeholder--advanced {
-  background: linear-gradient(145deg, #4c1d95 0%, #7c3aed 60%, #a78bfa 100%);
+  background: linear-gradient(145deg, #1e1b4b 0%, #3730a3 60%, #6366f1 100%);
 }
 
 /* Badge */
 .detail-badge {
   display: inline-block;
-  background: #2ec4b6;
+  background: rgba(37,99,235,0.85);
   color: #fff;
-  font-size: 12px;
-  font-weight: 600;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 11px;
+  font-weight: 700;
   padding: 4px 12px;
   border-radius: 20px;
   margin-bottom: 12px;
   width: fit-content;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.25);
 }
 
 .detail-title {
-  font-size: 32px;
-  font-weight: 700;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 34px;
+  font-weight: 800;
   margin: 0 0 10px;
   line-height: 1.2;
+  color: #fff;
 }
 .detail-short-desc {
   font-size: 15px;
   color: rgba(255,255,255,0.85);
-  margin: 0 0 16px;
+  margin: 0 0 18px;
   max-width: 680px;
+  line-height: 1.6;
 }
 .detail-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
   font-size: 13px;
 }
 .detail-meta__item {
@@ -176,70 +190,67 @@
   opacity: 0.9;
 }
 .detail-meta__item--instructor {
-  background: rgba(46,196,182,0.25);
-  border-color: rgba(46,196,182,0.5);
+  background: rgba(37,99,235,0.3);
+  border-color: rgba(96,165,250,0.45);
   font-weight: 700;
 }
 
-/* ── Copy / Share button ─────────────────────────── */
+/* ── Copy / Share button ── */
 .detail-copy-btn {
   cursor: pointer;
   border: 1px solid rgba(255,255,255,0.3);
   background: rgba(255,255,255,0.15);
   color: rgba(255,255,255,0.95);
-  font-family: inherit;
+  font-family: "DM Sans", sans-serif;
   font-size: 12.5px;
   font-weight: 600;
   transition: background 0.15s, border-color 0.15s;
 }
-
 .detail-copy-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
-
 .detail-copy-btn:hover {
   background: rgba(255,255,255,0.28);
   border-color: rgba(255,255,255,0.5);
 }
-
 .detail-copy-btn--copied {
-  background: rgba(39,105,90,0.4) !important;
-  border-color: rgba(39,105,90,0.7) !important;
+  background: rgba(22,163,74,0.3) !important;
+  border-color: rgba(134,239,172,0.5) !important;
   color: #fff !important;
 }
 
-/* ── Body ─────────────────────────────────────────── */
-.detail-page { background: #f9fafb; min-height: 100vh; }
-
+/* ── Body ── */
 .detail-body {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 40px 24px;
+  padding: 40px 24px 80px;
   display: grid;
-  grid-template-columns: 1fr 320px;
+  grid-template-columns: 1fr 340px;
   gap: 32px;
   align-items: start;
 }
 
-/* ── Sections ─────────────────────────────────────── */
+/* ── Sections ── */
 .detail-section {
   background: #fff;
-  border-radius: 16px;
-  padding: 28px;
-  margin-bottom: 24px;
-  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  padding: 30px;
+  margin-bottom: 20px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.04);
 }
 .detail-section h2 {
+  font-family: "Plus Jakarta Sans", sans-serif;
   font-size: 20px;
   font-weight: 700;
-  color: #111827;
-  margin: 0 0 16px;
+  color: #0f172a;
+  margin: 0 0 14px;
 }
 .detail-section p {
-  color: #6b7280;
-  line-height: 1.7;
+  color: #64748b;
+  line-height: 1.75;
   font-size: 15px;
 }
 
-/* ── Section head ─────────────────────────────────── */
+/* ── Section head ── */
 .detail-section__head {
   display: flex;
   align-items: baseline;
@@ -251,41 +262,41 @@
 .detail-section__head h2 { margin: 0; }
 .detail-section__summary {
   font-size: 13px;
-  color: #9ca3af;
+  color: #94a3b8;
   white-space: nowrap;
 }
 
-/* ── Accordion list ───────────────────────────────── */
+/* ── Accordion list ── */
 .accordion-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-/* ── Accordion item ───────────────────────────────── */
+/* ── Accordion item ── */
 .accordion {
-  border: 1.5px solid #e5e7eb;
-  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
   overflow: hidden;
   transition: border-color 0.15s;
 }
-.accordion--open { border-color: #2ec4b6; }
+.accordion--open { border-color: #2563EB; }
 
 .accordion__header {
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px;
-  background: #f9fafb;
+  padding: 14px 18px;
+  background: #f8fafc;
   border: none;
   cursor: pointer;
   text-align: left;
   transition: background 0.15s;
   gap: 12px;
 }
-.accordion--open .accordion__header { background: #e8f9f7; }
-.accordion__header:hover { background: #f3fffe; }
+.accordion--open .accordion__header { background: rgba(37,99,235,0.06); }
+.accordion__header:hover { background: rgba(37,99,235,0.04); }
 
 .accordion__left {
   display: flex;
@@ -299,8 +310,8 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #e5e7eb;
-  color: #6b7280;
+  background: #e2e8f0;
+  color: #64748b;
   font-size: 12px;
   font-weight: 700;
   display: flex;
@@ -309,14 +320,15 @@
   flex-shrink: 0;
 }
 .accordion--open .accordion__index {
-  background: #2ec4b6;
+  background: #2563EB;
   color: #fff;
 }
 
 .accordion__title {
+  font-family: "Plus Jakarta Sans", sans-serif;
   font-size: 14px;
   font-weight: 700;
-  color: #111827;
+  color: #0f172a;
   margin: 0 0 2px;
   white-space: nowrap;
   overflow: hidden;
@@ -324,40 +336,40 @@
 }
 .accordion__meta {
   font-size: 12px;
-  color: #9ca3af;
+  color: #94a3b8;
   margin: 0;
 }
 
 .accordion__chevron {
   font-size: 11px;
-  color: #9ca3af;
+  color: #94a3b8;
   flex-shrink: 0;
   transition: color 0.15s;
 }
-.accordion--open .accordion__chevron { color: #2ec4b6; }
+.accordion--open .accordion__chevron { color: #2563EB; }
 
-/* ── Lesson rows ──────────────────────────────────── */
+/* ── Lesson rows ── */
 .accordion__lessons {
   list-style: none;
   padding: 0;
   margin: 0;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #e2e8f0;
 }
 
 .lesson-row {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 11px 16px;
-  border-bottom: 1px solid #f3f4f6;
+  padding: 11px 18px;
+  border-bottom: 1px solid #f1f5f9;
   transition: background 0.12s;
 }
 .lesson-row:last-child { border-bottom: none; }
-.lesson-row:hover { background: #f9fafb; }
+.lesson-row:hover { background: #f8fafc; }
 
 .lesson-row__icon {
   font-size: 12px;
-  color: #9ca3af;
+  color: #94a3b8;
   flex-shrink: 0;
   width: 20px;
   text-align: center;
@@ -366,7 +378,7 @@
 .lesson-row__title {
   flex: 1;
   font-size: 13.5px;
-  color: #374151;
+  color: #334155;
 }
 
 .lesson-row__right {
@@ -379,38 +391,39 @@
 .lesson-row__preview {
   font-size: 11px;
   font-weight: 700;
-  color: #2ec4b6;
-  background: #e8f9f7;
+  color: #2563EB;
+  background: rgba(37,99,235,0.08);
   padding: 2px 8px;
   border-radius: 999px;
-  border: 1px solid #a7f3ed;
+  border: 1px solid rgba(37,99,235,0.2);
 }
 
 .lesson-row__dur {
   font-size: 12px;
-  color: #9ca3af;
+  color: #94a3b8;
   min-width: 36px;
   text-align: right;
 }
 
-/* ── Enroll Card ──────────────────────────────────── */
+/* ── Enroll Card ── */
 .detail-card {
   background: #fff;
-  border-radius: 16px;
+  border-radius: 20px;
   padding: 28px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e2e8f0;
   position: sticky;
   top: 24px;
   box-shadow: 0 4px 24px rgba(0,0,0,0.06);
 }
 .detail-card__price {
+  font-family: "Plus Jakarta Sans", sans-serif;
   font-size: 36px;
   font-weight: 800;
-  color: #111827;
+  color: #0f172a;
   margin-bottom: 20px;
 }
 .detail-card__price--free {
-  color: #2ec4b6;
+  color: #16a34a;
   font-size: 28px;
   font-weight: 800;
 }
@@ -418,22 +431,23 @@
 .detail-enroll-btn {
   width: 100%;
   padding: 15px;
-  background: #2ec4b6;
+  background: #2563EB;
   color: #fff;
   border: none;
   border-radius: 14px;
+  font-family: "DM Sans", sans-serif;
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.3px;
   cursor: pointer;
   transition: transform 0.18s, box-shadow 0.2s, background 0.2s;
   margin-bottom: 24px;
-  box-shadow: 0 5px 20px rgba(46,196,182,0.35);
+  box-shadow: 0 5px 20px rgba(37,99,235,0.35);
 }
 .detail-enroll-btn:hover:not(:disabled) {
-  background: #1aada0;
+  background: #1d4ed8;
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(46,196,182,0.45);
+  box-shadow: 0 8px 24px rgba(37,99,235,0.45);
 }
 .detail-enroll-btn:active:not(:disabled) { transform: translateY(0); }
 .detail-enroll-btn:disabled { cursor: not-allowed; }
@@ -451,23 +465,23 @@
   justify-content: space-between;
   font-size: 14px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #f3f4f6;
-  color: #6b7280;
+  border-bottom: 1px solid #f1f5f9;
+  color: #64748b;
 }
 .detail-card__info li:last-child { border-bottom: none; padding-bottom: 0; }
-.detail-card__info strong { color: #111827; font-weight: 600; }
+.detail-card__info strong { color: #0f172a; font-weight: 600; }
 
-/* ── EnrollButton states ──────────────────────────── */
+/* ── EnrollButton states ── */
 .enroll-success {
   text-align: center;
   background: #f0fdf4;
   border: 1px solid #86efac;
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 20px 16px;
   margin-bottom: 24px;
 }
 .enroll-success__icon { font-size: 36px; margin-bottom: 8px; }
-.enroll-success__title { font-size: 17px; font-weight: 700; color: #16a34a; margin: 0 0 6px; }
+.enroll-success__title { font-family: "Plus Jakarta Sans", sans-serif; font-size: 17px; font-weight: 700; color: #16a34a; margin: 0 0 6px; }
 .enroll-success__sub { font-size: 13px; color: #4b5563; margin: 0 0 14px; }
 .enroll-success__link {
   display: inline-flex;
@@ -492,7 +506,7 @@
 .enroll-success__link:active { transform: translateY(0); }
 .enroll-success__expiry {
   font-size: 12px;
-  color: #65a30d;
+  color: #16a34a;
   margin: -8px 0 14px;
 }
 
@@ -500,12 +514,12 @@
   text-align: center;
   background: #fffbeb;
   border: 1px solid #fde68a;
-  border-radius: 12px;
+  border-radius: 14px;
   padding: 20px 16px;
   margin-bottom: 24px;
 }
 .enroll-expired__icon { font-size: 36px; margin-bottom: 8px; }
-.enroll-expired__title { font-size: 17px; font-weight: 700; color: #b45309; margin: 0 0 6px; }
+.enroll-expired__title { font-family: "Plus Jakarta Sans", sans-serif; font-size: 17px; font-weight: 700; color: #b45309; margin: 0 0 6px; }
 .enroll-expired__sub { font-size: 13px; color: #4b5563; margin: 0 0 14px; }
 .enroll-expired .detail-enroll-btn { margin-bottom: 0; }
 
@@ -513,26 +527,26 @@
   text-align: center;
   margin-bottom: 24px;
 }
-.enroll-qr__title { font-size: 17px; font-weight: 700; color: #111827; margin: 0 0 6px; }
-.enroll-qr__meta { font-size: 13px; color: #6b7280; margin: 0 0 12px; }
+.enroll-qr__title { font-family: "Plus Jakarta Sans", sans-serif; font-size: 17px; font-weight: 700; color: #0f172a; margin: 0 0 6px; }
+.enroll-qr__meta { font-size: 13px; color: #64748b; margin: 0 0 12px; }
 .enroll-qr__img {
   width: 200px;
   height: 200px;
   object-fit: contain;
-  border: 3px solid #0ea5e9;
+  border: 3px solid #2563EB;
   border-radius: 10px;
   display: block;
   margin: 0 auto 10px;
 }
 .enroll-qr__placeholder {
   width: 200px; height: 200px;
-  border: 3px solid #e5e7eb;
+  border: 3px solid #e2e8f0;
   border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  color: #9ca3af; font-size: 13px;
+  color: #94a3b8; font-size: 13px;
   margin: 0 auto 10px;
 }
-.enroll-qr__hint { font-size: 12px; color: #9ca3af; margin: 0 0 14px; }
+.enroll-qr__hint { font-size: 12px; color: #94a3b8; margin: 0 0 14px; }
 .enroll-qr__actions { display: flex; flex-direction: column; gap: 8px; }
 .enroll-qr__cancel {
   width: 100%; padding: 12px;
@@ -540,6 +554,7 @@
   border: 1.5px solid #e2e8f0;
   border-radius: 12px;
   font-size: 14px; font-weight: 600; color: #64748b; cursor: pointer;
+  font-family: "DM Sans", sans-serif;
   transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.12s;
   letter-spacing: 0.2px;
 }
@@ -554,7 +569,7 @@
 
 .enroll-qr__auto {
   display: flex; align-items: center; justify-content: center; gap: 8px;
-  font-size: 13px; color: #6b7280; margin: 10px 0 0;
+  font-size: 13px; color: #64748b; margin: 10px 0 0;
 }
 .enroll-qr__pulse {
   display: inline-block; width: 8px; height: 8px;
@@ -569,7 +584,7 @@
 .enroll-error {
   background: #fef2f2;
   border: 1px solid #fca5a5;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 12px 14px;
   font-size: 13px;
   color: #dc2626;
@@ -592,6 +607,7 @@
   font-size: 13px;
   font-weight: 600;
   color: #334155;
+  font-family: "DM Sans", sans-serif;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
@@ -602,23 +618,23 @@
 }
 .enroll-success__receipt-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-/* ── EnrollButton: review/coupon step ─────────────── */
+/* ── EnrollButton: review/coupon step ── */
 .enroll-review { margin-bottom: 24px; }
-.enroll-review__title { font-size: 17px; font-weight: 700; color: #111827; margin: 0 0 14px; }
+.enroll-review__title { font-family: "Plus Jakarta Sans", sans-serif; font-size: 17px; font-weight: 700; color: #0f172a; margin: 0 0 14px; }
 .enroll-review__row {
   display: flex;
   justify-content: space-between;
   font-size: 14px;
   color: #4b5563;
   padding-bottom: 10px;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid #f1f5f9;
   margin-bottom: 10px;
 }
 .enroll-review__row--discount { color: #16a34a; font-weight: 600; }
 .enroll-review__row--total {
   font-size: 15px;
   font-weight: 700;
-  color: #111827;
+  color: #0f172a;
   border-bottom: none;
 }
 .enroll-review__coupon {
@@ -632,26 +648,31 @@
   border: 1.5px solid #e2e8f0;
   border-radius: 10px;
   font-size: 13px;
-  color: #111827;
+  color: #0f172a;
+  font-family: "DM Sans", sans-serif;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
 }
-.enroll-review__coupon-input:focus { outline: none; border-color: #2ec4b6; }
+.enroll-review__coupon-input:focus { border-color: #2563EB; }
 .enroll-review__coupon-btn {
   padding: 10px 16px;
   border: none;
   border-radius: 10px;
-  background: #0f172a;
+  background: #2563EB;
   color: #fff;
   font-size: 13px;
   font-weight: 600;
+  font-family: "DM Sans", sans-serif;
   cursor: pointer;
   transition: background 0.15s;
 }
-.enroll-review__coupon-btn:hover:not(:disabled) { background: #1e293b; }
+.enroll-review__coupon-btn:hover:not(:disabled) { background: #1d4ed8; }
 .enroll-review__coupon-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 .enroll-review__coupon-ok { font-size: 12px; color: #16a34a; font-weight: 600; margin: 0 0 12px; }
 .enroll-review__coupon-err { font-size: 12px; color: #dc2626; font-weight: 600; margin: 0 0 12px; }
 
-/* Billing address in review step */
+/* Billing address */
 .enroll-review__billing {
   display: flex;
   flex-direction: column;
@@ -685,7 +706,7 @@
   border: none;
   font-size: 12px;
   font-weight: 600;
-  color: #6366f1;
+  color: #2563EB;
   cursor: pointer;
   padding: 0;
   text-decoration: underline;
@@ -694,12 +715,13 @@
 .enroll-review__billing-select {
   width: 100%;
   padding: 8px 10px;
-  border: 1.5px solid #c7d2fe;
+  border: 1.5px solid #bfdbfe;
   border-radius: 8px;
   font-size: 13px;
   color: #0f172a;
   background: #fff;
   outline: none;
+  font-family: "DM Sans", sans-serif;
 }
 .enroll-review__billing-note {
   font-size: 12px;
@@ -708,43 +730,43 @@
   font-style: italic;
 }
 
-/* ── Responsive ───────────────────────────────────── */
+/* ── Responsive ── */
 @media (max-width: 768px) {
   .detail-body {
     grid-template-columns: 1fr;
-    padding: 24px 16px;
+    padding: 24px 16px 60px;
     gap: 20px;
   }
-  .detail-hero { min-height: 300px; }
+  .detail-hero { min-height: 320px; }
   .detail-hero__content {
-    min-height: 300px;
-    padding: 18px;
-    padding-top: 64px;
+    min-height: 320px;
+    padding: 20px;
+    padding-top: 68px;
   }
-  .detail-title { font-size: 22px; }
-  .detail-short-desc { font-size: 13.5px; }
+  .detail-title { font-size: 24px; }
+  .detail-short-desc { font-size: 14px; }
   .detail-back {
     top: 14px;
     left: 14px;
     padding: 7px 13px 7px 10px;
     font-size: 12px;
   }
-  .detail-meta { gap: 8px; }
-  .detail-meta__item { padding: 5px 10px; font-size: 11.5px; }
-  .detail-section { padding: 18px; border-radius: 14px; }
+  .detail-meta { gap: 6px; }
+  .detail-meta__item { padding: 4px 10px; font-size: 11.5px; }
+  .detail-section { padding: 20px; border-radius: 16px; }
   .detail-card { position: static; padding: 22px; }
 }
 
 @media (max-width: 400px) {
-  .detail-hero__content { padding: 14px; padding-top: 60px; }
-  .detail-title { font-size: 19px; }
+  .detail-hero__content { padding: 14px; padding-top: 62px; }
+  .detail-title { font-size: 20px; }
 }
 
-/* ── Checkout modal (review / QR / done / error) ───────────────────── */
+/* ── Checkout modal ── */
 .enroll-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(15, 23, 42, 0.65);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   z-index: 2000;
@@ -766,7 +788,7 @@
   max-width: 420px;
   max-height: 92vh;
   overflow-y: auto;
-  border-radius: 20px;
+  border-radius: 22px;
   animation: enrollCardIn 0.22s ease both;
 }
 @keyframes enrollCardIn {
@@ -776,7 +798,7 @@
 
 .enroll-modal__card {
   background: #fff;
-  border-radius: 20px;
+  border-radius: 22px;
   padding: 28px;
   box-shadow: 0 24px 64px rgba(0,0,0,0.22);
 }
@@ -803,8 +825,6 @@
 .enroll-modal__close:hover:not(:disabled) { background: #fee2e2; color: #dc2626; }
 .enroll-modal__close:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* Inside the modal, the success/review/qr cards lose their own bottom margin
-   since the modal card itself provides the padding. */
 .enroll-modal__card .enroll-success,
 .enroll-modal__card .enroll-review,
 .enroll-modal__card .enroll-qr,
@@ -819,6 +839,7 @@
   border-radius: 12px;
   font-size: 13px;
   font-weight: 600;
+  font-family: "DM Sans", sans-serif;
   color: #64748b;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
@@ -829,7 +850,6 @@
   color: #334155;
 }
 
-/* Loading state inside modal */
 .enroll-loading {
   display: flex;
   flex-direction: column;
@@ -837,19 +857,109 @@
   justify-content: center;
   gap: 14px;
   padding: 30px 0;
-  color: #6b7280;
+  color: #64748b;
   font-size: 14px;
 }
 .enroll-loading__spinner {
   width: 36px;
   height: 36px;
-  border: 3.5px solid #e5e7eb;
-  border-top-color: #2ec4b6;
+  border: 3.5px solid #e2e8f0;
+  border-top-color: #2563EB;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
 
 @media (max-width: 480px) {
-  .enroll-modal__card { padding: 22px 18px; border-radius: 16px; }
-  .enroll-modal-wrap { border-radius: 16px; }
+  .enroll-modal__card { padding: 22px 18px; border-radius: 18px; }
+  .enroll-modal-wrap { border-radius: 18px; }
 }
+
+/* ── Dark mode ──────────────────────────────────────── */
+
+/* Page */
+html.dark .detail-page { background: #0f172a; }
+
+/* Hero back button */
+html.dark .detail-back { background: rgba(30,41,59,0.95); border-color: rgba(51,65,85,0.8); color: #f1f5f9; }
+html.dark .detail-back:hover { background: #1e293b; }
+
+/* Sections */
+html.dark .detail-section { background: #1e293b; border-color: #334155; }
+html.dark .detail-section h2 { color: #f1f5f9; }
+html.dark .detail-section p { color: #94a3b8; }
+html.dark .detail-section__summary { color: #64748b; }
+
+/* Accordion */
+html.dark .accordion { border-color: #334155; }
+html.dark .accordion--open { border-color: #2563EB; }
+html.dark .accordion__header { background: #273548; }
+html.dark .accordion--open .accordion__header { background: rgba(37,99,235,0.12); }
+html.dark .accordion__header:hover { background: rgba(37,99,235,0.08); }
+html.dark .accordion__index { background: #334155; color: #94a3b8; }
+html.dark .accordion--open .accordion__index { background: #2563EB; color: #fff; }
+html.dark .accordion__title { color: #f1f5f9; }
+html.dark .accordion__meta { color: #64748b; }
+html.dark .accordion__chevron { color: #64748b; }
+html.dark .accordion--open .accordion__chevron { color: #60a5fa; }
+html.dark .accordion__lessons { border-top-color: #334155; }
+
+/* Lesson rows */
+html.dark .lesson-row { border-bottom-color: #334155; }
+html.dark .lesson-row:hover { background: #273548; }
+html.dark .lesson-row__icon { color: #64748b; }
+html.dark .lesson-row__title { color: #e2e8f0; }
+html.dark .lesson-row__preview { color: #60a5fa; background: rgba(37,99,235,0.12); border-color: rgba(96,165,250,0.25); }
+html.dark .lesson-row__dur { color: #64748b; }
+
+/* Enroll card */
+html.dark .detail-card { background: #1e293b; border-color: #334155; }
+html.dark .detail-card__price { color: #f1f5f9; }
+html.dark .detail-card__info li { color: #94a3b8; border-bottom-color: #334155; }
+html.dark .detail-card__info strong { color: #f1f5f9; }
+
+/* Enroll success/expired inline */
+html.dark .enroll-success { background: rgba(22,163,74,0.08); border-color: rgba(134,239,172,0.18); }
+html.dark .enroll-success__sub { color: #94a3b8; }
+html.dark .enroll-expired { background: rgba(180,83,9,0.08); border-color: rgba(253,230,138,0.18); }
+html.dark .enroll-expired__sub { color: #94a3b8; }
+
+/* Modal */
+html.dark .enroll-modal__card { background: #1e293b; }
+html.dark .enroll-modal__close { background: rgba(30,41,59,0.95); color: #94a3b8; }
+html.dark .enroll-modal__close:hover:not(:disabled) { background: rgba(239,68,68,0.15); color: #f87171; }
+html.dark .enroll-modal__done-close { border-color: #334155; color: #94a3b8; }
+html.dark .enroll-modal__done-close:hover { background: #273548; border-color: #475569; color: #e2e8f0; }
+
+/* Review step */
+html.dark .enroll-review__title { color: #f1f5f9; }
+html.dark .enroll-review__row { color: #94a3b8; border-bottom-color: #334155; }
+html.dark .enroll-review__row--discount { color: #4ade80; }
+html.dark .enroll-review__row--total { color: #f1f5f9; }
+html.dark .enroll-review__coupon-input { background: #0f172a; border-color: #334155; color: #f1f5f9; }
+html.dark .enroll-review__coupon-input:focus { border-color: #2563EB; }
+html.dark .enroll-review__billing { background: #273548; border-color: #334155; }
+html.dark .enroll-review__billing-text { color: #e2e8f0; }
+html.dark .enroll-review__billing-select { background: #0f172a; border-color: #334155; color: #f1f5f9; }
+html.dark .enroll-review__billing-note { color: #64748b; }
+html.dark .enroll-review__billing-change { color: #60a5fa; }
+
+/* QR step */
+html.dark .enroll-qr__title { color: #f1f5f9; }
+html.dark .enroll-qr__meta { color: #94a3b8; }
+html.dark .enroll-qr__hint { color: #64748b; }
+html.dark .enroll-qr__placeholder { border-color: #334155; color: #64748b; }
+html.dark .enroll-qr__auto { color: #94a3b8; }
+html.dark .enroll-qr__cancel { background: #273548; border-color: #334155; color: #94a3b8; }
+html.dark .enroll-qr__cancel:hover:not(:disabled) { background: rgba(239,68,68,0.12); border-color: rgba(252,165,165,0.3); color: #f87171; }
+
+/* Error */
+html.dark .enroll-error { background: rgba(239,68,68,0.1); border-color: rgba(252,165,165,0.2); color: #f87171; }
+
+/* Loading spinner */
+html.dark .enroll-loading { color: #94a3b8; }
+html.dark .enroll-loading__spinner { border-color: #334155; border-top-color: #2563EB; }
+html.dark .detail-spinner { border-color: #334155; border-top-color: #2563EB; }
+
+/* Receipt button */
+html.dark .enroll-success__receipt-btn { background: #273548; border-color: #334155; color: #94a3b8; }
+html.dark .enroll-success__receipt-btn:hover:not(:disabled) { background: rgba(37,99,235,0.12); border-color: #3b82f6; color: #60a5fa; }

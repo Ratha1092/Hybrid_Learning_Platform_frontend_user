@@ -2,14 +2,14 @@
 .auth-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(10, 20, 40, 0.62);
-  backdrop-filter: blur(7px);
-  -webkit-backdrop-filter: blur(7px);
+  background: rgba(10, 20, 40, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 2000;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 16px;
+  padding: 16px;
   overflow-y: auto;
   animation: backdropIn 0.18s ease both;
 }
@@ -23,38 +23,45 @@
 .auth-modal-wrap {
   position: relative;
   width: 100%;
-  max-width: 460px;
-  animation: cardIn 0.24s ease both;
+  max-width: 920px;
+  max-height: 95vh;
+  overflow-y: auto;
+  border-radius: 24px;
+  animation: cardIn 0.22s ease both;
 }
 
 @keyframes cardIn {
-  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  from { opacity: 0; transform: translateY(18px) scale(0.97); }
   to   { opacity: 1; transform: translateY(0)    scale(1); }
 }
 
 /* ─── Close button ───────────────────────────────────────────────── */
 .auth-close {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 30px;
-  height: 30px;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: none;
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.9);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 14px;
   color: #334155;
-  z-index: 10;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
-  transition: background 0.15s, color 0.15s;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.14);
+  transition: background 0.15s, color 0.15s, transform 0.15s;
 }
-.auth-close:hover { background: #fee2e2; color: #dc2626; }
+.auth-close:hover {
+  background: #fee2e2;
+  color: #dc2626;
+  transform: scale(1.08);
+}
 
-/* ─── Strip page-level wrapper layout ───────────────────────────── */
+/* ─── Strip page-level padding/bg inside modal ───────────────────── */
 .auth-modal-wrap .login-page,
 .auth-modal-wrap .rg-page {
   min-height: unset !important;
@@ -62,64 +69,28 @@
   padding: 0 !important;
 }
 
-/* ─── Hide decorative left panel inside modal ─────────────────── */
-.auth-modal-wrap .login-left,
-.auth-modal-wrap .rg-left {
-  display: none !important;
-}
-
-/* ─── Card: reset two-column layout ─────────────────────────────── */
+/* ─── Card fills the modal width ─────────────────────────────────── */
 .auth-modal-wrap .login-card,
 .auth-modal-wrap .rg-card {
   max-width: 100% !important;
   min-height: unset !important;
-  border-radius: 20px !important;
-  box-shadow: 0 24px 64px rgba(0,0,0,0.20) !important;
-  overflow: hidden;
+  border-radius: 24px !important;
+  box-shadow: none !important;
 }
 
-/* ─── Wrap scrolls as a whole, not the inner panel ─────────────── */
-.auth-modal-wrap {
-  max-height: 95vh;
-  overflow-y: auto;
-  border-radius: 20px;
-}
-
-/* ─── Right panel: full width, no inner scroll ───────────────────── */
+/* ─── Right panel: no inner scroll — modal scrolls as a whole ────── */
 .auth-modal-wrap .login-right,
 .auth-modal-wrap .rg-right {
-  width: 100% !important;
-  flex: 1 !important;
   max-height: none !important;
   overflow-y: visible !important;
-  border-radius: 20px !important;
-  padding: 24px 28px !important;
 }
 
-/* ─── Compact spacing for register form ──────────────────────────── */
-.auth-modal-wrap .rg-steps         { margin-bottom: 10px !important; }
-.auth-modal-wrap .rg-step__dot     { width: 22px !important; height: 22px !important; font-size: 11px !important; }
-.auth-modal-wrap .rg-title         { font-size: 20px !important; margin-bottom: 2px !important; }
-.auth-modal-wrap .rg-subtitle      { font-size: 12px !important; margin-bottom: 10px !important; }
-.auth-modal-wrap .rg-field         { margin-bottom: 8px !important; }
-.auth-modal-wrap .rg-label         { margin-bottom: 3px !important; font-size: 11px !important; }
-.auth-modal-wrap .rg-input         { padding: 8px 8px 8px 0 !important; font-size: 13px !important; }
-.auth-modal-wrap .rg-hint          { margin-top: 2px !important; font-size: 10px !important; }
-.auth-modal-wrap .rg-strength      { margin-top: 3px !important; }
-.auth-modal-wrap .rg-strength-bar  { height: 2px !important; }
-.auth-modal-wrap .rg-terms         { margin: 8px 0 !important; font-size: 12px !important; }
-.auth-modal-wrap .rg-btn           { padding: 10px !important; font-size: 14px !important; }
-.auth-modal-wrap .rg-login-link    { margin-top: 10px !important; }
-
-/* ─── Compact spacing for login form ────────────────────────────── */
-.auth-modal-wrap .login-title      { font-size: 20px !important; margin-bottom: 4px !important; }
-.auth-modal-wrap .login-subtitle   { font-size: 12px !important; margin-bottom: 16px !important; }
-.auth-modal-wrap .login-fields     { gap: 10px !important; }
-.auth-modal-wrap .login-submit     { padding: 11px !important; font-size: 14px !important; }
-.auth-modal-wrap .login-footer     { margin-top: 14px !important; }
-
-/* ─── Inner login panel reset ────────────────────────────────────── */
-.auth-modal-wrap .login-form-panel {
-  padding: 0 !important;
-  max-width: 100% !important;
+/* ── Dark mode ─────────────────────────────────── */
+html.dark .auth-close {
+  background: rgba(30, 41, 59, 0.9);
+  color: #94a3b8;
+}
+html.dark .auth-close:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
 }

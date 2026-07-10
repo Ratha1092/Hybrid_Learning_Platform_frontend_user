@@ -82,3 +82,9 @@
 @keyframes pc-spin {
   to { transform: rotate(360deg); }
 }
+
+/* ── Dark mode ─────────────────────────────────── */
+html.dark .pc-body { background: #0f172a; }
+html.dark .pc-count { color: #64748b; }
+html.dark .pc-spinner { border-color: #334155; border-top-color: #49BBBD; }
+html.dark .pc-state { color: #64748b; }

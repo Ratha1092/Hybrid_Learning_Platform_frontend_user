@@ -5,13 +5,18 @@ import {
   notificationService,
   type AppNotification,
 } from "../../services/notificationService";
+import { getEcho, disconnectEcho } from "../../utils/echo";
 import "./Notification.css";
 
-const POLL_INTERVAL = 30_000;
+// Polling is kept as a silent fallback in case the WebSocket drops.
+// 5 min is enough — real-time events handle the instant updates.
+const POLL_INTERVAL = 5 * 60_000;
 
 const TYPE_CONFIG: Record<string, { icon: string; accent: string }> = {
   instructor_approved: { icon: "🎉", accent: "#d97706" },
   instructor_rejected: { icon: "❌", accent: "#ef4444" },
+  course_purchased:    { icon: "🛒", accent: "#10b981" },
+  course_completed:    { icon: "🏆", accent: "#6366f1" },
   default:             { icon: "🔔", accent: "#3b82f6" },
 };
 
@@ -20,12 +25,13 @@ function getConfig(type: string) {
 }
 
 export default function Notification() {
-  const { isAuthenticated, refreshUser } = useAuth();
+  const { isAuthenticated, user, refreshUser } = useAuth();
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // ── REST fetch (initial load + fallback polling) ──────────────────────────
   const fetchNotifications = async () => {
     try {
       const { data } = await notificationService.getAll();
@@ -47,6 +53,39 @@ export default function Notification() {
     return () => clearInterval(id);
   }, [isAuthenticated]);
 
+  // ── Pusher real-time subscription ────────────────────────────────────────
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id) return;
+
+    const echo = getEcho();
+    const channel = echo.private(`user.${user.id}`);
+
+    channel.listen(".notification.received", (incoming: AppNotification) => {
+      setNotifications((prev) => {
+        // Deduplicate in case the fallback poll already added it.
+        if (prev.some((n) => n.id === incoming.id)) return prev;
+        return [incoming, ...prev];
+      });
+      setUnreadCount((c) => c + 1);
+
+      if (incoming.type === "instructor_approved") {
+        refreshUser();
+      }
+    });
+
+    return () => {
+      echo.leave(`user.${user.id}`);
+    };
+  }, [isAuthenticated, user?.id]);
+
+  // ── Disconnect Echo when the user logs out ────────────────────────────────
+  useEffect(() => {
+    if (!isAuthenticated) {
+      disconnectEcho();
+    }
+  }, [isAuthenticated]);
+
+  // ── Close dropdown on outside click ──────────────────────────────────────
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {

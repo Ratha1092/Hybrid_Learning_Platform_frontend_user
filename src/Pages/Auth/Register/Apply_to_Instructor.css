@@ -544,3 +544,30 @@
   .ai-success-card { padding: 32px 20px; }
   .ai-success-actions { flex-direction: column; }
 }
+
+/* ── Dark mode ─────────────────────────────────── */
+html.dark .ai-form-section { background: #1e293b; border-color: #334155; }
+html.dark .ai-form-section-title { color: #f1f5f9; }
+html.dark .ai-label { color: #94a3b8; }
+html.dark .ai-input,
+html.dark .ai-textarea,
+html.dark .ai-select {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+html.dark .ai-input:focus,
+html.dark .ai-textarea:focus,
+html.dark .ai-select:focus { border-color: #2563EB; background: #1e293b; }
+html.dark .ai-input--err,
+html.dark .ai-textarea--err { background: rgba(239,68,68,0.08); border-color: #ef4444; }
+html.dark .ai-hint { color: #64748b; }
+html.dark .ai-err-msg { color: #f87171; }
+html.dark .ai-step { color: #64748b; }
+html.dark .ai-step--active { color: #f1f5f9; }
+html.dark .ai-step__dot--active { border-color: #2563EB; background: #2563EB; }
+html.dark .ai-step__line { background: #334155; }
+html.dark .ai-perk-card { background: #1e293b; border-color: #334155; }
+html.dark .ai-perk-text { color: #94a3b8; }
+html.dark .ai-alert--success { background: rgba(22,163,74,0.1); border-color: rgba(134,239,172,0.2); color: #4ade80; }
+html.dark .ai-alert--error   { background: rgba(239,68,68,0.1); border-color: rgba(252,165,165,0.2); color: #f87171; }

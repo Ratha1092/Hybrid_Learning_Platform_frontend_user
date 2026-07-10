@@ -6,8 +6,8 @@ export interface SearchCourse {
   slug: string;
   thumbnail: string | null;
   price: number;
-  instructor: string;
-  category: string;
+  instructor: { id: number; name: string; avatar: string | null };
+  category: { id: number; name: string };
   enrollments: number;
   type: "course";
 }

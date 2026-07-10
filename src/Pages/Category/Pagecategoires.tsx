@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BookOpen, Code2, PenTool, FlaskConical, Camera, DollarSign, Video, Award, TrendingUp, Users, MessageSquare } from "lucide-react";
 import { categoryService, type Category } from "../../services/categoryService";
-import Footer from "../../Components/Footer";
 import "./Categories.css";
 import "./PageCategories.css";
 
@@ -105,7 +104,6 @@ export default function PageCategories() {
         </div>
       </section>
 
-      <Footer />
     </>
   );
 }

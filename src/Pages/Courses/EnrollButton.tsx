@@ -6,6 +6,7 @@ import { couponService, type CouponValidation } from "../../services/couponServi
 import { orderService } from "../../services/orderService";
 import { billingService, type BillingAddress } from "../../services/billingService";
 import { useAuthModal } from "../../context/AuthModalContext";
+import { useAuth } from "../../context/AuthContext";
 
 type Step = "idle" | "loading" | "review" | "qr" | "done" | "error";
 type CouponStatus = "idle" | "checking" | "valid" | "invalid";
@@ -26,6 +27,7 @@ interface Props {
 }
 
 export default function EnrollButton({ course }: Props) {
+  const { isAuthenticated } = useAuth();
   const [step, setStep] = useState<Step>("idle");
   const [justEnrolled, setJustEnrolled] = useState(false);
   const [cancelling, setCancelling] = useState(false);
@@ -53,7 +55,7 @@ export default function EnrollButton({ course }: Props) {
   // Resume an enrollment/renewal that was interrupted by a login/register redirect.
   useEffect(() => {
     if (hasActiveAccess) return;
-    if (!localStorage.getItem("token")) return;
+    if (!isAuthenticated) return;
     if (sessionStorage.getItem(PENDING_ENROLL_KEY) !== String(course.id)) return;
     sessionStorage.removeItem(PENDING_ENROLL_KEY);
     handleEnroll();
@@ -166,7 +168,7 @@ export default function EnrollButton({ course }: Props) {
   };
 
   const handleEnroll = async () => {
-    if (!localStorage.getItem("token")) {
+    if (!isAuthenticated) {
       sessionStorage.setItem(PENDING_ENROLL_KEY, String(course.id));
       openLogin();
       return;

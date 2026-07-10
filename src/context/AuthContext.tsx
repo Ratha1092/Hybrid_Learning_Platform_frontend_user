@@ -21,8 +21,7 @@ export interface AuthUser {
 
 interface AuthContextValue {
   user: AuthUser | null;
-  token: string | null;
-  login: (user: AuthUser, token: string) => void;
+  login: (user: AuthUser) => void;
   logout: () => void;
   updateUser: (fields: Partial<AuthUser>) => void;
   refreshUser: () => Promise<void>;
@@ -41,21 +40,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return null;
     }
   });
-  const [token, setToken] = useState<string | null>(
-    () => localStorage.getItem("token")
-  );
 
-  const login = (newUser: AuthUser, newToken: string) => {
-    localStorage.setItem("token", newToken);
+  const login = (newUser: AuthUser) => {
     localStorage.setItem("user", JSON.stringify(newUser));
-    setToken(newToken);
     setUser(newUser);
   };
 
   const logout = () => {
-    localStorage.removeItem("token");
     localStorage.removeItem("user");
-    setToken(null);
     setUser(null);
   };
 
@@ -69,13 +61,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const refreshUser = useCallback(async () => {
-    if (!localStorage.getItem("token")) return;
     try {
       const { data } = await api.get<{ data: AuthUser }>("/users/me");
       const fresh = data.data;
       setUser(prev => {
         if (!prev) return prev;
-        const updated = { ...prev, role: fresh.role, instructor_status: fresh.instructor_status, avatar_url: fresh.avatar_url ?? prev.avatar_url };
+        const updated = {
+          ...prev,
+          role: fresh.role,
+          instructor_status: fresh.instructor_status,
+          avatar_url: fresh.avatar_url ?? prev.avatar_url,
+        };
         localStorage.setItem("user", JSON.stringify(updated));
         return updated;
       });
@@ -86,16 +82,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Sync role/instructor_status on mount so cached user is never stale
   useEffect(() => {
-    if (token) refreshUser();
-  }, [token, refreshUser]);
+    if (localStorage.getItem("user")) refreshUser();
+  }, [refreshUser]);
 
   // Keep state in sync when another tab logs in/out
   useEffect(() => {
     const sync = () => {
-      const t = localStorage.getItem("token");
-      const u = localStorage.getItem("user");
-      setToken(t);
-      setUser(u ? (JSON.parse(u) as AuthUser) : null);
+      try {
+        const u = localStorage.getItem("user");
+        setUser(u ? (JSON.parse(u) as AuthUser) : null);
+      } catch {
+        localStorage.removeItem("user");
+        setUser(null);
+      }
     };
     window.addEventListener("storage", sync);
     return () => window.removeEventListener("storage", sync);
@@ -103,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, token, login, logout, updateUser, refreshUser, isAuthenticated: !!token }}
+      value={{ user, login, logout, updateUser, refreshUser, isAuthenticated: !!user }}
     >
       {children}
     </AuthContext.Provider>

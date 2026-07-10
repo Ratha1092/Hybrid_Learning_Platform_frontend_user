@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect, type ChangeEvent, type KeyboardEvent, type ClipboardEvent } from "react";
-import { usePlatformStats } from "../../../hooks/usePlatformStats";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { useAuthModal } from "../../../context/AuthModalContext";
@@ -72,8 +71,6 @@ export default function Register() {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from;
-  const stats = usePlatformStats();
-
   const [step, setStep] = useState<Step>("form");
 
   const [form, setForm] = useState<FormState>({ name: "", email: "", password: "", password_confirmation: "" });
@@ -223,8 +220,9 @@ export default function Register() {
     }
 
     try {
+      await authService.csrf();
       const { data: regData } = await authService.register({ ...form, otp_code: code });
-      login(regData.data.user, regData.data.token);
+      login(regData.data.user);
       setOtpStatus("success");
       const redirectTo = sessionStorage.getItem("authRedirectTo") ?? from ?? "/";
       sessionStorage.removeItem("authRedirectTo");
@@ -271,19 +269,44 @@ export default function Register() {
 
   const leftContent = step === "form" ? (
     <>
-      <div className="rg-tag">✦ Online Learning</div>
-      <h2 className="rg-left-heading">join();<br />learn();<br />succeed();</h2>
-      <p className="rg-left-desc">Join thousands of students and unlock premium courses on Hybrid Learning Platform.</p>
-      <div className="rg-stats">
-        <div><div className="rg-stat-num">{stats?.total_students ?? "—"}</div><div className="rg-stat-lbl">Students</div></div>
-        <div><div className="rg-stat-num">{stats?.total_courses ?? "—"}</div><div className="rg-stat-lbl">Courses</div></div>
-        <div><div className="rg-stat-num">{stats?.total_instructors ?? "—"}</div><div className="rg-stat-lbl">Instructors</div></div>
+      <div className="rg-tag">✦ Get started free</div>
+      <h2 className="rg-how-title">How registration works</h2>
+      <p className="rg-how-intro">Create your account in three simple steps — takes less than 2 minutes.</p>
+
+      <div className="rg-how-steps">
+        <div className="rg-how-step">
+          <div className="rg-how-num">1</div>
+          <div className="rg-how-text">
+            <div className="rg-how-step-title">Fill in your details</div>
+            <div className="rg-how-step-desc">Enter your full name, email address, and choose a strong password.</div>
+          </div>
+        </div>
+        <div className="rg-how-connector" />
+        <div className="rg-how-step">
+          <div className="rg-how-num">2</div>
+          <div className="rg-how-text">
+            <div className="rg-how-step-title">Verify your email</div>
+            <div className="rg-how-step-desc">We'll send a 6-digit code to your inbox. Enter it to confirm your identity.</div>
+          </div>
+        </div>
+        <div className="rg-how-connector" />
+        <div className="rg-how-step">
+          <div className="rg-how-num">3</div>
+          <div className="rg-how-text">
+            <div className="rg-how-step-title">Start learning</div>
+            <div className="rg-how-step-desc">Your account is ready. Browse courses and enroll instantly — free forever.</div>
+          </div>
+        </div>
       </div>
     </>
   ) : (
     <>
       <div className="rg-tag">✦ One step left</div>
-      <h2 className="rg-left-heading">verify();<br />confirm();<br />join();</h2>
+      <h2 className="rg-left-heading">
+        <span className="rg-c4">verify</span><span className="rg-c3">()</span><span className="rg-c2">;</span><br />
+        <span className="rg-c1">confirm</span><span className="rg-c3">()</span><span className="rg-c2">;</span><br />
+        <span className="rg-c4">join</span><span className="rg-c3">()</span><span className="rg-c2">;</span>
+      </h2>
       <p className="rg-left-desc">Enter the 6-digit code we sent to your email to confirm your identity before creating your account.</p>
       <div className="rg-otp-info">
         <div className="rg-otp-info__row">🔐 Code expires in {formatTime(timeLeft)}</div>
@@ -317,19 +340,6 @@ export default function Register() {
 
         {/* Right panel */}
         <div className="rg-right">
-
-          {/* Step indicator */}
-          <div className="rg-steps">
-            <div className={`rg-step ${step === "form" ? "rg-step--active" : "rg-step--done"}`}>
-              <span className="rg-step__dot">{step === "otp" ? "✓" : "1"}</span>
-              <span>Your details</span>
-            </div>
-            <div className="rg-step__line" />
-            <div className={`rg-step ${step === "otp" ? "rg-step--active" : ""}`}>
-              <span className="rg-step__dot">2</span>
-              <span>Verify email</span>
-            </div>
-          </div>
 
           {/* ══════════════ STEP 1 — FORM ══════════════ */}
           {step === "form" && (

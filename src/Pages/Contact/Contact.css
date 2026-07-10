@@ -1,0 +1,482 @@
+/* ── Hero ── */
+.ct-hero {
+  background: linear-gradient(135deg, #2563EB 0%, #1e3a8a 100%);
+  padding: 56px 0 48px;
+  text-align: center;
+}
+
+.ct-hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(30px, 4.5vw, 48px);
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 12px;
+}
+
+.ct-hero-sub {
+  font-size: 1.05rem;
+  color: rgba(255, 255, 255, 0.82);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* ── Info Cards ── */
+.ct-cards-wrap {
+  background: #f8fafc;
+  padding: 48px 0;
+}
+
+.ct-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.ct-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px 24px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.ct-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
+}
+
+.ct-card-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  color: #fff;
+}
+
+.ct-card-icon--blue   { background: #2563EB; }
+.ct-card-icon--orange { background: var(--orange); }
+.ct-card-icon--indigo { background: var(--indigo); }
+
+.ct-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 8px;
+}
+
+.ct-card-text {
+  font-size: 0.92rem;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.ct-card-text a {
+  color: #1d4ed8;
+  transition: color 0.15s;
+}
+
+.ct-card-text a:hover { color: #2563EB; }
+
+.ct-card-note {
+  margin-top: 6px;
+  font-size: 0.8rem;
+  color: var(--text-light);
+}
+
+/* ── Main layout ── */
+.ct-main {
+  padding: 64px 0 80px;
+}
+
+.ct-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 32px;
+  align-items: start;
+}
+
+/* ── Form card ── */
+.ct-form-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 40px;
+  box-shadow: var(--shadow-sm);
+}
+
+.ct-form-title {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 6px;
+}
+
+.ct-form-sub {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  margin-bottom: 28px;
+}
+
+.ct-form { display: flex; flex-direction: column; gap: 18px; }
+
+.ct-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.ct-field { display: flex; flex-direction: column; gap: 6px; }
+
+.ct-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.ct-input,
+.ct-textarea {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  color: var(--text);
+  background: #fafbfc;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+  resize: none;
+}
+
+.ct-input:focus,
+.ct-textarea:focus {
+  border-color: #2563EB;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(73, 187, 189, 0.14);
+}
+
+.ct-field--error .ct-input,
+.ct-field--error .ct-textarea {
+  border-color: #ef4444;
+  background: #fff5f5;
+}
+
+.ct-field-error {
+  font-size: 0.78rem;
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.ct-server-error {
+  font-size: 0.88rem;
+  color: #ef4444;
+  background: #fff5f5;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.ct-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 28px;
+  background: #2563EB;
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.18s, transform 0.18s, box-shadow 0.18s;
+  align-self: flex-start;
+}
+
+.ct-submit:hover:not(:disabled) {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(73, 187, 189, 0.3);
+}
+
+.ct-submit:disabled { opacity: 0.65; cursor: not-allowed; }
+
+.ct-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: ct-spin 0.6s linear infinite;
+  display: inline-block;
+}
+
+@keyframes ct-spin { to { transform: rotate(360deg); } }
+
+/* ── Success state ── */
+.ct-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 0;
+  gap: 12px;
+}
+
+.ct-success-icon { color: #22c55e; }
+
+.ct-success-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.ct-success-text {
+  font-size: 0.95rem;
+  color: var(--text);
+  max-width: 360px;
+}
+
+.ct-btn-reset {
+  margin-top: 8px;
+  padding: 10px 22px;
+  background: transparent;
+  border: 1.5px solid #2563EB;
+  border-radius: 50px;
+  color: #1d4ed8;
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ct-btn-reset:hover { background: #eff6ff; }
+
+/* ── Sidebar cards ── */
+.ct-side-col { display: flex; flex-direction: column; gap: 20px; }
+
+.ct-side-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.ct-side-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.ct-side-icon--orange {
+  background: #fff3ef;
+  color: var(--orange);
+}
+
+.ct-side-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 14px;
+}
+
+.ct-hours {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ct-hours li {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--text);
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.ct-hours li:last-child { border-bottom: none; padding-bottom: 0; }
+
+.ct-hours li span:first-child { color: #64748b; }
+
+.ct-closed { color: #ef4444 !important; font-weight: 600; }
+
+.ct-support-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ct-support-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
+.ct-support-list li svg { color: var(--text-light); flex-shrink: 0; }
+
+.ct-support-list a {
+  color: #1d4ed8;
+  transition: color 0.15s;
+}
+
+.ct-support-list a:hover { color: #2563EB; }
+
+/* ── FAQ ── */
+.ct-faq-section {
+  background: #f8fafc;
+  padding: 64px 0 80px;
+}
+
+.ct-faq-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.ct-faq-title {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 700;
+  color: var(--navy);
+  margin-bottom: 8px;
+}
+
+.ct-faq-sub {
+  font-size: 0.95rem;
+  color: var(--text-light);
+}
+
+.ct-faq-sub a {
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.ct-faq-sub a:hover { color: #2563EB; }
+
+.ct-faq-list {
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ct-faq-item {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  transition: box-shadow 0.18s;
+}
+
+.ct-faq-item[open] { box-shadow: var(--shadow-sm); }
+
+.ct-faq-q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--navy);
+  cursor: pointer;
+  list-style: none;
+  gap: 12px;
+  user-select: none;
+}
+
+.ct-faq-q::-webkit-details-marker { display: none; }
+
+.ct-faq-chevron {
+  flex-shrink: 0;
+  color: var(--text-light);
+  transition: transform 0.22s;
+}
+
+.ct-faq-item[open] .ct-faq-chevron { transform: rotate(180deg); }
+
+.ct-faq-a {
+  padding: 0 20px 18px;
+  font-size: 0.9rem;
+  color: var(--text);
+  line-height: 1.7;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .ct-grid {
+    grid-template-columns: 1fr;
+  }
+  .ct-side-col { flex-direction: row; flex-wrap: wrap; }
+  .ct-side-card { flex: 1; min-width: 240px; }
+}
+
+@media (max-width: 700px) {
+  .ct-cards { grid-template-columns: 1fr; }
+  .ct-row { grid-template-columns: 1fr; }
+  .ct-form-card { padding: 24px; }
+  .ct-side-col { flex-direction: column; }
+}
+
+/* ── Dark mode ─────────────────────────────────── */
+html.dark .ct-cards-wrap { background: #0f172a; }
+html.dark .ct-card { background: #1e293b; border-color: #334155; }
+html.dark .ct-card-title { color: #f1f5f9; }
+html.dark .ct-card-text { color: #94a3b8; }
+html.dark .ct-card-text a { color: #60a5fa; }
+/* form card + labels + inputs (correct class names) */
+html.dark .ct-form-card { background: #1e293b; border-color: #334155; }
+html.dark .ct-form-title { color: #f1f5f9; }
+html.dark .ct-form-sub   { color: #94a3b8; }
+html.dark .ct-label      { color: #94a3b8; }
+html.dark .ct-input,
+html.dark .ct-textarea {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+html.dark .ct-input:focus,
+html.dark .ct-textarea:focus {
+  border-color: #2563EB;
+  background: #1e293b;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+}
+html.dark .ct-field--error .ct-input,
+html.dark .ct-field--error .ct-textarea { background: rgba(239,68,68,0.08); border-color: #ef4444; }
+html.dark .ct-server-error { color: #f87171; background: rgba(239,68,68,0.1); border-color: rgba(252,165,165,0.2); }
+/* side cards (hours + support) */
+html.dark .ct-side-card { background: #1e293b; border-color: #334155; }
+html.dark .ct-side-title { color: #f1f5f9; }
+html.dark .ct-hours li   { border-bottom-color: #334155; color: #e2e8f0; }
+html.dark .ct-hours li span:first-child { color: #94a3b8; }
+html.dark .ct-support-list a { color: #60a5fa; }
+/* FAQ section */
+html.dark .ct-faq-section { background: #0f172a; }
+html.dark .ct-faq-header h2 { color: #f1f5f9; }
+html.dark .ct-faq-header p  { color: #94a3b8; }
+html.dark .ct-faq-list { background: #1e293b; border-color: #334155; }
+html.dark .ct-faq-item { border-bottom-color: #334155; }
+html.dark .ct-faq-q    { color: #f1f5f9; }
+html.dark .ct-faq-a    { color: #94a3b8; }
+html.dark .ct-btn-reset { border-color: #334155; color: #94a3b8; }
+html.dark .ct-btn-reset:hover { background: #1e293b; }
