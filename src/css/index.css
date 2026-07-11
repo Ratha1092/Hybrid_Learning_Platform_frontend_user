@@ -15,17 +15,20 @@
 }
 
 @layer utilities {
-  /* ── Gradients ── */
-  .grad-blue { background: linear-gradient(135deg, #2563EB, #3B82F6); }
+  /* Gradients
+     var(--color-primary)/(--color-secondary) are set at runtime from the
+     admin Settings' primary_color/secondary_color (see SettingsContext.tsx);
+     the hex values here are the fallback when no setting is configured. */
+  .grad-blue { background: linear-gradient(135deg, var(--color-primary, #2563EB), var(--color-secondary, #3B82F6)); }
   .grad-navy { background: linear-gradient(160deg, #0B1220 0%, #0f2044 100%); }
   .grad-text {
-    background: linear-gradient(135deg, #2563EB, #06b6d4);
+    background: linear-gradient(135deg, var(--color-primary, #2563EB), #06b6d4);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
-  /* ── Glassmorphism ── */
+  /* Glassmorphism */
   .glass {
     background: rgba(255, 255, 255, 0.72);
     backdrop-filter: blur(12px);
@@ -38,24 +41,24 @@
     border: 1px solid rgba(255, 255, 255, 0.12);
   }
 
-  /* ── Shadows ── */
+  /* Shadows */
   .shadow-e1        { box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04); }
   .shadow-soft      { box-shadow: 0 4px 24px rgba(0,0,0,.07), 0 1px 4px rgba(0,0,0,.04); }
   .shadow-card      { box-shadow: 0 12px 40px rgba(0,0,0,.12), 0 2px 8px rgba(0,0,0,.06); }
-  .shadow-glow      { box-shadow: 0 4px 20px rgba(37,99,235,.35); }
+  .shadow-glow      { box-shadow: 0 4px 20px color-mix(in srgb, var(--color-primary, #2563EB) 35%, transparent); }
   .shadow-soft-dark { box-shadow: 0 8px 32px rgba(0,0,0,.35); }
 
-  /* ── Colour aliases ── */
+  /* Colour aliases */
   .ink        { color: #0F172A; }
   .muted2     { color: #64748B; }
-  .brand-blue { color: #2563EB; }
-  .bg-brand   { background-color: #2563EB; }
+  .brand-blue { color: var(--color-primary, #2563EB); }
+  .bg-brand   { background-color: var(--color-primary, #2563EB); }
   .bg-navy    { background-color: #0B1220; }
 
-  /* ── Focus ring ── */
+  /* Focus ring */
   .focus-ring { outline: 2px solid #2563EB; outline-offset: 2px; }
 
-  /* ── Scroll reveal ── */
+  /* Scroll reveal */
   .reveal {
     opacity: 0;
     transform: translateY(24px);
@@ -63,17 +66,17 @@
   }
   .reveal.is-visible { opacity: 1; transform: none; }
 
-  /* ── Floating badge animations ── */
+  /* Floating badge animations */
   @keyframes floaty  { 0%, 100% { transform: translateY(0); }  50% { transform: translateY(-8px); } }
   @keyframes floaty2 { 0%, 100% { transform: translateY(0); }  50% { transform: translateY(6px); } }
   .animate-floaty  { animation: floaty  4s ease-in-out infinite; }
   .animate-floaty2 { animation: floaty2 5.5s ease-in-out infinite; }
 
-  /* ── Scrollbar hide ── */
+  /* Scrollbar hide */
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-  /* ── Skeleton loader ── */
+  /* Skeleton loader */
   @keyframes skeleton-shimmer { to { background-position: -200% 0; } }
   .skeleton {
     background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
@@ -86,11 +89,11 @@
   .skeleton-line--md  { width: 70%; }
   .skeleton-line--lg  { width: 90%; height: 16px; }
 
-  /* ── Page transition wrapper ── */
+  /* Page transition wrapper */
   .page-transition { min-height: 100vh; }
 }
 
-/* ── Dark mode overrides ──────────────────────────────────────────────────── */
+/* Dark mode overrides */
 html.dark {
   color-scheme: dark;
 }

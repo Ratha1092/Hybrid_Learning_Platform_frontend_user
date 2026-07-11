@@ -75,9 +75,13 @@ function Navbar() {
 
           {/* ── Logo ── */}
           <NavLink to="/" className="flex items-center gap-2.5 shrink-0" onClick={closeMenu}>
-            <span className="grid h-9 w-9 place-items-center rounded-xl grad-blue text-white shadow-glow">
-              <GraduationCap className="h-5 w-5" strokeWidth={2.4} />
-            </span>
+            {settings.site_logo ? (
+              <img src={settings.site_logo} alt={siteName} className="h-9 w-9 rounded-xl object-cover shadow-glow" />
+            ) : (
+              <span className="grid h-9 w-9 place-items-center rounded-xl grad-blue text-white shadow-glow">
+                <GraduationCap className="h-5 w-5" strokeWidth={2.4} />
+              </span>
+            )}
             <span className="font-display text-lg font-extrabold ink">
               {brandFirst}<span className="brand-blue">{brandRest ? ` ${brandRest}` : ""}</span>
             </span>
@@ -214,28 +218,28 @@ function Navbar() {
                       <div className="p-1.5">
                         {isStudent && (
                           <button
-                            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                             onClick={() => { setDropdownOpen(false); navigate("/profile"); }}
                           >
-                            <User className="h-4 w-4 text-slate-400" /> Dashboard
+                            <User className="h-4 w-4 text-slate-400 dark:text-slate-500" /> Dashboard
                           </button>
                         )}
                         <button
-                          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900"
+                          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
                           onClick={() => { setDropdownOpen(false); navigate("/profile/edit"); }}
                         >
-                          <Settings className="h-4 w-4 text-slate-400" /> Account settings
+                          <Settings className="h-4 w-4 text-slate-400 dark:text-slate-500" /> Account settings
                         </button>
                         {isStudent && user?.instructor_status !== "pending" && (
                           <button
-                            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50"
+                            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30"
                             onClick={() => { setDropdownOpen(false); navigate("/instructor/register"); }}
                           >
                             <Users className="h-4 w-4" /> Become an Instructor
                           </button>
                         )}
                         {user?.instructor_status === "pending" && (
-                          <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-amber-600">
+                          <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-amber-600 dark:text-amber-400">
                             <span className="h-4 w-4 text-center">⏳</span> Application pending
                           </div>
                         )}
@@ -243,7 +247,7 @@ function Navbar() {
 
                       <div className="border-t border-slate-100 dark:border-slate-800 p-1.5">
                         <button
-                          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-red-500 transition-colors hover:bg-red-50"
+                          className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-red-500 transition-colors hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10"
                           onClick={handleLogout}
                         >
                           <LogOut className="h-4 w-4" /> Log out
