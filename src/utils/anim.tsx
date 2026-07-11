@@ -49,8 +49,9 @@ export function useCountUp(end: number, duration = 1600) {
   const [val, setVal] = useState(0);
   const done = useRef(false);
   useEffect(() => {
+    done.current = false; // reset so animation re-fires when end changes (e.g. after data loads)
     const el = ref.current;
-    if (!el) return;
+    if (!el || end === 0) return;
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {

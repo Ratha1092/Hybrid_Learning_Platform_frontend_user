@@ -1,17 +1,10 @@
 import { ArrowRight, Play, CheckCircle2, Users, BookOpen, GraduationCap } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
-import api from "../api/axios";
 import heroImage from "../assets/image1.png";
 import { useAuth } from "../context/AuthContext";
 import { useAuthModal } from "../context/AuthModalContext";
 import { useCountUp } from "../utils/anim";
-
-interface PlatformStats {
-  total_students: number;
-  total_instructors: number;
-  total_courses: number;
-}
+import { usePlatformStats } from "../utils/usePlatformStats";
 
 function StatPill({ end, suffix, label }: { end: number; suffix: string; label: string }) {
   const { ref, val } = useCountUp(end, 1400);
@@ -28,19 +21,14 @@ function StatPill({ end, suffix, label }: { end: number; suffix: string; label: 
 function Hero() {
   const { isAuthenticated } = useAuth();
   const { openRegister } = useAuthModal();
-  const [stats, setStats] = useState<PlatformStats | null>(null);
+  const stats = usePlatformStats();
 
-  useEffect(() => {
-    api.get("/stats").then((res) => setStats(res.data.data)).catch(() => {});
-  }, []);
-
-  const students = stats?.total_students    ?? 30000;
-  const courses  = stats?.total_courses     ?? 2000;
-  const instrs   = stats?.total_instructors ?? 450;
+  const students = stats?.total_students    ?? 0; // 0 while loading; real value triggers count-up
+  const courses  = stats?.total_courses     ?? 0;
+  const instrs   = stats?.total_instructors ?? 0;
 
   return (
     <section className="hero-section grad-navy relative overflow-hidden pt-16 pb-24 sm:pt-20 sm:pb-32">
-      {/* Decorative blobs */}
       <div className="pointer-events-none absolute -top-40 right-0 h-[620px] w-[620px] rounded-full bg-blue-500/[0.06] blur-3xl dark:bg-blue-600/20" />
       <div className="pointer-events-none absolute -bottom-20 -left-16 h-80 w-80 rounded-full bg-cyan-400/[0.06] blur-3xl dark:bg-cyan-500/10" />
       <div className="pointer-events-none absolute left-1/3 top-1/2 h-48 w-48 rounded-full bg-indigo-400/[0.06] blur-2xl dark:bg-indigo-600/10" />
@@ -119,11 +107,12 @@ function Hero() {
               </div>
             </div>
 
-            {/* Floating badge — bottom right */}
+            {/* Floating badge — bottom right (real student count) */}
             <div className="animate-floaty2 absolute -bottom-4 -right-6 z-20 rounded-2xl glass px-4 py-3 shadow-card">
               <p className="text-[11px] text-slate-500">Total learners enrolled</p>
               <p className="flex items-center gap-1 font-display text-xl font-extrabold text-slate-900">
-                <Users className="h-4 w-4 text-blue-600" /> 30,000+
+                <Users className="h-4 w-4 text-blue-600" />
+                {students > 0 ? `${students.toLocaleString()}+` : "—"}
               </p>
             </div>
 

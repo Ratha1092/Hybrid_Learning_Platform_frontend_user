@@ -1,15 +1,20 @@
 import { Check, ArrowRight, Wallet, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Reveal } from "../../utils/anim";
-
-const perks = [
-  "Reach a global audience of 30,000+ learners",
-  "Secure monthly payouts & transparent revenue reports",
-  "Powerful analytics dashboard for every course",
-  "Dedicated instructor success & marketing support",
-];
+import { usePlatformStats } from "../../utils/usePlatformStats";
 
 export default function BecomeInstructor() {
+  const stats = usePlatformStats();
+  const students = stats?.total_students ?? 30000;
+  const topEarnings = stats?.top_instructor_monthly_earnings ?? 12480;
+
+  const perks = [
+    `Reach a global audience of ${students.toLocaleString()}+ learners`,
+    "Secure monthly payouts & transparent revenue reports",
+    "Powerful analytics dashboard for every course",
+    "Dedicated instructor success & marketing support",
+  ];
+
   return (
     <section className="bg-[#EEF1F6] dark:bg-slate-900 py-16 sm:py-20">
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
@@ -53,20 +58,20 @@ export default function BecomeInstructor() {
                   alt="Instructor teaching"
                   className="h-72 w-full rounded-2xl object-cover shadow-soft-dark"
                 />
-                <div className="animate-floaty absolute -left-5 top-8 rounded-2xl glass-dark p-4 text-white shadow-soft-dark">
-                  <div className="flex items-center gap-2">
-                    <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-500/20">
-                      <TrendingUp className="h-5 w-5 text-emerald-400" />
-                    </span>
-                    <div className="leading-tight">
-                      <p className="text-[11px] text-slate-300">Monthly earnings</p>
-                      <p className="font-display text-lg font-extrabold">$12,480</p>
-                    </div>
+                <div className="animate-floaty absolute -left-24 top-10 z-10 flex items-center gap-3 rounded-2xl bg-white/95 px-4 py-3 shadow-card backdrop-blur-md dark:bg-slate-800 dark:ring-1 dark:ring-slate-600">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-100 dark:bg-emerald-500/20">
+                    <TrendingUp className="h-5 w-5 text-emerald-500" />
+                  </span>
+                  <div className="leading-tight">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Monthly earnings</p>
+                    <p className="font-display text-lg font-extrabold text-slate-900 dark:text-white">
+                      {topEarnings > 0 ? `$${Math.round(topEarnings).toLocaleString()}` : "—"}
+                    </p>
                   </div>
                 </div>
-                <div className="animate-floaty2 absolute -bottom-4 right-2 rounded-2xl glass-dark px-4 py-3 text-white shadow-soft-dark">
-                  <p className="text-[11px] text-slate-300">Active students</p>
-                  <p className="font-display text-lg font-extrabold">8,204</p>
+                <div className="animate-floaty2 absolute -bottom-5 -right-8 z-10 rounded-2xl bg-white/95 px-4 py-3 shadow-card backdrop-blur-md dark:bg-slate-800 dark:ring-1 dark:ring-slate-600">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Active students</p>
+                  <p className="font-display text-lg font-extrabold text-slate-900 dark:text-white">{students > 0 ? students.toLocaleString() : "—"}</p>
                 </div>
               </div>
             </Reveal>
