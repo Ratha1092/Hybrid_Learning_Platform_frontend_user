@@ -20,6 +20,19 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
+  // Swap the favicon at runtime once the admin-configured one is known.
+  useEffect(() => {
+    if (!settings.site_favicon) return;
+    const link = document.querySelector<HTMLLinkElement>("link[rel='icon']");
+    if (link) link.href = settings.site_favicon;
+  }, [settings.site_favicon]);
+  
+  useEffect(() => {
+    const root = document.documentElement;
+    if (settings.primary_color) root.style.setProperty("--color-primary", settings.primary_color);
+    if (settings.secondary_color) root.style.setProperty("--color-secondary", settings.secondary_color);
+  }, [settings.primary_color, settings.secondary_color]);
+
   return (
     <SettingsContext.Provider value={{ settings, loading }}>
       {children}

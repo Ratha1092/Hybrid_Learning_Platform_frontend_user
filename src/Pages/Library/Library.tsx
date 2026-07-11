@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, CheckCircle2, Play, Clock, Search, X, RotateCcw, GraduationCap } from "lucide-react";
+import { BookOpen, CheckCircle2, Play, Clock, Search, X, RotateCcw, GraduationCap, LogIn } from "lucide-react";
 import { courseService, type EnrolledCourse } from "../../services/courseService";
 import { useAuth } from "../../context/AuthContext";
+import { useAuthModal } from "../../context/AuthModalContext";
 import "./Library.css";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
@@ -54,7 +55,8 @@ function SkeletonCard() {
 type Tab = "all" | "in-progress" | "completed";
 
 export default function Library() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const { openLogin, openRegister } = useAuthModal();
   const [courses, setCourses] = useState<EnrolledCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +73,10 @@ export default function Library() {
       .finally(() => setLoading(false));
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    if (isAuthenticated) load();
+    else setLoading(false);
+  }, [isAuthenticated]);
 
   const firstName = user?.name?.split(" ")[0] ?? "there";
 
@@ -91,6 +96,31 @@ export default function Library() {
 
   return (
     <>
+      {/* ── Guest state ── */}
+      {!isAuthenticated && (
+        <div className="lb-body" style={{ minHeight: "80vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div className="lb-state">
+            <div style={{ width: 72, height: 72, borderRadius: 20, background: "linear-gradient(135deg,#2563EB,#3B82F6)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+              <BookOpen size={34} color="#fff" />
+            </div>
+            <h2 className="lb-state-title">Your learning library</h2>
+            <p className="lb-state-msg" style={{ maxWidth: 380 }}>
+              Sign in to access your enrolled courses, track your progress, and continue where you left off.
+            </p>
+            <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
+              <button className="lb-btn-browse" onClick={openLogin} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                <LogIn size={16} /> Sign In
+              </button>
+              <button className="lb-btn-retry" onClick={openRegister} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                Create Account
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Authenticated view ── */}
+      {isAuthenticated && <>
       {/* ── Hero ── */}
       <div className="lb-hero">
         <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
@@ -261,6 +291,7 @@ export default function Library() {
 
         </div>
       </div>
+      </>}
 
     </>
   );
