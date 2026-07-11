@@ -5,6 +5,7 @@ export interface PlatformStats {
   total_students: number;
   total_courses: number;
   total_instructors: number;
+  top_instructor_monthly_earnings: number;
 }
 
 export function usePlatformStats() {

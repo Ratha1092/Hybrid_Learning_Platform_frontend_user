@@ -39,6 +39,25 @@ export interface Transaction {
   created_at: string;
 }
 
+export interface PayoutRequest {
+  id: number;
+  amount: number;
+  payment_method: string;
+  status: "pending" | "approved" | "rejected";
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+  receipt_id?: number | null;
+}
+
+export interface PayoutReceipt {
+  id: number;
+  payout_request_id: number;
+  number: string;
+  amount: number;
+  issued_at: string;
+}
+
 // Represents a student enrolled in instructor's course.
 export interface StudentEnrollment {
   id?: number;
@@ -325,4 +344,29 @@ export const instructorService = {
     payment_method: string;
   }) =>
     api.post("/finance/payout-request", data),
+
+  // Paginated payout request history.
+  getPayoutRequests: (page = 1) =>
+    api.get<{ data: { data: PayoutRequest[]; current_page: number; last_page: number } }>(
+      `/finance/payout-requests?page=${page}`
+    ),
+
+  // List payout receipts.
+  getPayoutReceipts: () =>
+    api.get<{ data: PayoutReceipt[] }>("/finance/payout-receipts"),
+
+  // Download a single payout receipt PDF (returns blob).
+  downloadPayoutReceipt: async (receiptId: number, receiptNumber: string) => {
+    const res = await api.get(`/finance/payout-receipts/${receiptId}/download`, {
+      responseType: "blob",
+    });
+    const url = URL.createObjectURL(res.data as Blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `payout-receipt-${receiptNumber}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  },
 };

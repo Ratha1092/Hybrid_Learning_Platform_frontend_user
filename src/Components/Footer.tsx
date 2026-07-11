@@ -1,7 +1,6 @@
-import { GraduationCap, MapPin, Phone, Mail, ArrowRight } from "lucide-react";
+import { GraduationCap, MapPin, Phone, Mail } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import { useSettings } from "../context/SettingsContext";
-import { Reveal } from "../utils/anim";
 
 const cols = [
   { title: "Explore",  items: [{ label: "All Courses",    to: "/courses" }, { label: "Categories",    to: "/categories" }, { label: "Library",      to: "/library" }, { label: "Certificates", to: "/courses" }] },
@@ -31,27 +30,6 @@ export default function Footer() {
   return (
     <footer className="bg-navy text-slate-300">
       <div className="mx-auto max-w-[1400px] px-4 py-11 sm:px-6">
-
-        {/* Newsletter band */}
-        <Reveal className="mb-10 grid gap-4 rounded-2xl glass-dark p-5 sm:grid-cols-[1.4fr_1fr] sm:items-center sm:gap-6 sm:p-6">
-          <div>
-            <h3 className="font-display text-[18px] font-extrabold text-white sm:text-[21px]">
-              Get learning tips & new course drops
-            </h3>
-            <p className="mt-1 text-[13.5px] text-slate-400">
-              Join our newsletter. No spam — unsubscribe anytime.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 rounded-xl bg-white/10 p-1.5">
-            <input
-              placeholder="Enter your email"
-              className="min-w-0 flex-1 bg-transparent px-3 py-2.5 text-sm text-white outline-none placeholder:text-slate-500"
-            />
-            <button className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">
-              Subscribe <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-        </Reveal>
 
         {/* Main grid */}
         <div className="grid gap-8 md:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">

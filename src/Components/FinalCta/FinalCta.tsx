@@ -3,11 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useAuthModal } from "../../context/AuthModalContext";
 import { Reveal } from "../../utils/anim";
+import { usePlatformStats } from "../../utils/usePlatformStats";
 
 export default function FinalCta() {
   const { isAuthenticated } = useAuth();
   const { openRegister } = useAuthModal();
   const navigate = useNavigate();
+  const stats = usePlatformStats();
+  const students = stats?.total_students ?? 30000;
 
   return (
     <section className="mx-auto max-w-[1400px] px-4 pb-20 sm:px-6 md:pb-28">
@@ -25,7 +28,7 @@ export default function FinalCta() {
               Ready to master skills that get you hired?
             </h2>
             <p className="mx-auto mt-4 max-w-lg text-[15px] text-blue-50">
-              Join 30,000+ learners building real, career-changing skills — with
+              Join {students.toLocaleString()}+ learners building real, career-changing skills — with
               lifetime access and a 30-day money-back guarantee.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">

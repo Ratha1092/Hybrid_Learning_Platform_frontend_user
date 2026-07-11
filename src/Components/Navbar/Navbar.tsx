@@ -151,7 +151,7 @@ function Navbar() {
               <>
                 <button
                   onClick={openLogin}
-                  className="hidden text-sm font-semibold text-slate-600 transition-colors hover:text-slate-900 sm:block"
+                  className="hidden text-sm font-semibold text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-300 dark:hover:text-white sm:block"
                 >
                   {t("nav.login")}
                 </button>
