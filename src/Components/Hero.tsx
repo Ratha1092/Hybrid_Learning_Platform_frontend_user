@@ -68,12 +68,12 @@ function Hero() {
                   Get Started Free <ArrowRight className="h-4 w-4" />
                 </button>
               )}
-              <button className="inline-flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-6 py-3.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/15">
+              {/* <button className="inline-flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-6 py-3.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/15">
                 <span className="grid h-8 w-8 place-items-center rounded-full grad-blue shadow-glow">
                   <Play className="h-3.5 w-3.5 fill-white text-white" />
                 </span>
                 Watch how it works
-              </button>
+              </button> */}
             </div>
 
             {/* Stats row */}

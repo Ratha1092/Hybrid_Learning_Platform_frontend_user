@@ -5,11 +5,13 @@ import { usePlatformStats } from "../../utils/usePlatformStats";
 
 export default function BecomeInstructor() {
   const stats = usePlatformStats();
-  const students = stats?.total_students ?? 30000;
-  const topEarnings = stats?.top_instructor_monthly_earnings ?? 12480;
+  const students = stats?.total_students ?? 0;
+  const topEarnings = stats?.top_instructor_monthly_earnings ?? 0;
 
   const perks = [
-    `Reach a global audience of ${students.toLocaleString()}+ learners`,
+    students > 0
+      ? `Reach a global audience of ${students.toLocaleString()}+ learners`
+      : "Reach a growing global audience of learners",
     "Secure monthly payouts & transparent revenue reports",
     "Powerful analytics dashboard for every course",
     "Dedicated instructor success & marketing support",

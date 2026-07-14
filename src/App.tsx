@@ -34,6 +34,7 @@ import MyCourses from "./Pages/User/Instructor/Sivbar/MyCourses";
 import CreateCourse from "./Pages/User/Instructor/Sivbar/CreateCourse";
 import EditCourse from "./Pages/User/Instructor/EditCourse/index";
 import Revenue from "./Pages/User/Instructor/Sivbar/Revenue";
+import PayoutAccount from "./Pages/User/Instructor/Sivbar/PayoutAccount";
 import Students from "./Pages/User/Instructor/Sivbar/Students";
 import Library from "./Pages/Library/Library";
 import Learn from "./Pages/Learn/Learn";
@@ -185,6 +186,7 @@ function App() {
             <Route path="courses/create" element={<CreateCourse />} />
             <Route path="courses/:id/edit" element={<EditCourse />} />
             <Route path="revenue" element={<Revenue />} />
+            <Route path="payout-account" element={<PayoutAccount />} />
             <Route path="students" element={<Students />} />
           </Route>
         </Routes>

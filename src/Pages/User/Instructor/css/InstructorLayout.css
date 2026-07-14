@@ -3,7 +3,7 @@
 .il-page {
   min-height: 100vh;
   background: var(--pt-paper);
-  overflow-x: hidden;
+  overflow-x: clip; /* clip (not hidden) so sticky children still work */
 }
 
 .il-wrap {

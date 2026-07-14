@@ -58,12 +58,12 @@ export default function Categories() {
               From code to creativity — find the right track for your goals.
             </p>
           </div>
-          <button
+          {/* <button
             onClick={() => navigate("/categories")}
             className="group inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold ink shadow-e1 transition-colors hover:border-blue-300 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-500 dark:hover:text-blue-400"
           >
             View all categories <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-          </button>
+          </button> */}
         </Reveal>
 
         {loading ? (

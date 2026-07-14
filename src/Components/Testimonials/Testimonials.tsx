@@ -50,9 +50,9 @@ export default function Testimonials() {
 
         {/* Real platform stats */}
         <Reveal delay={100} className="mx-auto mt-10 grid max-w-2xl grid-cols-2 gap-y-8 gap-x-6 sm:grid-cols-4">
-          <StatPill end={stats?.total_students    ?? 30000} suffix="+" label="Students enrolled" />
-          <StatPill end={stats?.total_courses     ?? 2000}  suffix="+" label="Expert courses" />
-          <StatPill end={stats?.total_instructors ?? 450}   suffix="+" label="Pro instructors" />
+          <StatPill end={stats?.total_students    ?? 0} suffix="+" label="Students enrolled" />
+          <StatPill end={stats?.total_courses     ?? 0} suffix="+" label="Expert courses" />
+          <StatPill end={stats?.total_instructors ?? 0} suffix="+" label="Pro instructors" />
           <div className="flex flex-col items-center text-center">
             <span className="font-display text-[30px] font-extrabold text-white sm:text-[38px]">4.8★</span>
             <p className="mt-1 text-[13px] text-slate-400">Average rating</p>

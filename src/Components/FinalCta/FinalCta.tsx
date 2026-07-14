@@ -10,7 +10,7 @@ export default function FinalCta() {
   const { openRegister } = useAuthModal();
   const navigate = useNavigate();
   const stats = usePlatformStats();
-  const students = stats?.total_students ?? 30000;
+  const students = stats?.total_students ?? 0;
 
   return (
     <section className="mx-auto max-w-[1400px] px-4 pb-20 sm:px-6 md:pb-28">
@@ -28,8 +28,10 @@ export default function FinalCta() {
               Ready to master skills that get you hired?
             </h2>
             <p className="mx-auto mt-4 max-w-lg text-[15px] text-blue-50">
-              Join {students.toLocaleString()}+ learners building real, career-changing skills — with
-              lifetime access and a 30-day money-back guarantee.
+              {students > 0
+                ? `Join ${students.toLocaleString()}+ learners building real, career-changing skills — with`
+                : "Build real, career-changing skills — with"}{" "}
+              limited time access and a 15-day money-back guarantee.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               {isAuthenticated ? (
