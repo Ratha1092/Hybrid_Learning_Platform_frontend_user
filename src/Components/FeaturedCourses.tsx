@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight, Star, Clock, BookOpen, BarChart3, Heart, Award } from "lucide-react";
 import { courseService, type Course } from "../services/courseService";
 import { Reveal } from "../utils/anim";
-import { useWishlist } from "../context/WishlistContext";
+import { useProtectedWishlist } from "../hooks/useProtectedWishlist";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
@@ -34,7 +34,7 @@ function SkeletonCard() {
 
 export default function FeaturedCourses() {
   const navigate = useNavigate();
-  const { toggle, isWishlisted } = useWishlist();
+  const { toggle, isWishlisted } = useProtectedWishlist();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("All");

@@ -80,8 +80,8 @@ export default function TopInstructors() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get("/instructors?limit=4")
-      .then((res) => setInstructors((res.data.data ?? []).slice(0, 4)))
+    api.get("/instructors?limit=8")
+      .then((res) => setInstructors((res.data.data ?? []).slice(0, 8)))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -106,9 +106,9 @@ export default function TopInstructors() {
           </Link>
         </Reveal>
 
-        <div className="mt-12 grid grid-cols-2 gap-5 lg:grid-cols-4">
+        <div className="mt-12 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
           {loading
-            ? Array.from({ length: 4 }).map((_, i) => (
+            ? Array.from({ length: 8 }).map((_, i) => (
                 <Reveal key={i} delay={i * 80}>
                   <SkeletonCard />
                 </Reveal>

@@ -25,7 +25,6 @@ import FeaturedCourses from "./Components/FeaturedCourses";
 import DetailCourse from "./Pages/Courses/DetailCourse";
 
 import PageCategories from "./Pages/Category/Pagecategoires";
-import StudentProfileEdit from "./Pages/User/Profile/StudentProfileEdit";
 import Profile from "./Pages/User/Profile/StudentProfile";
 import InstructorRegister from "./Pages/Auth/Register/Apply_to_Instructor";
 import CreateSections from "./Pages/User/Instructor/Sivbar/CreateSection";
@@ -171,7 +170,7 @@ function App() {
 
           {/* Auth-required routes */}
           <Route path="/profile" element={<RequireStudent><Profile /></RequireStudent>} />
-          <Route path="/profile/edit" element={<RequireStudent><StudentProfileEdit /></RequireStudent>} />
+          <Route path="/profile/edit" element={<Navigate to="/profile?view=edit" replace />} />
           <Route path="/library" element={<RequireAuth><WithFooter><Library /></WithFooter></RequireAuth>} />
           <Route path="/learn/:slug" element={<RequireAuth><Learn /></RequireAuth>} />
 

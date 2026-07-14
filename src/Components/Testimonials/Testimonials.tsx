@@ -1,5 +1,6 @@
 import { Star, Quote } from "lucide-react";
-import { Reveal } from "../../utils/anim";
+import { Reveal, useCountUp } from "../../utils/anim";
+import { usePlatformStats } from "../../utils/usePlatformStats";
 
 const testimonials = [
   {
@@ -19,11 +20,27 @@ const testimonials = [
   },
 ];
 
+function StatPill({ end, suffix, label }: { end: number; suffix: string; label: string }) {
+  const { ref, val } = useCountUp(end);
+  return (
+    <div className="flex flex-col items-center text-center">
+      <span ref={ref} className="font-display text-[30px] font-extrabold text-white sm:text-[38px]">
+        {val.toLocaleString()}{suffix}
+      </span>
+      <p className="mt-1 text-[13px] text-slate-400">{label}</p>
+    </div>
+  );
+}
+
 export default function Testimonials() {
+  const stats = usePlatformStats();
+
   return (
     <section className="grad-navy relative overflow-hidden py-20 sm:py-28">
       <div className="pointer-events-none absolute -left-20 top-10 h-72 w-72 rounded-full bg-blue-600/20 blur-3xl" />
+      <div className="pointer-events-none absolute -right-20 bottom-10 h-64 w-64 rounded-full bg-cyan-600/10 blur-3xl" />
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
+
         <Reveal className="mx-auto max-w-xl text-center">
           <p className="mb-2 text-sm font-semibold text-blue-300">Student success stories</p>
           <h2 className="font-display text-[32px] font-extrabold text-white sm:text-[40px]">
@@ -31,7 +48,20 @@ export default function Testimonials() {
           </h2>
         </Reveal>
 
-        <div className="mt-14 grid gap-6 lg:grid-cols-3">
+        {/* Real platform stats */}
+        <Reveal delay={100} className="mx-auto mt-10 grid max-w-2xl grid-cols-2 gap-y-8 gap-x-6 sm:grid-cols-4">
+          <StatPill end={stats?.total_students    ?? 30000} suffix="+" label="Students enrolled" />
+          <StatPill end={stats?.total_courses     ?? 2000}  suffix="+" label="Expert courses" />
+          <StatPill end={stats?.total_instructors ?? 450}   suffix="+" label="Pro instructors" />
+          <div className="flex flex-col items-center text-center">
+            <span className="font-display text-[30px] font-extrabold text-white sm:text-[38px]">4.8★</span>
+            <p className="mt-1 text-[13px] text-slate-400">Average rating</p>
+          </div>
+        </Reveal>
+
+        <div className="mx-auto mt-12 border-t border-white/10" />
+
+        <div className="mt-12 grid gap-6 lg:grid-cols-3">
           {testimonials.map((t, i) => (
             <Reveal key={t.name} delay={i * 100}>
               <div className="flex h-full flex-col rounded-2xl glass-dark p-6 shadow-soft-dark">

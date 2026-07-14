@@ -10,5 +10,5 @@ export interface CouponValidation {
 
 export const couponService = {
   validate: (code: string, course_id: number) =>
-    api.post<CouponValidation>("/coupons/validate", { code, course_id }),
+    api.post<{ success: boolean; data: CouponValidation }>("/coupons/validate", { code, course_id }),
 };
