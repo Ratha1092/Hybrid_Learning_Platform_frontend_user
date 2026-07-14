@@ -11,6 +11,7 @@ import { orderService, type Order } from "../../../services/orderService";
 import { billingService, type Invoice } from "../../../services/billingService";
 import { profileService, type DashboardData } from "../../../services/profileService";
 import ProfileLayout from "./ProfileLayout";
+import { EditProfilePanel } from "./StudentProfileEdit";
 import "./StudentProfile.css";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
@@ -64,6 +65,7 @@ export default function StudentProfile() {
   const [searchParams] = useSearchParams();
   const view = searchParams.get("view") ?? "overview";
 
+  const [editMounted, setEditMounted] = useState(false);
   const [studentProfile, setStudentProfile] = useState<DashboardData["profile"] | null>(null);
   const [courses, setCourses] = useState<EnrolledCourse[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
@@ -108,6 +110,9 @@ export default function StudentProfile() {
   }, []);
 
   useEffect(() => { if (isAuthenticated) fetchOrders(1); }, [isAuthenticated, fetchOrders]);
+
+  // Mount EditProfilePanel once on first visit, then keep alive (hidden) to avoid re-fetching
+  useEffect(() => { if (view === "edit") setEditMounted(true); }, [view]);
 
   const toggleOrderDetail = async (order: Order) => {
     if (expandedOrderId === order.id) { setExpandedOrderId(null); return; }
@@ -172,11 +177,12 @@ export default function StudentProfile() {
     view === "certificates" ? "Certificates" :
     view === "reviews"      ? "Reviews"      :
     view === "settings"     ? "Settings"     :
+    view === "edit"         ? "Profile"      :
     "Overview";
 
   /* ── Profile card (overview only) ── */
   const profileCard = (
-    <div className="sp-profile-card rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-e1 dark:border-slate-700 dark:bg-slate-800">
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-e1 dark:border-slate-700 dark:bg-slate-800">
       <div className="mx-auto grid h-24 w-24 place-items-center overflow-hidden rounded-2xl grad-blue text-3xl font-extrabold text-white shadow-glow">
         {avatarSrc
           ? <img src={avatarSrc} alt={displayName} className="h-full w-full object-cover" />
@@ -246,7 +252,7 @@ export default function StudentProfile() {
 
   return (
     <ProfileLayout activeLabel={activeLabel}>
-      <div key={view} className="sp-content flex min-w-0 flex-col gap-6">
+      <div key={view} className="flex min-w-0 flex-col gap-6">
 
         {/* ══════════════════ OVERVIEW ══════════════════ */}
         {view === "overview" && (
@@ -297,7 +303,7 @@ export default function StudentProfile() {
               </div>
 
               {/* Panels */}
-              <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-6 h-full">
                 {/* Continue Learning */}
                 <div className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-e1 dark:border-slate-700 dark:bg-slate-800">
                   <div className="flex items-center justify-between">
@@ -366,7 +372,7 @@ export default function StudentProfile() {
                 </div>
 
                 {/* Recent Activity */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-e1 dark:border-slate-700 dark:bg-slate-800">
+                <div className="flex flex-1 flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-e1 dark:border-slate-700 dark:bg-slate-800">
                   <div className="flex items-center justify-between">
                     <p className="font-display text-[17px] font-bold ink dark:text-slate-100">Recent activity</p>
                     <button
@@ -922,6 +928,13 @@ export default function StudentProfile() {
               </div>
             </div>
           </>
+        )}
+
+        {/* ══════════════════ EDIT PROFILE ══════════════════ */}
+        {editMounted && (
+          <div style={{ display: view === "edit" ? "block" : "none" }}>
+            <EditProfilePanel />
+          </div>
         )}
 
       </div>

@@ -67,14 +67,14 @@ export default function Categories() {
         </Reveal>
 
         {loading ? (
-          <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
+          <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            {Array.from({ length: 12 }).map((_, i) => (
               <div key={i} className="h-20 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800" />
             ))}
           </div>
         ) : (
-          <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3">
-            {categories.map((cat, i) => {
+          <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            {categories.slice(0, 12).map((cat, i) => {
               const { Icon, tint, ic } = getCategoryStyle(cat);
               return (
                 <Reveal key={cat.id} delay={i * 60}>

@@ -66,13 +66,22 @@ export interface EnrolledCourse {
   completed_at: string | null;
 }
 
-export const courseService = {
-  getAll: (search?: string) =>
-    api.get<{ data: Course[] }>("/courses", { params: search ? { search } : undefined }),
+export interface CoursePage {
+  data: Course[];
+  current_page: number;
+  last_page: number;
+  total: number;
+}
 
-  getByInstructor: (instructorId: number, search?: string) =>
-    api.get<{ data: Course[] }>("/courses", {
-      params: { instructor_id: instructorId, ...(search ? { search } : {}) },
+export const courseService = {
+  getAll: (search?: string, page = 1, per_page = 12) =>
+    api.get<{ data: CoursePage }>("/courses", {
+      params: { page, per_page, ...(search ? { search } : {}) },
+    }),
+
+  getByInstructor: (instructorId: number, search?: string, page = 1, per_page = 12) =>
+    api.get<{ data: CoursePage }>("/courses", {
+      params: { instructor_id: instructorId, page, per_page, ...(search ? { search } : {}) },
     }),
 
   getByCategory: (categorySlug: string) =>

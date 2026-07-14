@@ -19,7 +19,7 @@
   .pl-shell {
     flex-direction: row;
     padding: 32px 24px 80px;
-    align-items: stretch;
+    align-items: flex-start;
   }
 }
 
@@ -53,7 +53,7 @@
 
 .pl-snav {
   display: flex;
-  gap: 6px;
+  gap: 4px;
   background: #fff;
   border: 1px solid #e2e8f0;
   border-radius: 20px;
@@ -70,7 +70,6 @@
   .pl-snav {
     flex-direction: column;
     overflow-x: visible;
-    flex: 1;
   }
 }
 
@@ -108,7 +107,7 @@
 .pl-snav__item--active {
   background: linear-gradient(135deg, #2563EB, #3B82F6) !important;
   color: #fff !important;
-  box-shadow: 0 4px 20px rgba(37,99,235,0.35);
+  box-shadow: 0 2px 12px rgba(37,99,235,0.25);
 }
 
 .pl-snav__item--active .pl-snav__icon {
@@ -149,11 +148,11 @@
 
 /* ── Dark mode ── */
 html.dark .pl-page { background: #0f172a; }
-html.dark .pl-snav { background: #1e293b; border-color: #334155; }
-html.dark .pl-snav__item { color: #94a3b8; }
-html.dark .pl-snav__item:hover:not(:disabled) { background: #273548; color: #e2e8f0; }
-html.dark .pl-snav__item:hover:not(:disabled) .pl-snav__icon { color: #94a3b8; }
-html.dark .pl-snav-label { color: #475569; }
+html.dark .pl-snav { background: #131f35; border-color: #1e2d45; }
+html.dark .pl-snav__item { color: #8899b0; }
+html.dark .pl-snav__item:hover:not(:disabled) { background: #1a2d47; color: #e2e8f0; }
+html.dark .pl-snav__item:hover:not(:disabled) .pl-snav__icon { color: #8899b0; }
+html.dark .pl-snav-label { color: #4a6080; }
 
 /* ═══════════════════════════════════════
    Animations

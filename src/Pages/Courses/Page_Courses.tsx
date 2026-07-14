@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { ArrowRight, Star, Clock, BookOpen, BarChart3, Heart, Award } from "lucide-react";
 import { courseService, type Course } from "../../services/courseService";
-import { categoryService, type Category } from "../../services/categoryService";
-import { useWishlist } from "../../context/WishlistContext";
+import { categoryService } from "../../services/categoryService";
+import { useProtectedWishlist } from "../../hooks/useProtectedWishlist";
 import "./Page_Courses.css";
 
 const SKELETON_COUNT = 6;
@@ -34,15 +34,27 @@ function SkeletonCard() {
   );
 }
 
+const PER_PAGE = 12;
+
+// Module-level cache for the default (no filter) first page
+let _cachedDefault: { courses: Course[]; lastPage: number } | null = null;
+let _cachedCategories: import("../../services/categoryService").Category[] | null = null;
+// When backend returns a flat array (no server-side pagination), store all courses here
+// so we can slice client-side for page changes without re-fetching
+let _flatStore: { key: string; search: string; courses: Course[] } | null = null;
+
 function Courses() {
-  const { toggle, isWishlisted } = useWishlist();
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { toggle, isWishlisted } = useProtectedWishlist();
+  const [courses, setCourses] = useState<Course[]>(_cachedDefault?.courses ?? []);
+  const [categories, setCategories] = useState<import("../../services/categoryService").Category[]>(_cachedCategories ?? []);
+  const [loading, setLoading] = useState(!_cachedDefault);
+  const [total, setTotal] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState("All");
   const [freeOnly, setFreeOnly] = useState(false);
+  const [page, setPage] = useState(1);
+  const [lastPage, setLastPage] = useState(_cachedDefault?.lastPage ?? 1);
 
   const [searchParams] = useSearchParams();
   const category = searchParams.get("category");
@@ -52,42 +64,106 @@ function Courses() {
   const navigate = useNavigate();
   const isMounted = useRef(false);
 
-  const load = async (currentSearch: string, silent = false) => {
-    if (!silent) setLoading(true);
+  const load = async (currentSearch: string, currentPage = 1) => {
+    const cacheKey = category ? `cat:${category}` : instructorId ? `ins:${instructorId}` : "all";
+
+    // Client-side pagination: reuse stored flat array without re-fetching
+    if (_flatStore?.key === cacheKey && _flatStore.search === (currentSearch || "")) {
+      const all = _flatStore.courses;
+      const lp = Math.max(1, Math.ceil(all.length / PER_PAGE));
+      setCourses(all.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE));
+      setLastPage(lp);
+      setTotal(all.length);
+      setPage(currentPage);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    setLoading(true);
     setError(null);
+
+    const applyFlat = (raw: Course[]) => {
+      _flatStore = { key: cacheKey, search: currentSearch || "", courses: raw };
+      const lp = Math.max(1, Math.ceil(raw.length / PER_PAGE));
+      return { list: raw.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE), lp, tot: raw.length };
+    };
+
+    const applyPaged = (raw: unknown) => {
+      const p = raw as import("../../services/courseService").CoursePage;
+      return { list: p?.data ?? [], lp: p?.last_page ?? 1, tot: p?.total ?? (p?.data?.length ?? 0) };
+    };
+
     try {
       let list: Course[] = [];
+      let lp = 1;
+      let tot = 0;
+
       if (category) {
         const { data } = await courseService.getByCategory(category);
-        list = (data.data as unknown as { courses: Course[] }).courses ?? [];
+        const payload = data.data as { courses?: Course[] } | Course[] | unknown;
+        const allCourses: Course[] = Array.isArray(payload)
+          ? (payload as Course[])
+          : ((payload as { courses?: Course[] }).courses ?? []);
+        ({ list, lp, tot } = applyFlat(allCourses));
       } else if (instructorId) {
-        const { data } = await courseService.getByInstructor(instructorId, currentSearch || undefined);
-        list = (data.data as unknown as Course[]) ?? [];
+        const { data } = await courseService.getByInstructor(instructorId, currentSearch || undefined, currentPage, PER_PAGE);
+        const raw = data.data as unknown;
+        ({ list, lp, tot } = Array.isArray(raw) ? applyFlat(raw as Course[]) : applyPaged(raw));
       } else {
-        const { data } = await courseService.getAll(currentSearch || undefined);
-        list = (data.data as unknown as Course[]) ?? [];
+        const { data } = await courseService.getAll(currentSearch || undefined, currentPage, PER_PAGE);
+        const raw = data.data as unknown;
+        ({ list, lp, tot } = Array.isArray(raw) ? applyFlat(raw as Course[]) : applyPaged(raw));
+        if (!currentSearch && currentPage === 1) {
+          _cachedDefault = { courses: list, lastPage: lp };
+        }
       }
+
       setCourses(list);
+      setLastPage(lp);
+      setTotal(tot);
+      setPage(currentPage);
     } catch (err: unknown) {
       setError((err as { message?: string }).message ?? "Failed to load courses.");
     }
     setLoading(false);
   };
 
-  useEffect(() => { load(search); }, [category, instructorId]);
+  useEffect(() => {
+    load(search, 1);
+    isMounted.current = false;
+  }, [category, instructorId]);
 
   useEffect(() => {
+    if (_cachedCategories) return;
     categoryService.getAll()
-      .then(({ data }) => setCategories(data.data))
+      .then(({ data }) => { setCategories(data.data); _cachedCategories = data.data; })
       .catch(() => {});
   }, []);
 
-  // Debounce search — skip the first render since the effect above already loaded.
+  // Debounce search — reset to page 1
   useEffect(() => {
     if (!isMounted.current) { isMounted.current = true; return; }
-    const timer = setTimeout(() => load(search), 400);
+    const timer = setTimeout(() => load(search, 1), 400);
     return () => clearTimeout(timer);
   }, [search]);
+
+  const goToPage = (p: number) => {
+    if (p < 1 || p > lastPage || p === page) return;
+    load(search, p);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Build page number array with ellipsis
+  const pageNumbers = (): (number | "…")[] => {
+    if (lastPage <= 7) return Array.from({ length: lastPage }, (_, i) => i + 1);
+    const pages: (number | "…")[] = [1];
+    if (page > 3) pages.push("…");
+    for (let i = Math.max(2, page - 1); i <= Math.min(lastPage - 1, page + 1); i++) pages.push(i);
+    if (page < lastPage - 2) pages.push("…");
+    pages.push(lastPage);
+    return pages;
+  };
 
   const filtered = courses.filter((c) => {
     const matchLevel = level === "All" || c.level.toLowerCase() === level.toLowerCase();
@@ -121,9 +197,6 @@ function Courses() {
               : "All Courses"}
             <span className="courses-header__accent">✦</span>
           </h1>
-          <p className="courses-header__sub">
-            {loading ? "Loading..." : `${filtered.length} course${filtered.length !== 1 ? "s" : ""} available`}
-          </p>
         </div>
       </div>
 
@@ -304,6 +377,54 @@ function Courses() {
           })
         )}
       </div>
+
+      {/* Pagination */}
+      {!loading && !error && lastPage > 1 && filtered.length > 0 && (
+        <div className="mt-10 flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 pt-6 dark:border-slate-700">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Page <span className="font-semibold text-slate-700 dark:text-slate-200">{page}</span> of{" "}
+            <span className="font-semibold text-slate-700 dark:text-slate-200">{lastPage}</span>
+            {total > 0 && <> &nbsp;·&nbsp; {total} courses</>}
+          </p>
+          <div className="flex items-center gap-1">
+            {/* Prev */}
+            <button
+              onClick={() => goToPage(page - 1)}
+              disabled={page === 1}
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-blue-300 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-blue-500 dark:hover:text-blue-400"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+
+            {pageNumbers().map((p, i) =>
+              p === "…" ? (
+                <span key={`ellipsis-${i}`} className="flex h-9 w-9 items-center justify-center text-sm text-slate-400">…</span>
+              ) : (
+                <button
+                  key={p}
+                  onClick={() => goToPage(p)}
+                  className={`flex h-9 w-9 items-center justify-center rounded-lg border text-sm font-semibold transition ${
+                    p === page
+                      ? "border-blue-500 bg-blue-600 text-white shadow-glow"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:border-blue-500 dark:hover:text-blue-400"
+                  }`}
+                >
+                  {p}
+                </button>
+              )
+            )}
+
+            {/* Next */}
+            <button
+              onClick={() => goToPage(page + 1)}
+              disabled={page === lastPage}
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-blue-300 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-blue-500 dark:hover:text-blue-400"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

@@ -198,7 +198,8 @@ export default function EnrollButton({ course }: Props) {
     setCouponError("");
     try {
       const { data } = await couponService.validate(code, course.id);
-      setCouponResult(data);
+      if (!data.success) throw new Error("Invalid coupon.");
+      setCouponResult(data.data);
       setCouponStatus("valid");
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } }; message?: string };
@@ -249,6 +250,14 @@ export default function EnrollButton({ course }: Props) {
 
   // Closing the popup mid-payment cancels it on the backend; closing after
   // success marks the course as enrolled inline instead of reverting to "Buy Now".
+  const resetCoupon = () => {
+    setCouponInput("");
+    setCouponStatus("idle");
+    setCouponResult(null);
+    setCouponError("");
+    setCheckoutError("");
+  };
+
   const closeModal = () => {
     if (step === "qr" && payment) {
       handleCancel(payment.id);
@@ -257,6 +266,7 @@ export default function EnrollButton({ course }: Props) {
     if (step === "done") {
       setJustEnrolled(true);
     }
+    resetCoupon();
     setStep("idle");
   };
 
