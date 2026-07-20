@@ -5,7 +5,7 @@ import { useSettings } from "../context/SettingsContext";
 const cols = [
   { title: "Explore",  items: [{ label: "All Courses",    to: "/courses" }, { label: "Categories",    to: "/categories" }, { label: "Library",      to: "/library" }, { label: "Certificates", to: "/courses" }] },
   { title: "Programs", items: [{ label: "Design",         to: "/courses?category=design" }, { label: "Programming",  to: "/courses?category=programming" }, { label: "AI & Data",    to: "/courses?category=ai" }, { label: "Business",     to: "/courses?category=business" }] },
-  { title: "Company",  items: [{ label: "About",          to: "/contact" }, { label: "Become Instructor", to: "/instructor/register" }, { label: "Contact",      to: "/contact" }, { label: "Blog",         to: "/" }] },
+  { title: "Company",  items: [{ label: "About",          to: "/about" }, { label: "Become Instructor", to: "/instructor/register" }, { label: "Contact",      to: "/contact" }, { label: "Blog",         to: "/" }] },
   { title: "Support",  items: [{ label: "Help Center",    to: "/contact" }, { label: "Contact",      to: "/contact" }, { label: "Privacy",      to: "/" }, { label: "Terms",        to: "/" }] },
 ];
 

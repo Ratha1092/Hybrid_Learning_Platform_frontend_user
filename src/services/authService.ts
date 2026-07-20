@@ -65,10 +65,9 @@
 
     verifyOtp: (email: string, code: string) =>
       api.post<{ success: boolean; message: string; data: { verified: boolean } }>("/auth/otp/verify", { email, code }),
-
     googleOAuth: (payload: GoogleOAuthPayload) =>
-      api.post<OAuthResponse>("/auth/oauth/google", payload),
+      api.post<OAuthResponse>("/auth/oauth/google", payload, { timeout: 20000 }),
 
     githubOAuth: (code: string) =>
-      api.post<OAuthResponse>("/auth/oauth/github", { code }),
+      api.post<OAuthResponse>("/auth/oauth/github", { code }, { timeout: 20000 }),
   };

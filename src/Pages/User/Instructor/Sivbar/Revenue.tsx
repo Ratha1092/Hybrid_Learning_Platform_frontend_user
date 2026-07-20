@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { DollarSign, Wallet, Clock, TrendingUp, TrendingDown, Download, X, ArrowUpRight, CheckCircle, AlertCircle } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { DollarSign, Wallet, Clock, TrendingUp, TrendingDown, Download, X, CheckCircle, AlertCircle } from "lucide-react";
 import {
   instructorService,
   type WalletData,
@@ -16,13 +16,19 @@ const STATUS_CFG: Record<string, { label: string; cls: string }> = {
   rejected: { label: "Rejected", cls: "bg-rose-50 text-rose-600 ring-1 ring-rose-200" },
 };
 
+function safeNum(v: unknown): number {
+  const n = Number(v);
+  return isNaN(n) ? 0 : n;
+}
+
 function fmt(n: number) {
-  return new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+  return new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(safeNum(n));
 }
 
 function fmtK(n: number) {
-  if (n >= 1000) return `$${(n / 1000).toFixed(1)}k`;
-  return `$${n.toFixed(0)}`;
+  const v = safeNum(n);
+  if (v >= 1000) return `$${(v / 1000).toFixed(1)}k`;
+  return `$${v.toFixed(0)}`;
 }
 
 function Spinner({ size = 24 }: { size?: number }) {
@@ -35,12 +41,17 @@ function Spinner({ size = 24 }: { size?: number }) {
 }
 
 export default function Revenue() {
+  const navigate = useNavigate();
   const [wallet, setWallet]           = useState<WalletData | null>(null);
   const [earnings, setEarnings]       = useState<EarningsData | null>(null);
   const [txns, setTxns]               = useState<Transaction[]>([]);
   const [payoutAccount, setPayoutAccount] = useState<InstructorPayoutAccount | null>(null);
-  const [loading, setLoading]         = useState(true);
-  const [apiError, setApiError]       = useState(false);
+
+  // Independent loading states — each section renders as soon as its data arrives
+  const [loadingWallet, setLoadingWallet]     = useState(true);
+  const [loadingEarnings, setLoadingEarnings] = useState(true);
+  const [loadingTxns, setLoadingTxns]         = useState(true);
+  const [loadingAccount, setLoadingAccount]   = useState(true);
 
   const [payouts, setPayouts]               = useState<PayoutRequest[]>([]);
   const [payoutsPage, setPayoutsPage]       = useState(1);
@@ -57,20 +68,26 @@ export default function Revenue() {
   const [downloadError, setDownloadError] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([
-      instructorService.getWallet(),
-      instructorService.getEarnings(),
-      instructorService.getTransactions(),
-      instructorService.getPayoutAccount(),
-    ])
-      .then(([w, e, t, a]) => {
-        setWallet(w.data.data);
-        setEarnings(e.data.data);
-        setTxns(Array.isArray(t.data.data) ? t.data.data : []);
-        setPayoutAccount(a.data.data);
-      })
-      .catch(() => setApiError(true))
-      .finally(() => setLoading(false));
+    instructorService.getWallet()
+      .then((r) => setWallet(r.data.data))
+      .catch(() => {})
+      .finally(() => setLoadingWallet(false));
+
+    instructorService.getEarnings()
+      .then((r) => setEarnings(r.data.data))
+      .catch(() => {})
+      .finally(() => setLoadingEarnings(false));
+
+    instructorService.getTransactions()
+      .then((r) => setTxns(Array.isArray(r.data.data) ? r.data.data : []))
+      .catch(() => {})
+      .finally(() => setLoadingTxns(false));
+
+    instructorService.getPayoutAccount()
+      .then((r) => setPayoutAccount(r.data.data))
+      .catch(() => {})
+      .finally(() => setLoadingAccount(false));
+
     fetchPayouts(1);
   }, []);
 
@@ -123,34 +140,25 @@ export default function Revenue() {
     setDownloadingId(null);
   };
 
-  const openPayout = () => { setShowPayout(true); setPayoutSuccess(false); setPayoutError(null); };
+  const openPayout = () => {
+    if (!payoutAccount) {
+      navigate("/instructor/payout-account");
+      return;
+    }
+    setShowPayout(true);
+    setPayoutSuccess(false);
+    setPayoutError(null);
+  };
 
   const trend  = earnings?.monthly_trend ?? [];
-  const maxVal = trend.reduce((m, t) => Math.max(m, Number(t.amount)), 1);
+  const maxVal = trend.reduce((m, t) => Math.max(m, safeNum(t.total)), 1);
   const growthPct = trend.length >= 2
-    ? Math.round(((Number(trend[trend.length - 1].amount) - Number(trend[0].amount)) / Math.max(1, Number(trend[0].amount))) * 100)
+    ? Math.round(((safeNum(trend[trend.length - 1].total) - safeNum(trend[0].total)) / Math.max(1, safeNum(trend[0].total))) * 100)
     : null;
 
-  if (loading) return (
-    <div className="flex min-h-[50vh] items-center justify-center">
-      <Spinner size={36} />
-    </div>
-  );
-
-  if (apiError) return (
-    <div className="max-w-2xl">
-      <h1 className="mb-1 font-display text-[28px] font-extrabold text-slate-900 dark:text-white">Revenue</h1>
-      <p className="text-[14px] text-slate-500">Track your earnings and payouts.</p>
-      <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-10 text-center dark:border-slate-700 dark:bg-slate-800">
-        <div className="mx-auto mb-3 text-4xl">💰</div>
-        <p className="text-[15px] font-bold text-slate-700 dark:text-slate-200">Revenue data unavailable</p>
-        <p className="mt-1 text-[13px] text-slate-400">The finance API is not accessible. Please contact the backend team.</p>
-      </div>
-    </div>
-  );
 
   return (
-    <div className="flex max-w-[940px] flex-col gap-6">
+    <div className="flex flex-col gap-6">
 
       {/* ── Header ── */}
       <div className="flex items-start justify-between gap-4">
@@ -161,16 +169,15 @@ export default function Revenue() {
         <div className="group relative shrink-0">
           <button
             onClick={openPayout}
-            disabled={!canPayout}
+            disabled={!!payoutAccount && !canPayout}
             className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-[13.5px] font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-glow disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
           >
-            <DollarSign className="h-4 w-4" /> Request Payout
+            <DollarSign className="h-4 w-4" />
+            {!payoutAccount ? "Set Up Payout" : "Request Payout"}
           </button>
-          {!canPayout && (
+          {payoutAccount && !canPayout && (
             <div className="pointer-events-none absolute right-0 top-full z-10 mt-2 w-56 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-[12px] text-slate-600 opacity-0 shadow-card transition-opacity group-hover:opacity-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300">
-              {!payoutAccount
-                ? "Set up and verify a payout account first."
-                : payoutAccount.status === "pending"
+              {payoutAccount.status === "pending"
                 ? "Waiting for admin to verify your payout account."
                 : "Your payout account was rejected. Please update it."}
             </div>
@@ -179,7 +186,9 @@ export default function Revenue() {
       </div>
 
       {/* ── Payout account status strip ── */}
-      {!payoutAccount ? (
+      {loadingAccount ? (
+        <div className="h-14 animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-700/50" />
+      ) : !payoutAccount ? (
         <Link
           to="/instructor/payout-account"
           className="flex items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3.5 transition-colors hover:bg-amber-100 dark:border-amber-500/20 dark:bg-amber-500/10 dark:hover:bg-amber-500/15"
@@ -251,40 +260,87 @@ export default function Revenue() {
       )}
 
       {/* ── Stat cards ── */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-e1 dark:border-slate-700 dark:bg-slate-800">
-          <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-500/15">
-            <DollarSign className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-          </div>
-          <p className="font-display text-[26px] font-extrabold text-slate-900 dark:text-white">
-            ${fmt(Number(wallet?.balance ?? 0))}
-          </p>
-          <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">Available balance</p>
-        </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {(loadingWallet || loadingEarnings) ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="animate-pulse rounded-2xl border border-slate-200 bg-white p-5 shadow-e1 dark:border-slate-700 dark:bg-slate-800">
+              <div className="mb-4 h-10 w-10 rounded-xl bg-slate-100 dark:bg-slate-700" />
+              <div className="mb-2 h-8 w-28 rounded-lg bg-slate-100 dark:bg-slate-700" />
+              <div className="h-4 w-32 rounded bg-slate-100 dark:bg-slate-700" />
+            </div>
+          ))
+        ) : (
+          <>
+            <div className="rounded-2xl border-2 border-emerald-200 bg-emerald-50 p-5 shadow-e1 dark:border-emerald-500/30 dark:bg-emerald-500/10">
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 dark:bg-emerald-500/20">
+                <DollarSign className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <p className="font-display text-[26px] font-extrabold text-emerald-700 dark:text-emerald-300">
+                ${fmt(safeNum(wallet?.balance))}
+              </p>
+              <p className="mt-1 text-[13px] font-semibold text-emerald-600 dark:text-emerald-400">Available for payout</p>
+            </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-e1 dark:border-slate-700 dark:bg-slate-800">
-          <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-500/15">
-            <Wallet className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-          </div>
-          <p className="font-display text-[26px] font-extrabold text-slate-900 dark:text-white">
-            ${fmt(Number(earnings?.total ?? 0))}
-          </p>
-          <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">Lifetime earnings</p>
-        </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-e1 dark:border-slate-700 dark:bg-slate-800">
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-500/15">
+                <Wallet className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <p className="font-display text-[26px] font-extrabold text-slate-900 dark:text-white">
+                ${fmt(safeNum(earnings?.total_earned))}
+              </p>
+              <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">Lifetime earnings</p>
+            </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-e1 dark:border-slate-700 dark:bg-slate-800">
-          <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-500/15">
-            <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-          </div>
-          <p className="font-display text-[26px] font-extrabold text-slate-900 dark:text-white">
-            ${fmt(Number(wallet?.pending_balance ?? 0))}
-          </p>
-          <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">Pending payout</p>
-        </div>
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-e1 dark:border-slate-700 dark:bg-slate-800">
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100 dark:bg-violet-500/15">
+                <TrendingUp className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+              </div>
+              <p className="font-display text-[26px] font-extrabold text-slate-900 dark:text-white">
+                ${fmt(safeNum(earnings?.this_month))}
+              </p>
+              <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">This month</p>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-e1 dark:border-slate-700 dark:bg-slate-800">
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 dark:bg-amber-500/15">
+                <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <p className="font-display text-[26px] font-extrabold text-slate-900 dark:text-white">
+                ${fmt(safeNum(wallet?.pending_balance))}
+              </p>
+              <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">Pending settlement</p>
+            </div>
+          </>
+        )}
       </div>
 
       {/* ── Earnings chart ── */}
-      {trend.length > 0 && (
+      {loadingEarnings ? (
+        <div className="animate-pulse rounded-2xl border border-slate-200 bg-white p-6 shadow-e1 dark:border-slate-700 dark:bg-slate-800">
+          <div className="mb-6 flex items-center justify-between">
+            <div className="h-5 w-48 rounded-lg bg-slate-100 dark:bg-slate-700" />
+            <div className="h-6 w-16 rounded-full bg-slate-100 dark:bg-slate-700" />
+          </div>
+          <div className="flex items-end gap-2" style={{ height: 160 }}>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex flex-1 flex-col items-center justify-end gap-1.5">
+                <div className="h-3 w-8 rounded bg-slate-100 dark:bg-slate-700" />
+                <div
+                  className="w-full max-w-12 rounded-t-lg bg-slate-100 dark:bg-slate-700"
+                  style={{ height: [60, 100, 45, 120, 80, 95][i] }}
+                />
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 flex gap-2">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex flex-1 justify-center">
+                <div className="h-3 w-8 rounded bg-slate-100 dark:bg-slate-700" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : trend.length > 0 && (
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-e1 dark:border-slate-700 dark:bg-slate-800">
           <div className="mb-6 flex items-center justify-between">
             <h3 className="text-[15px] font-bold text-slate-800 dark:text-slate-100">
@@ -306,11 +362,11 @@ export default function Revenue() {
 
           <div className="flex items-end gap-2 border-b border-slate-100 pb-3 dark:border-slate-700" style={{ height: 200 }}>
             {trend.map((t) => {
-              const barH = Math.max(6, (Number(t.amount) / maxVal) * 148);
+              const barH = Math.max(6, (safeNum(t.total) / maxVal) * 148);
               return (
                 <div key={t.month} className="group flex flex-1 flex-col items-center gap-1.5 justify-end">
                   <span className="text-[10px] font-semibold text-slate-400 transition-colors group-hover:text-blue-600 dark:text-slate-500 dark:group-hover:text-blue-400">
-                    {fmtK(Number(t.amount))}
+                    {fmtK(safeNum(t.total))}
                   </span>
                   <div
                     className="w-full max-w-12 rounded-t-lg bg-slate-100 transition-colors group-hover:bg-blue-500 dark:bg-slate-700 dark:group-hover:bg-blue-500"
@@ -335,17 +391,9 @@ export default function Revenue() {
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-e1 dark:border-slate-700 dark:bg-slate-800">
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-700">
           <h3 className="text-[15px] font-bold text-slate-800 dark:text-slate-100">Payout history</h3>
-          <div className="flex items-center gap-3">
-            {downloadError && (
-              <span className="text-[12px] text-rose-500">{downloadError}</span>
-            )}
-            <button
-              onClick={openPayout}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-[12.5px] font-semibold text-slate-600 shadow-e1 transition-colors hover:border-blue-300 hover:text-blue-600 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:border-blue-400 dark:hover:text-blue-400"
-            >
-              <DollarSign className="h-3.5 w-3.5" /> Request Payout
-            </button>
-          </div>
+          {downloadError && (
+            <span className="text-[12px] text-rose-500">{downloadError}</span>
+          )}
         </div>
 
         {loadingPayouts ? (
@@ -359,12 +407,6 @@ export default function Revenue() {
             </div>
             <p className="text-[14px] font-semibold text-slate-600 dark:text-slate-300">No payout requests yet</p>
             <p className="text-[13px] text-slate-400">Request a payout when your balance is ready.</p>
-            <button
-              onClick={openPayout}
-              className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2.5 text-[13px] font-semibold text-white hover:bg-blue-700"
-            >
-              Request payout <ArrowUpRight className="h-4 w-4" />
-            </button>
           </div>
         ) : (
           <>
@@ -399,7 +441,7 @@ export default function Revenue() {
                           {p.payment_method.replace(/_/g, " ")}
                         </td>
                         <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">
-                          ${fmt(Number(p.amount))}
+                          ${fmt(safeNum(p.amount))}
                         </td>
                         <td className="px-6 py-4">
                           <span className={`inline-block rounded-full px-2.5 py-0.5 text-[11.5px] font-semibold capitalize ${cfg.cls}`}>
@@ -451,7 +493,23 @@ export default function Revenue() {
       </div>
 
       {/* ── Transaction history (recent activity) ── */}
-      {txns.length > 0 && (
+      {loadingTxns ? (
+        <div className="animate-pulse overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-e1 dark:border-slate-700 dark:bg-slate-800">
+          <div className="border-b border-slate-100 px-6 py-4 dark:border-slate-700">
+            <div className="h-5 w-44 rounded-lg bg-slate-100 dark:bg-slate-700" />
+          </div>
+          <div className="divide-y divide-slate-50 dark:divide-slate-700/50">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-6 px-6 py-4">
+                <div className="h-4 w-40 rounded bg-slate-100 dark:bg-slate-700" />
+                <div className="h-5 w-16 rounded-full bg-slate-100 dark:bg-slate-700" />
+                <div className="h-4 w-16 rounded bg-slate-100 dark:bg-slate-700" />
+                <div className="h-4 w-24 rounded bg-slate-100 dark:bg-slate-700" />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : txns.length > 0 && (
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-e1 dark:border-slate-700 dark:bg-slate-800">
           <div className="border-b border-slate-100 px-6 py-4 dark:border-slate-700">
             <h3 className="text-[15px] font-bold text-slate-800 dark:text-slate-100">Recent transactions</h3>
@@ -488,7 +546,7 @@ export default function Revenue() {
                         ? "text-rose-600 dark:text-rose-400"
                         : "text-emerald-600 dark:text-emerald-400"
                     }`}>
-                      {t.type === "payout" ? "−" : "+"}${fmt(Number(t.amount))}
+                      {t.type === "payout" ? "−" : "+"}${fmt(safeNum(t.amount))}
                     </td>
                     <td className="px-6 py-4 text-slate-500 dark:text-slate-400">
                       {new Date(t.created_at).toLocaleDateString("en-US", {
@@ -531,12 +589,12 @@ export default function Revenue() {
             <div className="mb-5 space-y-2 rounded-xl bg-slate-50 px-4 py-3 dark:bg-slate-700/50">
               <div className="flex items-center justify-between text-[13px]">
                 <span className="text-slate-500 dark:text-slate-400">Available balance</span>
-                <span className="font-bold text-slate-900 dark:text-white">${fmt(Number(wallet?.balance ?? 0))}</span>
+                <span className="font-bold text-slate-900 dark:text-white">${fmt(safeNum(wallet?.balance))}</span>
               </div>
-              {Number(wallet?.pending_balance ?? 0) > 0 && (
+              {safeNum(wallet?.pending_balance) > 0 && (
                 <div className="flex items-center justify-between text-[13px]">
                   <span className="text-slate-500 dark:text-slate-400">Pending (not withdrawable)</span>
-                  <span className="font-semibold text-amber-600">${fmt(Number(wallet.pending_balance))}</span>
+                  <span className="font-semibold text-amber-600">${fmt(safeNum(wallet?.pending_balance))}</span>
                 </div>
               )}
               <div className="flex items-center justify-between border-t border-slate-200 pt-2 text-[13px] dark:border-slate-600">
@@ -571,14 +629,14 @@ export default function Revenue() {
                 />
                 <button
                   type="button"
-                  onClick={() => setPayoutForm((f) => ({ ...f, amount: String(Number(wallet?.balance ?? 0).toFixed(2)) }))}
+                  onClick={() => setPayoutForm((f) => ({ ...f, amount: String(safeNum(wallet?.balance).toFixed(2)) }))}
                   className="border-l border-slate-200 bg-slate-50 px-3.5 text-[11.5px] font-semibold text-blue-600 transition-colors hover:bg-blue-50 dark:border-slate-600 dark:bg-slate-700 dark:text-blue-400 dark:hover:bg-blue-500/10"
                 >
                   Max
                 </button>
               </div>
               <p className="mt-1.5 text-[11.5px] text-slate-400">
-                Maximum: ${fmt(Number(wallet?.balance ?? 0))}
+                Maximum: ${fmt(safeNum(wallet?.balance))}
               </p>
             </div>
 

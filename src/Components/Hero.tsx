@@ -1,4 +1,4 @@
-import { ArrowRight, Play, CheckCircle2, Users, BookOpen, GraduationCap } from "lucide-react";
+import { ArrowRight, CheckCircle2, Users, BookOpen, GraduationCap } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroImage from "../assets/image1.png";
 import { useAuth } from "../context/AuthContext";
@@ -38,11 +38,6 @@ function Hero() {
 
           {/* Left */}
           <div className="max-w-xl">
-            <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-blue-50 px-3.5 py-1.5 text-[13px] font-semibold text-blue-600 dark:border-white/[0.12] dark:bg-white/[0.08] dark:text-blue-200">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-blue-500 dark:bg-blue-400" />
-              Online Learning Platform
-            </span>
-
             <h1 className="font-display text-[40px] font-extrabold leading-tight text-slate-900 dark:text-white sm:text-[56px]">
               <span className="grad-text">Studying</span> Online is now much easier
             </h1>

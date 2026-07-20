@@ -25,7 +25,11 @@ export default function PayoutAccount() {
   useEffect(() => {
     instructorService.getPayoutAccount()
       .then((res) => setAccount(res.data.data))
-      .catch(() => setApiError(true))
+      .catch((err) => {
+        const status = (err as { response?: { status?: number } })?.response?.status;
+        // Only hard-fail on auth errors; anything else (500, network) → treat as no account
+        if (status === 401 || status === 403) setApiError(true);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -36,7 +40,7 @@ export default function PayoutAccount() {
       <h1 className="font-display text-[28px] font-extrabold text-slate-900 dark:text-white">Payout Account</h1>
       <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center dark:border-slate-700 dark:bg-slate-800">
         <p className="text-[15px] font-bold text-slate-700 dark:text-slate-200">Could not load account data</p>
-        <p className="mt-1 text-[13px] text-slate-400">Please refresh or contact support if the problem persists.</p>
+        <p className="mt-1 text-[14.5px] text-slate-400">Please refresh or contact support if the problem persists.</p>
       </div>
     </div>
   );
@@ -46,7 +50,7 @@ export default function PayoutAccount() {
   return (
     <div className="flex flex-col gap-6">
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-[28px] font-extrabold text-slate-900 dark:text-white">Payout Account</h1>
@@ -55,27 +59,21 @@ export default function PayoutAccount() {
           </p>
         </div>
         {statusCfg && (
-          <span className={`mt-1 inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-bold ${statusCfg.cls}`}>
+          <span className={`mt-1 inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[14.5px] font-bold ${statusCfg.cls}`}>
             <statusCfg.Icon className="h-3.5 w-3.5" />
             {statusCfg.label}
           </span>
         )}
       </div>
-
-      {/* ── Two-column body — fills all available width ── */}
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-
-        {/* Left — form, grows to fill space */}
         <div className="min-w-0 flex-1">
           <PayoutAccountSection account={account} onSaved={(a) => setAccount(a)} />
         </div>
-
-        {/* Right — info panel, fixed width */}
         <div className="flex shrink-0 flex-col gap-4 lg:w-72">
 
           {/* How it works */}
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-e1 dark:border-slate-700 dark:bg-slate-800">
-            <h3 className="mb-4 text-[13.5px] font-bold text-slate-800 dark:text-slate-100">How it works</h3>
+            <h3 className="mb-4 text-[15px] font-bold text-slate-800 dark:text-slate-100">How it works</h3>
             <ol className="space-y-0">
               {[
                 { Icon: Banknote,    color: "bg-blue-100 dark:bg-blue-500/15",    icon: "text-blue-600 dark:text-blue-400",    title: "Register",  desc: "Fill in your payment method, account name, and any required details." },
@@ -92,8 +90,8 @@ export default function PayoutAccount() {
                     )}
                   </div>
                   <div className="pb-4 pt-0.5">
-                    <p className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">{title}</p>
-                    <p className="mt-0.5 text-[12px] leading-relaxed text-slate-400 dark:text-slate-500">{desc}</p>
+                    <p className="text-[14.5px] font-semibold text-slate-700 dark:text-slate-200">{title}</p>
+                    <p className="mt-0.5 text-[14.5px] leading-relaxed text-slate-400 dark:text-slate-500">{desc}</p>
                   </div>
                 </li>
               ))}
@@ -102,7 +100,7 @@ export default function PayoutAccount() {
 
           {/* Supported methods */}
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-e1 dark:border-slate-700 dark:bg-slate-800">
-            <h3 className="mb-3 text-[13.5px] font-bold text-slate-800 dark:text-slate-100">Supported methods</h3>
+            <h3 className="mb-3 text-[15px] font-bold text-slate-800 dark:text-slate-100">Supported methods</h3>
             <div className="space-y-2.5">
               {[
                 { name: "Bank Transfer", note: "Name + account no." },
@@ -112,15 +110,15 @@ export default function PayoutAccount() {
                 { name: "KHQR",          note: "Name + QR code" },
               ].map(({ name, note }) => (
                 <div key={name} className="flex items-center justify-between gap-2">
-                  <span className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">{name}</span>
-                  <span className="text-[12px] text-slate-400 dark:text-slate-500">{note}</span>
+                  <span className="text-[14.5px] font-semibold text-slate-700 dark:text-slate-200">{name}</span>
+                  <span className="text-[14.5px] text-slate-400 dark:text-slate-500">{note}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* QR tip */}
-          <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-[12.5px] leading-relaxed text-blue-700 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-300">
+          <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-[14px] leading-relaxed text-blue-700 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-300">
             <span className="font-semibold">Tip:</span> Uploading a QR code speeds up verification and ensures funds go to exactly the right account.
           </div>
         </div>

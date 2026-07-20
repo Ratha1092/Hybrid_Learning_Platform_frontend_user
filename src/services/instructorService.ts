@@ -19,12 +19,12 @@ export interface WalletData {
 // Represents monthly earnings data for charts.
 export interface MonthlyTrend {
   month: string;
-  amount: number;
+  total: number;
 }
 
 // Represents instructor earnings summary.
 export interface EarningsData {
-  total: number;
+  total_earned: number;
   this_month: number;
   monthly_trend: MonthlyTrend[];
 }
@@ -128,6 +128,7 @@ export interface InstructorCourse {
   what_you_will_learn?: string;
   certificate_enabled?: boolean;
   visibility?: string;
+  commission_percentage?: number;
 }
 
 // Represents a lesson inside a section.

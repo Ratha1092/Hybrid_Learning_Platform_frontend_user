@@ -447,16 +447,16 @@ export default function Instructors() {
   return (
     <>
       {/* Hero */}
-      <div className="relative overflow-hidden bg-[#EEF1F6] py-10 dark:bg-slate-900 sm:py-14">
-        <div className="pointer-events-none absolute -left-32 -top-32 h-[500px] w-[500px] rounded-full bg-blue-100 opacity-50 blur-[100px]" />
-        <div className="pointer-events-none absolute -bottom-24 right-0 h-[400px] w-[400px] rounded-full bg-cyan-100 opacity-40 blur-[80px]" />
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-400 py-10 sm:py-14">
+        <div className="pointer-events-none absolute -left-32 -top-32 h-[500px] w-[500px] rounded-full bg-white/20 blur-[100px]" />
+        <div className="pointer-events-none absolute -bottom-24 right-0 h-[400px] w-[400px] rounded-full bg-cyan-200/20 blur-[80px]" />
         <div className="relative mx-auto max-w-[1400px] px-4 text-center sm:px-6">
           <Reveal>
-            <p className="mb-2 text-sm font-semibold brand-blue">Meet the mentors</p>
-            <h1 className="font-display text-[32px] font-extrabold ink sm:text-[40px]">
+            <p className="mb-2 text-sm font-semibold text-blue-100">Meet the mentors</p>
+            <h1 className="font-display text-[32px] font-extrabold text-white sm:text-[40px]">
               Learn from top instructors
             </h1>
-            <p className="mx-auto mt-4 max-w-xl text-base muted2">
+            <p className="mx-auto mt-4 max-w-xl text-base text-blue-100">
               Industry professionals and seasoned educators who bring real-world experience to every course they teach.
             </p>
           </Reveal>

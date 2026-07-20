@@ -23,7 +23,6 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  max-width: 960px;
 }
 
 /* ── Header ── */
@@ -265,3 +264,117 @@
   .mc-row__actions { width: 100%; justify-content: flex-end; }
   .mc-title { font-size: 1.4rem; }
 }
+
+/* ── Delete confirm modal ───────────────────────────── */
+.mc-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  animation: mc-fade-in 0.15s ease;
+}
+@keyframes mc-fade-in { from { opacity: 0 } to { opacity: 1 } }
+
+.mc-modal {
+  background: #fff;
+  border-radius: 20px;
+  padding: 32px 28px 24px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.18), 0 4px 12px rgba(0,0,0,0.08);
+  text-align: center;
+  animation: mc-slide-up 0.18s ease;
+}
+@keyframes mc-slide-up { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
+
+.mc-modal__icon { font-size: 2.2rem; margin-bottom: 12px; }
+.mc-modal__title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 8px;
+}
+.mc-modal__body {
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.55;
+  margin: 0 0 24px;
+}
+.mc-modal__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+.mc-modal__cancel {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.mc-modal__cancel:hover { background: #f8fafc; border-color: #cbd5e1; }
+
+.mc-modal__confirm {
+  flex: 1;
+  padding: 10px 0;
+  border-radius: 12px;
+  border: none;
+  background: #ef4444;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.mc-modal__confirm:hover { background: #dc2626; }
+
+/* Dark mode */
+
+/* Create button — swap black bg for blue so it's visible */
+html.dark .mc-btn-create { background: #2563eb; }
+html.dark .mc-btn-create:hover { background: #1d4ed8; }
+
+/* Header / page title */
+html.dark .mc-header h1 { color: #f1f5f9; }
+html.dark .mc-header p  { color: #94a3b8; }
+
+/* Empty state */
+html.dark .mc-empty { background: #1e293b; border-color: #334155; color: #64748b; }
+
+/* Course rows */
+html.dark .mc-row { background: #1e293b; border-color: #334155; }
+html.dark .mc-row:hover { border-color: #475569; box-shadow: 0 4px 16px rgba(0,0,0,0.3); }
+html.dark .mc-row__thumb-placeholder { background: #273548; }
+html.dark .mc-row__title { color: #f1f5f9; }
+html.dark .mc-row__level,
+html.dark .mc-row__price,
+html.dark .mc-row__students { color: #64748b; }
+
+/* Action buttons */
+html.dark .mc-btn--copy { background: #273548; color: #94a3b8; border-color: #334155; }
+html.dark .mc-btn--copy:hover { background: #334155; color: #e2e8f0; border-color: #475569; }
+html.dark .mc-btn--copied { background: rgba(39,105,90,0.2) !important; color: #4ade80 !important; border-color: rgba(74,222,128,0.3) !important; }
+html.dark .mc-btn--edit { background: rgba(37,99,235,0.15); color: #93c5fd; border-color: rgba(59,130,246,0.3); }
+html.dark .mc-btn--edit:hover { background: rgba(37,99,235,0.25); border-color: rgba(59,130,246,0.5); }
+html.dark .mc-btn--submit { background: rgba(16,185,129,0.15); color: #6ee7b7; border-color: rgba(16,185,129,0.3); }
+html.dark .mc-btn--submit:hover { background: rgba(16,185,129,0.25); }
+html.dark .mc-btn--delete { background: rgba(239,68,68,0.1); color: #fca5a5; border-color: rgba(239,68,68,0.25); }
+html.dark .mc-btn--delete:hover { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); }
+
+/* Delete confirm modal */
+html.dark .mc-modal-backdrop { background: rgba(0,0,0,0.6); }
+html.dark .mc-modal { background: #1e293b; border: 1px solid #334155; }
+html.dark .mc-modal__title { color: #f1f5f9; }
+html.dark .mc-modal__body { color: #94a3b8; }
+html.dark .mc-modal__cancel { background: #1e293b; border-color: #334155; color: #94a3b8; }
+html.dark .mc-modal__cancel:hover { background: #0f172a; }

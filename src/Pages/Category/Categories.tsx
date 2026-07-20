@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowUpRight, ArrowRight, BookOpen, Code2, PenTool, FlaskConical, Camera, DollarSign, Video, Award, TrendingUp, Users, MessageSquare, Bot } from "lucide-react";
+import { ArrowUpRight, BookOpen, Code2, PenTool, FlaskConical, Camera, DollarSign, Video, Award, TrendingUp, Users, MessageSquare, Bot } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { categoryService, type Category } from "../../services/categoryService";
 import { Reveal } from "../../utils/anim";

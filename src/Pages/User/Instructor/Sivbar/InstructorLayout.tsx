@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import "../css/InstructorLayout.css";
 
 const MENU_LINKS = [
@@ -79,15 +79,45 @@ const MENU_LINKS = [
   },
 ];
 
+const BOTTOM_LINKS = [
+  {
+    to: "/instructor/profile",
+    label: "Profile",
+    end: true,
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="8" r="4"/>
+        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+      </svg>
+    ),
+  },
+];
+
 export default function InstructorLayout() {
+  const location = useLocation();
+
   return (
     <div className="il-page">
       <div className="il-wrap">
-        {/* ── Sidebar ── */}
+        {/* ── Sidebar (persists across sub-navigation, no re-animation) ── */}
         <aside className="il-sidebar">
           <p className="il-section-label">Instructor</p>
           <nav className="il-nav">
             {MENU_LINKS.map((l) => (
+              <NavLink
+                key={l.to}
+                to={l.to}
+                end={l.end}
+                className={({ isActive }) =>
+                  `il-link${isActive ? " il-link--active" : ""}`
+                }
+              >
+                <span className="il-link__icon">{l.icon}</span>
+                {l.label}
+              </NavLink>
+            ))}
+            <div className="il-sidebar-div" />
+            {BOTTOM_LINKS.map((l) => (
               <NavLink
                 key={l.to}
                 to={l.to}
@@ -105,7 +135,9 @@ export default function InstructorLayout() {
 
         {/* ── Content ── */}
         <main className="il-content">
-          <Outlet />
+          <div className="page-fade" key={location.pathname}>
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

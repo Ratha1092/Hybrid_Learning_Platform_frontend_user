@@ -352,3 +352,56 @@
   .sl-create-actions { justify-content: flex-end; }
   .sl-attach-cta { flex-direction: column; align-items: flex-start; }
 }
+
+/* Dark mode */
+
+/* Page header */
+html.dark .sl-header__text h1 { color: #f1f5f9; }
+html.dark .sl-header__text p  { color: #94a3b8; }
+
+/* "New Section" button — swap --pt-ink (becomes white) to blue */
+html.dark .sl-btn-new { background: #2563eb; }
+html.dark .sl-btn-new:hover { background: #1d4ed8; }
+
+/* Info banner */
+html.dark .sl-banner { background: rgba(234,179,8,0.1); border-color: rgba(234,179,8,0.25); }
+html.dark .sl-banner { color: #fde68a; }
+
+/* Empty state */
+html.dark .sl-empty { background: #1e293b; border-color: #334155; }
+html.dark .sl-empty p { color: #64748b; }
+html.dark .sl-empty__icon { background: #273548; }
+
+/* Create-new row (inline form) */
+html.dark .sl-create-row { background: #1e293b; border-color: #3b82f6; }
+html.dark .sl-create-row input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+html.dark .sl-create-row input::placeholder { color: #475569; }
+html.dark .sl-create-row input:focus { border-color: #3b82f6; }
+
+/* Section cards */
+html.dark .sl-section-card { background: #1e293b; border-color: #334155; }
+html.dark .sl-section-card:hover { border-color: #475569; }
+html.dark .sl-section-card__title { color: #f1f5f9; }
+html.dark .sl-section-card__meta { color: #64748b; }
+
+/* Action buttons inside section cards */
+html.dark .sl-btn-edit { background: #273548; border-color: #334155; color: #94a3b8; }
+html.dark .sl-btn-edit:hover { background: #334155; color: #e2e8f0; }
+html.dark .sl-btn-delete { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.25); color: #fca5a5; }
+html.dark .sl-btn-delete:hover { background: rgba(239,68,68,0.2); }
+
+/* Attach CTA panel */
+html.dark .sl-attach-cta { background: #1e293b; border-color: #334155; }
+html.dark .sl-attach-cta__title { color: #f1f5f9; }
+html.dark .sl-attach-cta__body { color: #94a3b8; }
+
+/* Cancel button */
+html.dark .sl-btn-cancel { border-color: #334155; color: #94a3b8; }
+html.dark .sl-btn-cancel:hover { border-color: #475569; color: #e2e8f0; }
+
+/* Error banner */
+html.dark .sl-error { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.25); color: #fca5a5; }

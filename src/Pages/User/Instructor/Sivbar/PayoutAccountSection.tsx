@@ -91,15 +91,15 @@ export default function PayoutAccountSection({ account, onSaved }: Props) {
       {/* ── Card header ── */}
       <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-700">
         <div>
-          <h3 className="text-[15px] font-bold text-slate-800 dark:text-slate-100">Payout Account</h3>
-          <p className="mt-0.5 text-[12.5px] text-slate-500 dark:text-slate-400">
+          <h3 className="text-[16.5px] font-bold text-slate-800 dark:text-slate-100">Payout Account</h3>
+          <p className="mt-0.5 text-[14px] text-slate-500 dark:text-slate-400">
             {account ? "Your registered payment account for payouts." : "Set up once — used for all future payouts."}
           </p>
         </div>
         {account && !editing && (
           <button
             onClick={() => { setEditing(true); setError(null); }}
-            className="rounded-lg border border-slate-200 px-3.5 py-1.5 text-[12.5px] font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+            className="rounded-lg border border-slate-200 px-3.5 py-1.5 text-[14px] font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
           >
             Update
           </button>
@@ -111,19 +111,19 @@ export default function PayoutAccountSection({ account, onSaved }: Props) {
         <div className="px-6 py-5">
           <div className="flex flex-wrap items-center gap-4">
             {statusCfg && (
-              <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-bold ${statusCfg.cls}`}>
+              <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[14.5px] font-bold ${statusCfg.cls}`}>
                 <statusCfg.Icon className="h-3.5 w-3.5" />
                 {statusCfg.label}
               </span>
             )}
-            <div className="flex flex-wrap items-center gap-2.5 text-[13px] text-slate-600 dark:text-slate-400">
+            <div className="flex flex-wrap items-center gap-2.5 text-[14.5px] text-slate-600 dark:text-slate-400">
               <span className="font-semibold capitalize">{account.method.replace("_", " ")}</span>
               <span className="text-slate-300 dark:text-slate-600">·</span>
               <span>{account.account_name}</span>
               {account.account_number && (
                 <>
                   <span className="text-slate-300 dark:text-slate-600">·</span>
-                  <span className="font-mono text-[12.5px]">{account.account_number}</span>
+                  <span className="font-mono text-[14px]">{account.account_number}</span>
                 </>
               )}
               {account.phone_number && (
@@ -135,7 +135,7 @@ export default function PayoutAccountSection({ account, onSaved }: Props) {
               {account.qr_code_path && (
                 <>
                   <span className="text-slate-300 dark:text-slate-600">·</span>
-                  <span className="inline-flex items-center gap-1 text-[12.5px] font-medium text-blue-600 dark:text-blue-400">
+                  <span className="inline-flex items-center gap-1 text-[14px] font-medium text-blue-600 dark:text-blue-400">
                     <span>📷</span> QR on file
                   </span>
                 </>
@@ -144,14 +144,14 @@ export default function PayoutAccountSection({ account, onSaved }: Props) {
           </div>
 
           {account.status === "rejected" && account.rejection_reason && (
-            <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] text-rose-600 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-400">
+            <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-[14.5px] text-rose-600 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-400">
               <span className="font-semibold">Rejection reason:</span> {account.rejection_reason}
-              <p className="mt-1 text-[12px] opacity-75">Click <span className="font-semibold">Update</span> to fix and re-submit.</p>
+              <p className="mt-1 text-[14.5px] opacity-75">Click <span className="font-semibold">Update</span> to fix and re-submit.</p>
             </div>
           )}
 
           {account.status === "pending" && (
-            <p className="mt-3 text-[12.5px] text-slate-400 dark:text-slate-500">
+            <p className="mt-3 text-[14px] text-slate-400 dark:text-slate-500">
               An admin will review your account within 1–2 business days before you can request payouts.
             </p>
           )}
@@ -164,20 +164,20 @@ export default function PayoutAccountSection({ account, onSaved }: Props) {
 
           {/* Rejection notice */}
           {account?.status === "rejected" && account.rejection_reason && (
-            <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-400">
+            <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-[14.5px] text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-400">
               <span className="font-semibold">Rejected:</span> {account.rejection_reason}
             </div>
           )}
 
           {error && (
-            <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] font-medium text-rose-600 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-400">
+            <div className="mb-5 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-[14.5px] font-medium text-rose-600 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-400">
               ⚠ {error}
             </div>
           )}
 
           {/* Method selector */}
           <div className="mb-5">
-            <label className="mb-3 block text-[13px] font-semibold text-slate-700 dark:text-slate-300">
+            <label className="mb-3 block text-[14.5px] font-semibold text-slate-700 dark:text-slate-300">
               Payment method
             </label>
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
@@ -200,7 +200,7 @@ export default function PayoutAccountSection({ account, onSaved }: Props) {
                     </div>
 
                     {/* Label */}
-                    <span className="flex-1 text-[13px] font-bold text-slate-800 dark:text-slate-100">
+                    <span className="flex-1 text-[14.5px] font-bold text-slate-800 dark:text-slate-100">
                       {m.label}
                     </span>
 
@@ -221,7 +221,7 @@ export default function PayoutAccountSection({ account, onSaved }: Props) {
           {/* Text fields */}
           <div className="mb-5 grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <label className="mb-1.5 block text-[13px] font-semibold text-slate-700 dark:text-slate-300">
+              <label className="mb-1.5 block text-[14.5px] font-semibold text-slate-700 dark:text-slate-300">
                 Account name <span className="text-rose-500">*</span>
               </label>
               <input
@@ -229,13 +229,13 @@ export default function PayoutAccountSection({ account, onSaved }: Props) {
                 placeholder="Full name as registered with the payment provider"
                 value={form.account_name}
                 onChange={(e) => setForm((f) => ({ ...f, account_name: e.target.value }))}
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13.5px] text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-700/50 dark:text-white dark:placeholder:text-slate-500"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[16.5px] text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-700/50 dark:text-white dark:placeholder:text-slate-500"
               />
             </div>
 
             {methodCfg.needsAccount && (
               <div className="sm:col-span-2">
-                <label className="mb-1.5 block text-[13px] font-semibold text-slate-700 dark:text-slate-300">
+                <label className="mb-1.5 block text-[14.5px] font-semibold text-slate-700 dark:text-slate-300">
                   Account number <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -243,14 +243,14 @@ export default function PayoutAccountSection({ account, onSaved }: Props) {
                   placeholder="Bank account number"
                   value={form.account_number}
                   onChange={(e) => setForm((f) => ({ ...f, account_number: e.target.value }))}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13.5px] font-mono text-slate-900 outline-none transition-all placeholder:font-sans placeholder:text-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-700/50 dark:text-white dark:placeholder:text-slate-500"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[16.5px] font-mono text-slate-900 outline-none transition-all placeholder:font-sans placeholder:text-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-700/50 dark:text-white dark:placeholder:text-slate-500"
                 />
               </div>
             )}
 
             {methodCfg.needsPhone && (
               <div className="sm:col-span-2">
-                <label className="mb-1.5 block text-[13px] font-semibold text-slate-700 dark:text-slate-300">
+                <label className="mb-1.5 block text-[14.5px] font-semibold text-slate-700 dark:text-slate-300">
                   Phone number <span className="text-rose-500">*</span>
                 </label>
                 <input
@@ -258,7 +258,7 @@ export default function PayoutAccountSection({ account, onSaved }: Props) {
                   placeholder="+855 12 345 678"
                   value={form.phone_number}
                   onChange={(e) => setForm((f) => ({ ...f, phone_number: e.target.value }))}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13.5px] text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-700/50 dark:text-white dark:placeholder:text-slate-500"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[16.5px] text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-700/50 dark:text-white dark:placeholder:text-slate-500"
                 />
               </div>
             )}
@@ -266,13 +266,13 @@ export default function PayoutAccountSection({ account, onSaved }: Props) {
 
           {/* QR code upload */}
           <div className="mb-6">
-            <label className="mb-1.5 block text-[13px] font-semibold text-slate-700 dark:text-slate-300">
+            <label className="mb-1.5 block text-[14.5px] font-semibold text-slate-700 dark:text-slate-300">
               QR code{" "}
               {form.method === "khqr"
                 ? <span className="text-rose-500">*</span>
                 : <span className="font-normal text-slate-400">(optional)</span>}
             </label>
-            <p className="mb-2.5 text-[12px] text-slate-400 dark:text-slate-500">
+            <p className="mb-2.5 text-[14.5px] text-slate-400 dark:text-slate-500">
               Upload a screenshot of your payment QR so the admin can send funds directly.
             </p>
 
@@ -292,13 +292,13 @@ export default function PayoutAccountSection({ account, onSaved }: Props) {
                   </button>
                 </div>
                 <div className="pt-1">
-                  <p className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">{form.qr_code?.name}</p>
-                  <p className="mt-0.5 text-[12px] text-slate-400">
+                  <p className="text-[14.5px] font-semibold text-slate-700 dark:text-slate-300">{form.qr_code?.name}</p>
+                  <p className="mt-0.5 text-[14.5px] text-slate-400">
                     {form.qr_code ? `${(form.qr_code.size / 1024).toFixed(0)} KB` : ""}
                   </p>
                   <button
                     onClick={() => fileRef.current?.click()}
-                    className="mt-2 text-[12.5px] font-semibold text-blue-600 hover:underline dark:text-blue-400"
+                    className="mt-2 text-[14px] font-semibold text-blue-600 hover:underline dark:text-blue-400"
                   >
                     Replace image
                   </button>
@@ -316,16 +316,16 @@ export default function PayoutAccountSection({ account, onSaved }: Props) {
                     <div className="grid h-11 w-11 place-items-center rounded-xl bg-emerald-100 dark:bg-emerald-500/15">
                       <span className="text-xl">📷</span>
                     </div>
-                    <p className="text-[13px] font-semibold text-emerald-600 dark:text-emerald-400">QR image on file</p>
-                    <p className="text-[12px] text-slate-400">Click or drag to replace</p>
+                    <p className="text-[14.5px] font-semibold text-emerald-600 dark:text-emerald-400">QR image on file</p>
+                    <p className="text-[14.5px] text-slate-400">Click or drag to replace</p>
                   </>
                 ) : (
                   <>
                     <div className="grid h-11 w-11 place-items-center rounded-xl bg-slate-100 dark:bg-slate-700">
                       <Upload className="h-5 w-5 text-slate-400" />
                     </div>
-                    <p className="text-[13px] font-semibold text-slate-600 dark:text-slate-300">Drop QR image here</p>
-                    <p className="text-[12px] text-slate-400">JPG or PNG · max 5 MB</p>
+                    <p className="text-[14.5px] font-semibold text-slate-600 dark:text-slate-300">Drop QR image here</p>
+                    <p className="text-[14.5px] text-slate-400">JPG or PNG · max 5 MB</p>
                   </>
                 )}
               </div>
@@ -345,14 +345,14 @@ export default function PayoutAccountSection({ account, onSaved }: Props) {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="rounded-xl bg-blue-600 px-5 py-2.5 text-[13.5px] font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+              className="rounded-xl bg-blue-600 px-5 py-2.5 text-[16.5px] font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
             >
               {saving ? "Submitting…" : "Submit for Verification"}
             </button>
             {account && editing && (
               <button
                 onClick={() => { setEditing(false); setError(null); clearQr(); }}
-                className="rounded-xl border border-slate-200 px-5 py-2.5 text-[13.5px] font-semibold text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700"
+                className="rounded-xl border border-slate-200 px-5 py-2.5 text-[16.5px] font-semibold text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700"
               >
                 Cancel
               </button>

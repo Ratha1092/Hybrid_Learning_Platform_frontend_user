@@ -20,19 +20,7 @@ export default function MyCourses() {
   const navigate = useNavigate();
   const [courses, setCourses] = useState<InstructorCourse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [submittingId, setSubmittingId] = useState<number | null>(null);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [copiedId, setCopiedId] = useState<number | null>(null);
-
-  const handleCopyLink = async (course: InstructorCourse) => {
-    const slug = course.slug ?? course.id;
-    const url = `${window.location.origin}/courses/${slug}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopiedId(course.id);
-      setTimeout(() => setCopiedId(null), 2000);
-    } catch { /* silent — clipboard may be unavailable */ }
-  };
+  const [confirmId, setConfirmId] = useState<number | null>(null);
 
   const load = () => {
     setLoading(true);
@@ -45,27 +33,19 @@ export default function MyCourses() {
   useEffect(() => { load(); }, []);
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm("Delete this course? This cannot be undone.")) return;
+    setConfirmId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!confirmId) return;
+    const id = confirmId;
+    setConfirmId(null);
     try {
       await instructorService.deleteCourse(id);
       setCourses((prev) => prev.filter((c) => c.id !== id));
     } catch { /* silent */ }
   };
 
-  const handleSubmit = async (id: number) => {
-    if (submittingId !== null) return;
-    setSubmittingId(id);
-    setSubmitError(null);
-    try {
-      await instructorService.submitForReview(id);
-      load();
-    } catch (err: unknown) {
-      const e = err as { response?: { data?: { message?: string } } };
-      setSubmitError(e.response?.data?.message ?? "Failed to submit. Make sure your course has at least one section and lesson.");
-    } finally {
-      setSubmittingId(null);
-    }
-  };
 
   if (loading) {
     return (
@@ -84,9 +64,6 @@ export default function MyCourses() {
         </button>
       </div>
 
-      {submitError && (
-        <div className="mc-error">⚠ {submitError}</div>
-      )}
 
       {courses.length === 0 ? (
         <div className="mc-empty">
@@ -127,38 +104,12 @@ export default function MyCourses() {
 
               <div className="mc-row__actions">
                 <button
-                  className={`mc-btn mc-btn--copy${copiedId === course.id ? " mc-btn--copied" : ""}`}
-                  onClick={() => handleCopyLink(course)}
-                  title="Copy shareable link"
-                >
-                  {copiedId === course.id ? (
-                    <>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                      Copied!
-                    </>
-                  ) : (
-                    <>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                      Copy Link
-                    </>
-                  )}
-                </button>
-                <button
                   className="mc-btn mc-btn--edit"
                   onClick={() => navigate(`/instructor/courses/${course.id}/edit`)}
                 >
                   Edit
                 </button>
-                {course.status === "draft" && (
-                  <button
-                    className="mc-btn mc-btn--submit"
-                    onClick={() => handleSubmit(course.id)}
-                    disabled={submittingId === course.id}
-                    style={submittingId === course.id ? { opacity: 0.6, cursor: "not-allowed" } : undefined}
-                  >
-                    {submittingId === course.id ? "Submitting..." : "Submit"}
-                  </button>
-                )}
+
                 <button
                   className="mc-btn mc-btn--delete"
                   onClick={() => handleDelete(course.id)}
@@ -168,6 +119,21 @@ export default function MyCourses() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Delete */}
+      {confirmId !== null && (
+        <div className="mc-modal-backdrop" onClick={() => setConfirmId(null)}>
+          <div className="mc-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="mc-modal__icon">🗑️</div>
+            <h3 className="mc-modal__title">Delete this course?</h3>
+            <p className="mc-modal__body">This action cannot be undone. The course and all its content will be permanently removed.</p>
+            <div className="mc-modal__actions">
+              <button className="mc-modal__cancel" onClick={() => setConfirmId(null)}>Cancel</button>
+              <button className="mc-modal__confirm" onClick={confirmDelete}>Yes, delete</button>
+            </div>
+          </div>
         </div>
       )}
     </div>

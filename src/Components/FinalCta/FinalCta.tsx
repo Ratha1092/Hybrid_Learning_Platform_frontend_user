@@ -15,10 +15,10 @@ export default function FinalCta() {
   return (
     <section className="mx-auto max-w-[1400px] px-4 pb-20 sm:px-6 md:pb-28">
       <Reveal>
-        <div className="grad-blue relative overflow-hidden rounded-[32px] px-6 py-14 text-center shadow-glow sm:px-12 sm:py-20">
-          <div className="pointer-events-none absolute inset-0 opacity-30">
-            <div className="absolute -left-10 -top-10 h-56 w-56 rounded-full bg-white/30 blur-3xl" />
-            <div className="absolute -bottom-10 right-0 h-64 w-64 rounded-full bg-cyan-300/40 blur-3xl" />
+        <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-blue-600 via-blue-500 to-blue-400 px-6 py-14 text-center shadow-glow sm:px-12 sm:py-20">
+          <div className="pointer-events-none absolute inset-0 opacity-20">
+            <div className="absolute -left-10 -top-10 h-56 w-56 rounded-full bg-white/40 blur-3xl" />
+            <div className="absolute -bottom-10 right-0 h-64 w-64 rounded-full bg-cyan-200/30 blur-3xl" />
           </div>
           <div className="relative">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-[13px] font-semibold text-white">
@@ -37,23 +37,23 @@ export default function FinalCta() {
               {isAuthenticated ? (
                 <button
                   onClick={() => navigate("/courses")}
-                  className="inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 text-sm font-semibold brand-blue transition-transform hover:-translate-y-0.5"
+                  className="inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 text-sm font-semibold text-blue-600 transition-transform hover:-translate-y-0.5 hover:bg-blue-50"
                 >
                   Browse Courses <ArrowRight className="h-4 w-4" />
                 </button>
               ) : (
                 <button
                   onClick={openRegister}
-                  className="inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 text-sm font-semibold brand-blue transition-transform hover:-translate-y-0.5"
+                  className="inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 text-sm font-semibold text-blue-600 transition-transform hover:-translate-y-0.5 hover:bg-blue-50"
                 >
                   Get Started Free <ArrowRight className="h-4 w-4" />
                 </button>
               )}
               <button
-                onClick={() => navigate("/courses")}
+                onClick={() => navigate("/instructors")}
                 className="rounded-xl border border-white/40 px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
               >
-                Browse Courses
+                Browse Instructor
               </button>
             </div>
           </div>

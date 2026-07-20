@@ -1,4 +1,4 @@
-/* ── Register Page ─────────────────────────────────── */
+/* Register Page */
 .rg-page {
   min-height: calc(100vh - 70px);
   display: flex;
@@ -19,7 +19,7 @@
   box-shadow: 0 24px 64px rgba(15,23,42,0.18), 0 4px 16px rgba(15,23,42,0.08);
 }
 
-/* ── Left Panel ─────────────────────────────────── */
+/* Left Panel */
 .rg-left {
   flex: 1;
   display: flex;
@@ -132,7 +132,7 @@
   max-width: 260px;
 }
 
-/* ── How it works (left panel) ─────────────────────── */
+/* How it works (left panel)─ */
 .rg-how-title {
   font-family: "Plus Jakarta Sans", sans-serif;
   font-size: 22px;
@@ -235,12 +235,13 @@
 
 .rg-left-footer {
   font-size: 12px;
-  color: #475569;
+  color: #5988ca;
   position: relative;
   z-index: 1;
+  font-weight: 100;
 }
 
-/* ── Right Panel ─────────────────────────────────── */
+/* Right Panel */
 .rg-right {
   flex: none;
   width: 480px;
@@ -253,7 +254,7 @@
   max-height: 90vh;
 }
 
-/* ── Step Indicator ─────────────────────────────────── */
+/* Step Indicator */
 .rg-steps {
   display: flex;
   align-items: center;
@@ -306,7 +307,7 @@
   background: #e2e8f0;
 }
 
-/* ── Headings ─────────────────────────────────── */
+/* Headings */
 .rg-title {
   font-family: "Plus Jakarta Sans", sans-serif;
   font-size: 24px;
@@ -321,7 +322,7 @@
   margin-bottom: 14px;
 }
 
-/* ── Alert ─────────────────────────────────── */
+/* Alert */
 .rg-alert {
   padding: 9px 12px;
   border-radius: 10px;
@@ -332,7 +333,7 @@
 .rg-alert--success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
 .rg-alert--error   { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
 
-/* ── Fields ─────────────────────────────────── */
+/* Fields */
 .rg-field {
   margin-bottom: 10px;
 }
@@ -402,7 +403,7 @@
 }
 .rg-eye:hover { color: #2563EB; }
 
-/* ── Password strength ─────────────────────────────────── */
+/* Password strength */
 .rg-strength {
   display: flex;
   align-items: center;
@@ -440,7 +441,7 @@
   margin-top: 5px;
 }
 
-/* ── Terms ─────────────────────────────────── */
+/* Terms */
 .rg-terms {
   display: flex;
   align-items: flex-start;
@@ -460,7 +461,7 @@
 .rg-terms a { color: #2563EB; font-weight: 600; text-decoration: none; }
 .rg-terms a:hover { text-decoration: underline; }
 
-/* ── Submit Button ─────────────────────────────────── */
+/* Submit Button */
 .rg-btn {
   width: 100%;
   padding: 11px;
@@ -500,7 +501,7 @@
 }
 @keyframes rg-spin { to { transform: rotate(360deg); } }
 
-/* ── OTP boxes ─────────────────────────────────── */
+/* OTP boxes */
 .rg-otp-boxes {
   display: flex;
   gap: 10px;
@@ -565,7 +566,7 @@
 .rg-otp-resend__btn:not(:disabled):hover { text-decoration: underline; }
 .rg-otp-resend--ok { color: #16a34a; font-weight: 700; }
 
-/* ── Footer links ─────────────────────────────────── */
+/* Footer links */
 .rg-footer,
 .rg-login-link {
   text-align: center;
@@ -589,13 +590,13 @@
 .rg-footer a:hover,
 .rg-link-btn:hover { color: #1d4ed8; text-decoration: underline; }
 
-/* ── Responsive ─────────────────────────────────── */
+/* Responsive */
 @media (max-width: 720px) {
   .rg-left { display: none; }
   .rg-right { width: 100%; max-height: none; padding: 28px 24px; }
 }
 
-/* ── Dark mode ─────────────────────────────────── */
+/* Dark mode */
 html.dark .rg-page  { background: #0f172a; }
 html.dark .rg-right { background: #1e293b; }
 html.dark .rg-title { color: #f1f5f9; }
