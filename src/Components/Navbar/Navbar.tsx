@@ -39,6 +39,7 @@ function Navbar() {
     { to: "/courses",    label: t("nav.courses") },
     { to: "/instructors", label: t("nav.instructors") },
     { to: "/library",    label: t("nav.library") },
+    { to: "/about",      label: t("nav.about") },
     { to: "/contact",    label: t("nav.contact") },
   ];
 
@@ -73,7 +74,7 @@ function Navbar() {
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
         <div className="flex h-16 items-center justify-between gap-4">
 
-          {/* ── Logo ── */}
+          {/* Logo */}
           <NavLink to="/" className="flex items-center gap-2.5 shrink-0" onClick={closeMenu}>
             {settings.site_logo ? (
               <img src={settings.site_logo} alt={siteName} className="h-9 w-9 rounded-xl object-cover shadow-glow" />
@@ -87,7 +88,7 @@ function Navbar() {
             </span>
           </NavLink>
 
-          {/* ── Desktop Nav Links ── */}
+          {/* Desktop Nav Links */}
           <ul className="hidden items-center gap-1 lg:flex">
             {navLinks.map(({ to, label }) => (
               <li key={to}>
@@ -105,7 +106,7 @@ function Navbar() {
                     <>
                       {label}
                       <span
-                        className={`absolute inset-x-3 -bottom-0.5 h-0.5 origin-left rounded-full grad-blue transition-transform duration-300 ${
+                        className={`absolute inset-x-3 -bottom-0.5 h-0.5 origin-left rounded-full bg-gradient-to-r from-blue-500 to-blue-400 transition-transform duration-300 ${
                           isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
                         }`}
                       />
@@ -116,7 +117,7 @@ function Navbar() {
             ))}
           </ul>
 
-          {/* ── Right side ── */}
+          {/* Right side */}
           <div className="flex items-center gap-3">
             {/* Search */}
             <SearchBar />
@@ -270,7 +271,7 @@ function Navbar() {
           </div>
         </div>
 
-        {/* ── Mobile Menu ── */}
+        {/* Mobile Menu */}
         {menuOpen && (
           <div className="pb-4 lg:hidden">
             <div className="rounded-2xl border border-slate-200 bg-white p-2 shadow-soft dark:border-slate-700 dark:bg-slate-900">

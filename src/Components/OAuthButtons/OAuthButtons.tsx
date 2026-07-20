@@ -21,14 +21,21 @@ interface Props {
 }
 
 let googleInitialized = false;
+let googleCallbacks: {
+  onError?: (msg: string) => void;
+  onSuccess?: () => void;
+  from?: string;
+  login: ReturnType<typeof useAuth>["login"];
+  navigate: ReturnType<typeof useNavigate>;
+  setGoogleLoading: (v: boolean) => void;
+} | null = null;
 
 export default function OAuthButtons({ onError, onSuccess, from }: Props) {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [googleLoading, setGoogleLoading] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
-  const latestRef = useRef({ onError, onSuccess, from, login, navigate, setGoogleLoading });
-  latestRef.current = { onError, onSuccess, from, login, navigate, setGoogleLoading };
+  googleCallbacks = { onError, onSuccess, from, login, navigate, setGoogleLoading };
 
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return;
@@ -40,7 +47,7 @@ export default function OAuthButtons({ onError, onSuccess, from }: Props) {
         google.accounts.id.initialize({
           client_id: GOOGLE_CLIENT_ID,
           callback: async (response) => {
-            const { onError, onSuccess, from, login, navigate, setGoogleLoading } = latestRef.current;
+            const { onError, onSuccess, from, login, navigate, setGoogleLoading } = googleCallbacks!;
             setGoogleLoading(true);
             try {
               const payload = JSON.parse(atob(response.credential.split(".")[1])) as {

@@ -45,8 +45,10 @@ export default function GitHubCallback() {
         navigate(from || "/", { replace: true });
       })
       .catch((err: unknown) => {
-        const msg = (err as { response?: { data?: { message?: string } } })
-          .response?.data?.message ?? "GitHub login failed. Please try again.";
+        const e = err as { code?: string; response?: { data?: { message?: string } } };
+        const msg = e.code === "ECONNABORTED"
+          ? "GitHub sign-in timed out. Please try again."
+          : e.response?.data?.message ?? "GitHub login failed. Please try again.";
         setState("error");
         setErrorMsg(msg);
       });
@@ -59,6 +61,12 @@ export default function GitHubCallback() {
           <path d="M21 12a9 9 0 1 1-6.219-8.56" strokeLinecap="round" />
         </svg>
         <p style={{ color: "#64748b", fontSize: 15, margin: 0 }}>Completing GitHub sign-in…</p>
+        <button
+          onClick={() => navigate("/")}
+          style={{ marginTop: 8, background: "none", border: "none", color: "#94a3b8", fontSize: 13, textDecoration: "underline", cursor: "pointer" }}
+        >
+          Taking too long? Return home
+        </button>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );

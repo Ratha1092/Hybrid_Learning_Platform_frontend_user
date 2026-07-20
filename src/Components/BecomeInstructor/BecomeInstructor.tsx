@@ -5,11 +5,13 @@ import { usePlatformStats } from "../../utils/usePlatformStats";
 
 export default function BecomeInstructor() {
   const stats = usePlatformStats();
-  const students = stats?.total_students ?? 30000;
-  const topEarnings = stats?.top_instructor_monthly_earnings ?? 12480;
+  const students = stats?.total_students ?? 0;
+  const topEarnings = stats?.top_instructor_monthly_earnings ?? 0;
 
   const perks = [
-    `Reach a global audience of ${students.toLocaleString()}+ learners`,
+    students > 0
+      ? `Reach a global audience of ${students.toLocaleString()}+ learners`
+      : "Reach a growing global audience of learners",
     "Secure monthly payouts & transparent revenue reports",
     "Powerful analytics dashboard for every course",
     "Dedicated instructor success & marketing support",
@@ -56,7 +58,7 @@ export default function BecomeInstructor() {
                 <img
                   src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=700&q=75"
                   alt="Instructor teaching"
-                  className="h-72 w-full rounded-2xl object-cover shadow-soft-dark"
+                  className="h-72 w-full rounded-2xl object-cover shadow-soft-dark dark:brightness-[0.65] dark:contrast-[0.95] transition-[filter] duration-300"
                 />
                 <div className="animate-floaty absolute -left-24 top-10 z-10 flex items-center gap-3 rounded-2xl bg-white/95 px-4 py-3 shadow-card backdrop-blur-md dark:bg-slate-800 dark:ring-1 dark:ring-slate-600">
                   <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-100 dark:bg-emerald-500/20">

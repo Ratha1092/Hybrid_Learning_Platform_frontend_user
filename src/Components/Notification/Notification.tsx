@@ -127,7 +127,9 @@ export default function Notification() {
     if (m < 60) return `${m}m ago`;
     const h = Math.floor(m / 60);
     if (h < 24) return `${h}h ago`;
-    return `${Math.floor(h / 24)}d ago`;
+    const d = Math.floor(h / 24);
+    if (d < 7) return `${d}d ago`;
+    return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
   if (!isAuthenticated) return null;
@@ -161,7 +163,7 @@ export default function Notification() {
             {notifications.length === 0 ? (
               <div className="notif-empty">
                 <span className="notif-empty__icon">🔔</span>
-                <p>No notifications yet.</p>
+                <p>You're all caught up!</p>
               </div>
             ) : (
               notifications.map((n) => {
@@ -174,14 +176,14 @@ export default function Notification() {
                   >
                     <div
                       className="notif-item__icon"
-                      style={{ background: `${cfg.accent}18`, color: cfg.accent }}
+                      style={{ background: `${cfg.accent}15`, color: cfg.accent }}
                     >
                       {cfg.icon}
                     </div>
                     <div className="notif-item__body">
                       <p className="notif-item__title">{n.title}</p>
                       <p className="notif-item__msg">{n.message}</p>
-                      <span className="notif-item__time">{formatTime(n.created_at)}</span>
+                      <span className="notif-item__time">· {formatTime(n.created_at)}</span>
                     </div>
                     {!n.read && <div className="notif-item__dot" />}
                   </div>

@@ -56,6 +56,10 @@ export default function InstructorRegister() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
+
+  const previewUrl = previewFile ? URL.createObjectURL(previewFile) : null;
+  const isPdf = previewFile?.type === "application/pdf";
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -118,32 +122,11 @@ export default function InstructorRegister() {
     }
   };
 
-  /* ── Success state ── */
-  if (success) {
-    return (
-      <div className="ai-success-page">
-        <div className="ai-success-card">
-          <div className="ai-success-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
-          </div>
-          <h2 className="ai-success-title">Application Submitted!</h2>
-          <p className="ai-success-body">Our team will review your application and get back to you within 2–5 business days.</p>
-          <p className="ai-success-email">We'll notify you at <strong>{user?.email}</strong></p>
-          <div className="ai-success-actions">
-            <button className="ai-btn ai-btn--primary" onClick={() => navigate("/")}>Back to Home</button>
-            <button className="ai-btn ai-btn--ghost" onClick={() => navigate("/profile")}>My Profile</button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
+    <>
     <div className="ai-page">
 
-      {/* ── Hero ── */}
+      {/* Hero */}
       <div className="ai-hero">
         <div className="ai-hero-inner">
           <div className="ai-hero-text">
@@ -165,7 +148,7 @@ export default function InstructorRegister() {
         </div>
       </div>
 
-      {/* ── Form ── */}
+      {/* Form */}
       <div className="ai-body">
         <div className="ai-container">
 
@@ -195,7 +178,7 @@ export default function InstructorRegister() {
           <form onSubmit={handleSubmit} noValidate>
             <div className="ai-grid">
 
-              {/* ── Left column ── */}
+              {/* Left column */}
               <div className="ai-col">
 
                 {/* Bio */}
@@ -246,7 +229,7 @@ export default function InstructorRegister() {
 
               </div>
 
-              {/* ── Right column ── */}
+              {/* Right column */}
               <div className="ai-col">
 
                 {/* Qualification */}
@@ -362,6 +345,17 @@ export default function InstructorRegister() {
                             <>
                               <span className="ai-upload-done">✓</span>
                               <span className="ai-upload-name">{form.certificate_file.name}</span>
+                              <button
+                                type="button"
+                                className="ai-upload-preview-btn"
+                                onClick={(e) => { e.preventDefault(); setPreviewFile(form.certificate_file); }}
+                                title="Preview file"
+                              >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="15" height="15">
+                                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                Preview
+                              </button>
                             </>
                           ) : (
                             <>
@@ -386,6 +380,17 @@ export default function InstructorRegister() {
                             <>
                               <span className="ai-upload-done">✓</span>
                               <span className="ai-upload-name">{form.identity_file.name}</span>
+                              <button
+                                type="button"
+                                className="ai-upload-preview-btn"
+                                onClick={(e) => { e.preventDefault(); setPreviewFile(form.identity_file); }}
+                                title="Preview file"
+                              >
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="15" height="15">
+                                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                Preview
+                              </button>
                             </>
                           ) : (
                             <>
@@ -406,7 +411,7 @@ export default function InstructorRegister() {
               </div>
             </div>
 
-            {/* ── Submit bar ── */}
+            {/* Submit bar */}
             <div className="ai-submit-bar">
               <p className="ai-submit-note">By submitting, you agree to our Instructor Terms of Service.</p>
               <div className="ai-submit-actions">
@@ -424,5 +429,57 @@ export default function InstructorRegister() {
         </div>
       </div>
     </div>
+
+    {/* Success modal */}
+    {success && (
+      <div className="ai-success-backdrop">
+        <div className="ai-success-card">
+          <div className="ai-success-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <h2 className="ai-success-title">Application Submitted!</h2>
+          <p className="ai-success-body">Our team will review your application and get back to you within 2–5 business days.</p>
+          <p className="ai-success-email">We'll notify you at <strong>{user?.email}</strong></p>
+          <div className="ai-success-actions">
+            <button className="ai-btn ai-btn--primary" onClick={() => navigate("/")}>Back to Home</button>
+            <button className="ai-btn ai-btn--ghost" onClick={() => navigate("/profile")}>My Profile</button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* File preview lightbox */}
+    {previewFile && previewUrl && (
+      <div
+        className="ai-lightbox-backdrop"
+        onClick={() => setPreviewFile(null)}
+      >
+        <div className="ai-lightbox" onClick={(e) => e.stopPropagation()}>
+          <div className="ai-lightbox-header">
+            <span className="ai-lightbox-name">{previewFile.name}</span>
+            <button
+              type="button"
+              className="ai-lightbox-close"
+              onClick={() => setPreviewFile(null)}
+              aria-label="Close preview"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" width="18" height="18">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+          <div className="ai-lightbox-body">
+            {isPdf ? (
+              <iframe src={previewUrl} className="ai-lightbox-iframe" title="File preview" />
+            ) : (
+              <img src={previewUrl} className="ai-lightbox-img" alt="File preview" />
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   );
 }

@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { instructorService, type StandaloneSection } from "../../../../services/instructorService";
+import { instructorService, type StandaloneSection, type LessonResource } from "../../../../services/instructorService";
 import api from "../../../../api/axios";
 import "../css/CreateCourse.css";
 
@@ -18,6 +18,33 @@ interface LessonForm {
 
 const STEPS = ["Basic Info", "Curriculum", "Pricing", "Submit"];
 
+// Draft persistence (sessionStorage)
+const DRAFT_KEY = "cc_draft_v1";
+
+interface Draft {
+  step: number;
+  courseId: number | null;
+  info: {
+    title: string; category_id: string; level: string; language: string;
+    short_description: string; description: string; preview_video_url: string;
+    requirements: string; what_you_will_learn: string;
+  };
+  certificateEnabled: boolean;
+  visibility: string;
+  isFree: boolean;
+  price: string;
+}
+
+function loadDraft(): Draft | null {
+  try { const r = sessionStorage.getItem(DRAFT_KEY); return r ? JSON.parse(r) : null; } catch { return null; }
+}
+function saveDraft(d: Draft) {
+  try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify(d)); } catch {}
+}
+function clearDraft() {
+  try { sessionStorage.removeItem(DRAFT_KEY); } catch {}
+}
+
 function isTechnicalError(msg: string): boolean {
   return ["SQLSTATE", "SQL:", "pgsql", "transaction", "constraint", "duplicate key"].some((k) => msg.includes(k));
 }
@@ -33,7 +60,108 @@ function getApiError(err: unknown): string {
   return msg;
 }
 
-// ── SectionBlock ──────────────────────────────────────────────────────────────
+// LessonResourcesPane
+const EXT_ICON: Record<string, string> = {
+  pdf: "📄", zip: "🗜️", doc: "📝", docx: "📝", ppt: "📊", pptx: "📊",
+  mp4: "🎬", jpg: "🖼️", png: "🖼️",
+};
+
+function LessonResourcesPanel({ courseId, sectionId, lessonId }: { courseId: number; sectionId: number; lessonId: number }) {
+  const [resources, setResources] = useState<LessonResource[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [title, setTitle]         = useState("");
+  const [file, setFile]           = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress]   = useState<number | null>(null);
+  const [err, setErr]             = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    instructorService.getLessonResources(courseId, sectionId, lessonId)
+      .then((r) => setResources(r.data.data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [courseId, sectionId, lessonId]);
+
+  const handleUpload = async () => {
+    if (!title.trim()) { setErr("Title is required."); return; }
+    if (!file) { setErr("Please select a file."); return; }
+    setErr(null); setUploading(true); setProgress(0);
+    try {
+      const fd = new FormData();
+      fd.append("title", title.trim());
+      fd.append("file", file);
+      const res = await instructorService.uploadLessonResource(courseId, sectionId, lessonId, fd, setProgress);
+      setResources((prev) => [...prev, res.data.data]);
+      setTitle(""); setFile(null); setProgress(null);
+      if (fileRef.current) fileRef.current.value = "";
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } }; message?: string };
+      setErr(err.response?.data?.message ?? err.message ?? "Upload failed.");
+    }
+    setUploading(false); setProgress(null);
+  };
+
+  const handleDelete = async (rid: number) => {
+    try {
+      await instructorService.deleteLessonResource(courseId, sectionId, lessonId, rid);
+      setResources((prev) => prev.filter((r) => r.id !== rid));
+    } catch { /* silent */ }
+  };
+
+  return (
+    <div className="cur-resources">
+      <p className="cur-resources__label">Lesson Resources</p>
+
+      {loading ? (
+        <p className="cur-resources__hint">Loading…</p>
+      ) : (
+        <>
+          {resources.length === 0 && <p className="cur-resources__hint">No resources yet.</p>}
+          {resources.map((r) => (
+            <div key={r.id} className="cur-resource-item">
+              <span className="cur-resource-item__icon">{EXT_ICON[r.type] ?? "📎"}</span>
+              <span className="cur-resource-item__title">{r.title}</span>
+              <span className="cur-resource-item__ext">.{r.type}</span>
+              <button className="cur-btn cur-btn--icon" onClick={() => handleDelete(r.id)}>✕</button>
+            </div>
+          ))}
+
+          <div className="cur-resource-form">
+            <input
+              placeholder="Resource title *"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="cur-resource-form__input"
+            />
+            <label className="cur-resource-form__file-label">
+              {file ? file.name : "Choose file (PDF, DOC, PPT, ZIP…)"}
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".pdf,.zip,.doc,.docx,.ppt,.pptx,.mp4,.jpg,.png"
+                style={{ display: "none" }}
+                onChange={(e) => { setFile(e.target.files?.[0] ?? null); setErr(null); }}
+              />
+            </label>
+            {err && <p style={{ color: "#dc2626", fontSize: 12 }}>⚠ {err}</p>}
+            {progress !== null && (
+              <div className="cur-upload-bar">
+                <div className="cur-upload-bar__fill" style={{ width: `${progress}%` }} />
+                <span className="cur-upload-bar__label">{progress}%</span>
+              </div>
+            )}
+            <button className="cur-btn cur-btn--primary" onClick={handleUpload} disabled={uploading}>
+              {uploading ? "Uploading…" : "Upload"}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// SectionBloc
 interface SectionBlockProps {
   section: LocalSection;
   index: number;
@@ -50,6 +178,10 @@ function SectionBlock({ section, index, courseId, onDelete, onLessonAdded, onLes
   const [saving, setSaving] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [expandedResources, setExpandedResources] = useState<Set<number>>(new Set());
+
+  const toggleResources = (lessonId: number) =>
+    setExpandedResources((prev) => { const s = new Set(prev); s.has(lessonId) ? s.delete(lessonId) : s.add(lessonId); return s; });
 
   const setL = (k: keyof LessonForm, v: string | boolean) => setLesson((f) => ({ ...f, [k]: v }));
 
@@ -98,11 +230,23 @@ function SectionBlock({ section, index, courseId, onDelete, onLessonAdded, onLes
       {open && (
         <div className="cur-lessons">
           {section.lessons.map((l) => (
-            <div key={l.id} className="cur-lesson">
-              <span className="cur-lesson__icon">{l.type === "video" ? "🎬" : l.type === "quiz" ? "📝" : "📄"}</span>
-              <span className="cur-lesson__title">{l.title}</span>
-              {l.is_preview && <span className="cur-lesson__preview">Free Preview</span>}
-              <button className="cur-btn cur-btn--icon" onClick={() => handleDeleteLesson(l.id)}>✕</button>
+            <div key={l.id} className="cur-lesson-wrap">
+              <div className="cur-lesson">
+                <span className="cur-lesson__icon">{l.type === "video" ? "🎬" : l.type === "quiz" ? "📝" : "📄"}</span>
+                <span className="cur-lesson__title">{l.title}</span>
+                {l.is_preview && <span className="cur-lesson__preview">Free Preview</span>}
+                <button
+                  className={`cur-btn cur-btn--resources${expandedResources.has(l.id) ? " cur-btn--resources-active" : ""}`}
+                  onClick={() => toggleResources(l.id)}
+                  title="Lesson resources"
+                >
+                  📎 Resources
+                </button>
+                <button className="cur-btn cur-btn--icon" onClick={() => handleDeleteLesson(l.id)}>✕</button>
+              </div>
+              {expandedResources.has(l.id) && (
+                <LessonResourcesPanel courseId={courseId} sectionId={section.id} lessonId={l.id} />
+              )}
             </div>
           ))}
 
@@ -166,7 +310,7 @@ function SectionBlock({ section, index, courseId, onDelete, onLessonAdded, onLes
   );
 }
 
-// ── CurriculumStep ────────────────────────────────────────────────────────────
+// CurriculumSte
 interface CurriculumStepProps {
   courseId: number;
   sections: LocalSection[];
@@ -181,7 +325,7 @@ function CurriculumStep({ courseId, sections, setSections, onNext, onBack }: Cur
   const [addingSection, setAddingSection] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  // ── Section Library state ──
+  // Section Library state
   const [library, setLibrary] = useState<StandaloneSection[]>([]);
   const [loadingLib, setLoadingLib] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -251,7 +395,7 @@ function CurriculumStep({ courseId, sections, setSections, onNext, onBack }: Cur
       </div>
       <p className="cc-subtitle">Attach sections from your library, or create new ones directly below.</p>
 
-      {/* ── Section Library picker ── */}
+      {/* Section Library picker */}
       <div className="cur-library">
         <div className="cur-library__head">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -307,7 +451,7 @@ function CurriculumStep({ courseId, sections, setSections, onNext, onBack }: Cur
         {attachErr && <p className="cur-library__err">⚠ {attachErr}</p>}
       </div>
 
-      {/* ── Divider ── */}
+      {/* Divider */}
       <div className="cur-divider"><span>or create sections directly</span></div>
 
       {err && <div className="cc-error" style={{ marginBottom: 16 }}>⚠ {err}</div>}
@@ -370,25 +514,32 @@ function CurriculumStep({ courseId, sections, setSections, onNext, onBack }: Cur
   );
 }
 
-// ── CreateCourse ──────────────────────────────────────────────────────────────
+// CreateCours
+const DEFAULT_INFO = {
+  title: "", category_id: "", level: "beginner",
+  language: "English", short_description: "", description: "",
+  preview_video_url: "", requirements: "", what_you_will_learn: "",
+};
+
 export default function CreateCourse() {
   const navigate = useNavigate();
-  const [step, setStep] = useState(0);
-  const [courseId, setCourseId] = useState<number | null>(null);
+
+  // Restore draft saved before last refresh
+  const draft = loadDraft();
+
+  const [step, setStep]       = useState(draft?.step ?? 0);
+  const [courseId, setCourseId] = useState<number | null>(draft?.courseId ?? null);
   const [sections, setSections] = useState<LocalSection[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving]   = useState(false);
+  const [error, setError]     = useState<string | null>(null);
 
-  const [info, setInfo] = useState({
-    title: "", category_id: "", level: "beginner",
-    language: "English", short_description: "", description: "",
-    preview_video_url: "", requirements: "", what_you_will_learn: "",
-  });
-  const [certificateEnabled, setCertificateEnabled] = useState(false);
-  const [visibility, setVisibility] = useState("public");
-  const [isFree, setIsFree] = useState(true);
-  const [price, setPrice] = useState("");
+  const [info, setInfo]       = useState<Draft["info"]>(draft?.info ?? DEFAULT_INFO);
+  const [certificateEnabled, setCertificateEnabled] = useState(draft?.certificateEnabled ?? false);
+  const [visibility, setVisibility] = useState(draft?.visibility ?? "public");
+  const [isFree, setIsFree]   = useState(draft?.isFree ?? true);
+  const [price, setPrice]     = useState(draft?.price ?? "");
+  const [commission, setCommission] = useState(20);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
 
@@ -399,6 +550,35 @@ export default function CreateCourse() {
     setThumbnailPreview(URL.createObjectURL(file));
   };
 
+  // Persist draft on every relevant state change (File objects are not serialisable — skip thumbnail)
+  useEffect(() => {
+    saveDraft({ step, courseId, info, certificateEnabled, visibility, isFree, price });
+  }, [step, courseId, info, certificateEnabled, visibility, isFree, price]);
+
+  // Re-fetch sections + commission when courseId is restored from draft on refresh
+  useEffect(() => {
+    if (!courseId) return;
+    instructorService.getCourseById(courseId)
+      .then(({ data }) => {
+        if (data.data.commission_percentage !== undefined) setCommission(data.data.commission_percentage);
+      })
+      .catch(() => {});
+    if (sections.length > 0) return;
+    instructorService.getSections(courseId)
+      .then(({ data }) =>
+        setSections((data.data ?? []).map((s) => ({
+          id: s.id,
+          title: s.title,
+          order: s.order,
+          lessons: (s.lessons ?? []).map((l) => ({
+            id: l.id, title: l.title, type: l.type, is_preview: l.is_preview,
+          })),
+        })))
+      )
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courseId]);
+
   useEffect(() => {
     api.get<{ data: Category[] }>("/categories")
       .then(({ data }) => setCategories(data.data ?? []))
@@ -408,32 +588,44 @@ export default function CreateCourse() {
   const setI = (k: string, v: string) => setInfo((f) => ({ ...f, [k]: v }));
   const selectedCategory = categories.find((c) => String(c.id) === info.category_id);
 
-  // ── Step 0: Create course ──────────────────────────────────────────────────
+  // Step 0: Create or update course
   const handleCreateCourse = async () => {
     if (saving) return;
     if (!info.title.trim()) { setError("Course title is required."); return; }
     if (!info.category_id)  { setError("Please select a category."); return; }
     setSaving(true); setError(null);
     try {
-      const { data } = await instructorService.createCourse({
+      const payload = {
         title: info.title,
         short_description: info.short_description,
         description: info.description,
         level: info.level,
         language: info.language,
         category_id: Number(info.category_id),
-      });
-      const newId = data.data.id;
-      setCourseId(newId);
-      if (thumbnailFile) {
-        try { await instructorService.uploadThumbnail(newId, thumbnailFile); } catch { /* non-blocking */ }
+      };
+
+      if (courseId) {
+        // Updating existing course — don't create a duplicate
+        const { data: upd } = await instructorService.updateCourse(courseId, payload);
+        if (upd.data.commission_percentage !== undefined) setCommission(upd.data.commission_percentage);
+        if (thumbnailFile) {
+          try { await instructorService.uploadThumbnail(courseId, thumbnailFile); } catch { /* non-blocking */ }
+        }
+      } else {
+        const { data } = await instructorService.createCourse(payload);
+        const newId = data.data.id;
+        setCourseId(newId);
+        if (data.data.commission_percentage !== undefined) setCommission(data.data.commission_percentage);
+        if (thumbnailFile) {
+          try { await instructorService.uploadThumbnail(newId, thumbnailFile); } catch { /* non-blocking */ }
+        }
       }
       setStep(1);
     } catch (err) { setError(getApiError(err)); }
     setSaving(false);
   };
 
-  // ── Step 2: Save price ─────────────────────────────────────────────────────
+  // Step 2: Save pric─
   const handleSavePrice = async () => {
     if (saving) return;
     if (!isFree && (!price || Number(price) < 0)) {
@@ -451,53 +643,70 @@ export default function CreateCourse() {
     setSaving(false);
   };
 
-  // ── Step 3: Submit for review ──────────────────────────────────────────────
+  const totalLessons = sections.reduce((sum, s) => sum + s.lessons.length, 0);
+
+  const submitIssues: { step: number; label: string }[] = [
+    ...(!info.title.trim()    ? [{ step: 0, label: "Course title is required" }] : []),
+    ...(!info.category_id     ? [{ step: 0, label: "Category is required" }] : []),
+    ...(!courseId             ? [{ step: 0, label: 'Basic Info must be saved — click "Continue"' }] : []),
+    ...(sections.length === 0 ? [{ step: 1, label: "Add at least one section" }] : []),
+    ...(totalLessons === 0    ? [{ step: 1, label: "Add at least one lesson to your sections" }] : []),
+    ...(!isFree && (!price || Number(price) <= 0) ? [{ step: 2, label: "Enter a valid price for your paid course" }] : []),
+  ];
+
+  // Step 3: Submit for review
   const handleSubmit = async () => {
-    if (saving || !courseId) return;
+    if (saving || !courseId || submitIssues.length > 0) return;
     setSaving(true); setError(null);
     try {
       await instructorService.updateCourse(courseId, {
+        price: isFree ? "0" : String(Number(price)),
         certificate_enabled: certificateEnabled,
         visibility,
       });
       await instructorService.submitForReview(courseId);
+      clearDraft();
       navigate("/instructor/courses");
     } catch (err) { setError(getApiError(err)); }
     setSaving(false);
   };
 
-  const totalLessons = sections.reduce((sum, s) => sum + s.lessons.length, 0);
-
   return (
     <div className="cc-wrap">
       {/* Page header */}
       <div className="cc-header">
-        <button className="cc-header__back" onClick={() => navigate("/instructor/dashboard")}>
-          ← Back to Dashboard
-        </button>
         <h1>Create New Course</h1>
         <p>Fill in the details below to publish your course on the platform.</p>
       </div>
 
-      {/* Step tabs */}
+      {/* Step tabs — all always clickable */}
       <div className="cc-tabs">
-        {STEPS.map((label, i) => (
-          <button
-            key={label}
-            className={`cc-tab${step === i ? " cc-tab--active" : ""}${i < step ? " cc-tab--done" : ""}`}
-            onClick={() => { if (i < step) setStep(i); }}
-          >
-            <span className="cc-tab__num">{i < step ? "✓" : i + 1}</span>
-            {label}
-          </button>
-        ))}
+        {STEPS.map((label, i) => {
+          const active = i === step;
+          // ✓ only when the step's required content is actually filled
+          const done =
+            i === 0 ? !!courseId :
+            i === 1 ? sections.length > 0 && totalLessons > 0 :
+            i === 2 ? (isFree || Number(price) > 0) :
+            false;
+          return (
+            <button
+              key={label}
+              className={`cc-tab${active ? " cc-tab--active" : ""}${done ? " cc-tab--done" : " cc-tab--reachable"}`}
+              onClick={() => { if (!active) setStep(i); }}
+            >
+              <span className="cc-tab__num">{done ? "✓" : i + 1}</span>
+              {label}
+            </button>
+          );
+        })}
       </div>
 
       <div className={`cc-body${step === 1 ? " cc-body--full" : ""}`}>
         <div className="cc-main">
           {error && <div className="cc-error">⚠ {error}</div>}
 
-          {/* ── STEP 0: Basic Info ── */}
+          {/* STEP 0: Basic Info */}
           {step === 0 && (
             <div className="cc-card">
               <div className="cc-card__head">
@@ -579,7 +788,7 @@ export default function CreateCourse() {
                 <select value={info.language} onChange={(e) => setI("language", e.target.value)}>
                   <option>English</option>
                   <option>Khmer</option>
-                  <option>French</option>
+                  {/* <option>French</option> */}
                 </select>
               </div>
 
@@ -623,26 +832,39 @@ export default function CreateCourse() {
               </div>
 
               <div className="cc-actions">
-                <button className="cc-discard" onClick={() => navigate("/instructor/courses")}>✕ Discard</button>
+                <button className="cc-discard" onClick={() => { clearDraft(); navigate("/instructor/courses"); }}>✕ Discard</button>
                 <button className="cc-continue" onClick={handleCreateCourse} disabled={saving}>
-                  {saving ? "Creating..." : "Save & Continue →"}
+                  {saving ? "Saving..." : "Continue →"}
                 </button>
               </div>
             </div>
           )}
 
-          {/* ── STEP 1: Curriculum ── */}
-          {step === 1 && courseId && (
-            <CurriculumStep
-              courseId={courseId}
-              sections={sections}
-              setSections={setSections}
-              onNext={() => { setError(null); setStep(2); }}
-              onBack={() => setStep(0)}
-            />
+          {/* STEP 1: Curriculum */}
+          {step === 1 && (
+            courseId ? (
+              <CurriculumStep
+                courseId={courseId}
+                sections={sections}
+                setSections={setSections}
+                onNext={() => { setError(null); setStep(2); }}
+                onBack={() => setStep(0)}
+              />
+            ) : (
+              <div className="cc-card">
+                <div className="cc-card__head">
+                  <span className="cc-card__icon">🎬</span>
+                  <h2>Curriculum</h2>
+                </div>
+                <div className="cc-notice">
+                  <p>Save your <strong>Basic Info</strong> first to start building the curriculum.</p>
+                  <button className="cc-continue" onClick={() => setStep(0)}>← Go to Basic Info</button>
+                </div>
+              </div>
+            )
           )}
 
-          {/* ── STEP 2: Pricing ── */}
+          {/* STEP 2: Pricing */}
           {step === 2 && (
             <div className="cc-card">
               <div className="cc-card__head">
@@ -684,26 +906,68 @@ export default function CreateCourse() {
                 </div>
               )}
 
+              {/* Commission info — read-only from backend, only for paid courses */}
+              {!isFree && (
+                <div className="cc-commission-info">
+                  <div className="cc-commission-info__row">
+                    <span>Platform commission</span>
+                    <span className="cc-commission-info__val">{commission}%</span>
+                  </div>
+                  <div className="cc-commission-info__row">
+                    <span>Your earnings rate</span>
+                    <span className="cc-commission-info__val cc-commission-info__val--green">{100 - commission}%</span>
+                  </div>
+                  {price && Number(price) > 0 && (
+                    <div className="cc-commission-info__row cc-commission-info__row--highlight">
+                      <span>You earn per sale</span>
+                      <span className="cc-commission-info__val cc-commission-info__val--green">
+                        ${(Number(price) * (1 - commission / 100)).toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                  <p className="cc-commission-info__note">Commission rate is set by the platform admin and applied to each sale.</p>
+                </div>
+              )}
+
               <div className="cc-actions" style={{ marginTop: 24 }}>
                 <button className="cc-discard" onClick={() => setStep(1)}>← Back</button>
                 <button className="cc-continue" onClick={handleSavePrice} disabled={saving}>
-                  {saving ? "Saving..." : "Save & Continue →"}
+                  {saving ? "Saving..." : " Continue →"}
                 </button>
               </div>
             </div>
           )}
 
-          {/* ── STEP 3: Submit ── */}
+          {/* STEP 3: Submit */}
           {step === 3 && (
             <div className="cc-card">
               <div className="cc-submit-hero">
-                <span className="cc-submit-hero__icon">🚀</span>
-                <h2>Ready to Submit!</h2>
-                <p>
-                  <strong>{info.title}</strong><br />
-                  {sections.length} section(s) · {totalLessons} lesson(s) · {isFree ? "Free" : `$${price}`}
-                </p>
+                <span className="cc-submit-hero__icon">{submitIssues.length === 0 ? "🚀" : "📋"}</span>
+                <h2>{submitIssues.length === 0 ? "Ready to Submit!" : "Almost there…"}</h2>
+                {submitIssues.length === 0 && (
+                  <p>
+                    <strong>{info.title}</strong><br />
+                    {sections.length} section(s) · {totalLessons} lesson(s) · {isFree ? "Free" : `$${price}`}
+                  </p>
+                )}
               </div>
+
+              {/* Validation issues — clickable links to each step */}
+              {submitIssues.length > 0 && (
+                <div className="cc-submit-issues">
+                  <p className="cc-submit-issues__title">Complete the following before submitting:</p>
+                  <ul>
+                    {submitIssues.map((issue) => (
+                      <li key={issue.label}>
+                        <button className="cc-submit-issues__link" onClick={() => setStep(issue.step)}>
+                          <span className="cc-submit-issues__step">{STEPS[issue.step]}</span>
+                          {issue.label}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               <div className="cc-field">
                 <label>Visibility</label>
@@ -726,7 +990,12 @@ export default function CreateCourse() {
 
               <div className="cc-submit-actions">
                 <button className="cc-discard" onClick={() => setStep(2)}>← Back</button>
-                <button className="cc-submit-btn" onClick={handleSubmit} disabled={saving}>
+                <button
+                  className="cc-submit-btn"
+                  onClick={handleSubmit}
+                  disabled={saving || submitIssues.length > 0}
+                  style={submitIssues.length > 0 ? { opacity: 0.4, cursor: "not-allowed" } : undefined}
+                >
                   {saving ? "Submitting..." : "✓ Submit for Review"}
                 </button>
               </div>
@@ -735,7 +1004,7 @@ export default function CreateCourse() {
           )}
         </div>
 
-        {/* ── Right: Preview + Checklist (not on curriculum step) ── */}
+        {/* Right: Preview + Checklist (not on curriculum step) */}
         {step !== 1 && (
           <aside className="cc-aside">
             <div className="cc-preview">

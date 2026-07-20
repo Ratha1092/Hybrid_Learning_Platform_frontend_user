@@ -25,9 +25,9 @@ export default function Stats() {
   }, []);
 
   const items = [
-    { end: stats?.total_students    ?? 30000, suffix: "+", label: "Active Students",  sub: "learning every day" },
-    { end: stats?.total_courses     ?? 2000,  suffix: "+", label: "Expert Courses",   sub: "in 15+ categories" },
-    { end: stats?.total_instructors ?? 450,   suffix: "+", label: "Pro Instructors",  sub: "from top companies" },
+    { end: stats?.total_students    ?? 0, suffix: "+", label: "Active Students",  sub: "learning every day" },
+    { end: stats?.total_courses     ?? 0, suffix: "+", label: "Expert Courses",   sub: "in 15+ categories" },
+    { end: stats?.total_instructors ?? 0, suffix: "+", label: "Pro Instructors",  sub: "from top companies" },
     { end: 97,                                suffix: "%", label: "Completion Rate",  sub: "industry-leading" },
   ];
 

@@ -1,4 +1,4 @@
-import { ArrowRight, Play, CheckCircle2, Users, BookOpen, GraduationCap } from "lucide-react";
+import { ArrowRight, CheckCircle2, Users, BookOpen, GraduationCap } from "lucide-react";
 import { Link } from "react-router-dom";
 import heroImage from "../assets/image1.png";
 import { useAuth } from "../context/AuthContext";
@@ -38,11 +38,6 @@ function Hero() {
 
           {/* Left */}
           <div className="max-w-xl">
-            <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-blue-50 px-3.5 py-1.5 text-[13px] font-semibold text-blue-600 dark:border-white/[0.12] dark:bg-white/[0.08] dark:text-blue-200">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-blue-500 dark:bg-blue-400" />
-              Online Learning Platform
-            </span>
-
             <h1 className="font-display text-[40px] font-extrabold leading-tight text-slate-900 dark:text-white sm:text-[56px]">
               <span className="grad-text">Studying</span> Online is now much easier
             </h1>
@@ -68,12 +63,12 @@ function Hero() {
                   Get Started Free <ArrowRight className="h-4 w-4" />
                 </button>
               )}
-              <button className="inline-flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-6 py-3.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/15">
+              {/* <button className="inline-flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-6 py-3.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/15">
                 <span className="grid h-8 w-8 place-items-center rounded-full grad-blue shadow-glow">
                   <Play className="h-3.5 w-3.5 fill-white text-white" />
                 </span>
                 Watch how it works
-              </button>
+              </button> */}
             </div>
 
             {/* Stats row */}

@@ -219,7 +219,7 @@ export default function Contact() {
               </div>
 
               <div className="ct-side-card ct-side-card--support">
-                <div className="ct-side-icon ct-side-icon--orange"><Headphones size={20} /></div>
+                <div className="ct-side-icon ct-side-icon--blue"><Headphones size={20} /></div>
                 <h3 className="ct-side-title">Support Channels</h3>
                 <ul className="ct-support-list">
                   <li>

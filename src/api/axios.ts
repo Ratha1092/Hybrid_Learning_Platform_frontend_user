@@ -10,6 +10,7 @@ const api = axios.create({
 });
 
 export const MAINTENANCE_EVENT = "app:maintenance";
+export const SUSPENDED_EVENT = "app:suspended";
 
 api.interceptors.response.use(
   (response) => response,
@@ -22,6 +23,15 @@ api.interceptors.response.use(
         "The platform is currently undergoing maintenance. Please check back shortly.";
       window.dispatchEvent(new CustomEvent(MAINTENANCE_EVENT, { detail: message }));
       return Promise.reject(error);
+    }
+    if (status === 403) {
+      const data = error.response?.data ?? {};
+      const message: string = data.message ?? "";
+      if (data.error_code === "account_suspended" || /suspended/i.test(message)) {
+        localStorage.removeItem("user");
+        window.dispatchEvent(new CustomEvent(SUSPENDED_EVENT, { detail: message }));
+        return Promise.reject(error);
+      }
     }
 
     if (status === 401) {

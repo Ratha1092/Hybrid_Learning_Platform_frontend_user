@@ -18,6 +18,7 @@ interface FormErrors {
   email?: string;
   password?: string;
   password_confirmation?: string;
+  terms?: string;
 }
 
 type Step = "form" | "otp";
@@ -143,8 +144,8 @@ export default function Register() {
 
   const handleSendOtp = async () => {
     const validationErrors = validate();
+    if (!agreed) validationErrors.terms = "Please agree to the Terms of Service and Privacy Policy to continue.";
     if (Object.keys(validationErrors).length > 0) { setErrors(validationErrors); return; }
-    if (!agreed) { setErrors((e) => ({ ...e, name: undefined })); return; }
 
     setSendStatus("loading");
     setSendError("");
@@ -294,7 +295,7 @@ export default function Register() {
           <div className="rg-how-num">3</div>
           <div className="rg-how-text">
             <div className="rg-how-step-title">Start learning</div>
-            <div className="rg-how-step-desc">Your account is ready. Browse courses and enroll instantly — free forever.</div>
+            <div className="rg-how-step-desc">Your account is ready. Browse courses and enroll instantly.</div>
           </div>
         </div>
       </div>
@@ -341,7 +342,7 @@ export default function Register() {
         {/* Right panel */}
         <div className="rg-right">
 
-          {/* ══════════════ STEP 1 — FORM ══════════════ */}
+          {/* STEP 1 — FORM */}
           {step === "form" && (
             <>
               <h1 className="rg-title">Create account_</h1>
@@ -405,13 +406,19 @@ export default function Register() {
               </div>
 
               <div className="rg-terms">
-                <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} id="terms" />
+                <input
+                  type="checkbox"
+                  checked={agreed}
+                  onChange={(e) => { setAgreed(e.target.checked); setErrors((prev) => ({ ...prev, terms: undefined })); }}
+                  id="terms"
+                />
                 <label htmlFor="terms">
                   I agree to the <Link to="/terms">Terms of Service</Link> and <Link to="/privacy">Privacy Policy</Link>
                 </label>
               </div>
+              {errors.terms && <p className="rg-err-msg">{errors.terms}</p>}
 
-              <button className="rg-btn" onClick={handleSendOtp} disabled={sendStatus === "loading" || !agreed}>
+              <button className="rg-btn" onClick={handleSendOtp} disabled={sendStatus === "loading"}>
                 {sendStatus === "loading" ? <span className="rg-spinner" /> : "Send verification code →"}
               </button>
 
@@ -421,7 +428,7 @@ export default function Register() {
             </>
           )}
 
-          {/* ══════════════ STEP 2 — OTP ══════════════ */}
+          {/* STEP 2 — OTP */}
           {step === "otp" && (
             <>
               <h1 className="rg-title">Check your email_</h1>

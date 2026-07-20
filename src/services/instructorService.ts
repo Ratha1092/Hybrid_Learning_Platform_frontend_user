@@ -19,12 +19,12 @@ export interface WalletData {
 // Represents monthly earnings data for charts.
 export interface MonthlyTrend {
   month: string;
-  amount: number;
+  total: number;
 }
 
 // Represents instructor earnings summary.
 export interface EarningsData {
-  total: number;
+  total_earned: number;
   this_month: number;
   monthly_trend: MonthlyTrend[];
 }
@@ -37,6 +37,21 @@ export interface Transaction {
   description: string;
   status: string;
   created_at: string;
+}
+
+export interface InstructorPayoutAccount {
+  id: number;
+  instructor_id: number;
+  method: string;
+  account_name: string;
+  account_number: string | null;
+  phone_number: string | null;
+  qr_code_path: string | null;
+  status: "pending" | "verified" | "rejected";
+  rejection_reason: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface PayoutRequest {
@@ -104,7 +119,7 @@ export interface InstructorCourse {
   status: string;
   level: string;
   price: string;
-  category_id?: number;
+  category_id?: number | string;
   thumbnail_url: string | null;
   students_count?: number;
   created_at: string;
@@ -113,6 +128,7 @@ export interface InstructorCourse {
   what_you_will_learn?: string;
   certificate_enabled?: boolean;
   visibility?: string;
+  commission_percentage?: number;
 }
 
 // Represents a lesson inside a section.
@@ -123,6 +139,15 @@ export interface InstructorLesson {
   duration: number;
   is_preview: boolean;
   order: number;
+}
+
+// Represents a file attached to a lesson as a downloadable resource.
+export interface LessonResource {
+  id: number;
+  lesson_id: number;
+  title: string;
+  type: string;
+  file_path: string;
 }
 
 // Represents a course section containing lessons.
@@ -191,10 +216,7 @@ export const instructorService = {
   // Update existing course.
   updateCourse: (
     id: number | string,
-    data: Partial<InstructorCourse> & {
-      description?: string;
-      category_id?: string;
-    }
+    data: Partial<InstructorCourse>
   ) =>
     api.put<{ data: InstructorCourse }>(
       `/instructor/courses/${id}`,
@@ -318,6 +340,41 @@ export const instructorService = {
       `/instructor/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}`
     ),
 
+  // ── Lesson Resources ─────────────────────────────────
+
+  getLessonResources: (courseId: number | string, sectionId: number | string, lessonId: number | string) =>
+    api.get<{ data: LessonResource[] }>(
+      `/instructor/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}/resources`
+    ),
+
+  uploadLessonResource: (
+    courseId: number | string,
+    sectionId: number | string,
+    lessonId: number | string,
+    formData: FormData,
+    onProgress?: (pct: number) => void
+  ) =>
+    api.post<{ data: LessonResource }>(
+      `/instructor/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}/resources`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (e) => {
+          if (onProgress && e.total) onProgress(Math.round((e.loaded / e.total) * 100));
+        },
+      }
+    ),
+
+  deleteLessonResource: (
+    courseId: number | string,
+    sectionId: number | string,
+    lessonId: number | string,
+    resourceId: number | string
+  ) =>
+    api.delete(
+      `/instructor/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}/resources/${resourceId}`
+    ),
+
   // ── Students ─────────────────────────────────────────
 
   // Fetch all students enrolled in instructor courses.
@@ -338,11 +395,18 @@ export const instructorService = {
   getTransactions: () =>
     api.get<{ data: Transaction[] }>("/finance/transactions"),
 
+  // Fetch the instructor's registered payout account.
+  getPayoutAccount: () =>
+    api.get<{ data: InstructorPayoutAccount | null }>("/finance/payout-account"),
+
+  // Create or update payout account (multipart — may include qr_code file).
+  savePayoutAccount: (formData: FormData) =>
+    api.post<{ data: InstructorPayoutAccount }>("/finance/payout-account", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }),
+
   // Request payout from available balance.
-  requestPayout: (data: {
-    amount: number;
-    payment_method: string;
-  }) =>
+  requestPayout: (data: { amount: number }) =>
     api.post("/finance/payout-request", data),
 
   // Paginated payout request history.

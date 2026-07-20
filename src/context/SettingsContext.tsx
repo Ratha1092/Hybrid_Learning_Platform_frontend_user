@@ -28,10 +28,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }, [settings.site_favicon]);
   
   useEffect(() => {
-    const root = document.documentElement;
-    if (settings.primary_color) root.style.setProperty("--color-primary", settings.primary_color);
-    if (settings.secondary_color) root.style.setProperty("--color-secondary", settings.secondary_color);
-  }, [settings.primary_color, settings.secondary_color]);
+    // Brand color is fixed blue — ignore any admin-stored purple/violet value.
+    document.documentElement.style.setProperty("--color-primary",   "#2563eb");
+    document.documentElement.style.setProperty("--color-secondary", "#3b82f6");
+  }, []);
 
   return (
     <SettingsContext.Provider value={{ settings, loading }}>
