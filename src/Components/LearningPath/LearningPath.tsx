@@ -1,25 +1,28 @@
 import { Compass, PlayCircle, ClipboardCheck, Award, Rocket } from "lucide-react";
 import { Reveal } from "../../utils/anim";
-
-const steps = [
-  { title: "Choose your path",  text: "Pick a curated track aligned to your career goal.",       Icon: Compass       },
-  { title: "Enroll & learn",    text: "Access lessons, resources and hands-on projects.",          Icon: PlayCircle    },
-  { title: "Practice & quiz",   text: "Reinforce skills with real exercises and quizzes.",          Icon: ClipboardCheck },
-  { title: "Earn certificate",  text: "Get a verifiable certificate on completion.",                Icon: Award         },
-  { title: "Grow your career",  text: "Showcase skills and unlock new opportunities.",              Icon: Rocket        },
-];
+import { useLanguage } from "../../context/LanguageContext";
 
 export default function LearningPath() {
+  const { t } = useLanguage();
+
+  const steps = [
+    { title: t("learningPath.step1Title"), text: t("learningPath.step1Text"), Icon: Compass        },
+    { title: t("learningPath.step2Title"), text: t("learningPath.step2Text"), Icon: PlayCircle     },
+    { title: t("learningPath.step3Title"), text: t("learningPath.step3Text"), Icon: ClipboardCheck },
+    { title: t("learningPath.step4Title"), text: t("learningPath.step4Text"), Icon: Award          },
+    { title: t("learningPath.step5Title"), text: t("learningPath.step5Text"), Icon: Rocket         },
+  ];
+
   return (
     <section className="bg-white dark:bg-slate-900 py-20 sm:py-28">
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
         <Reveal className="mx-auto max-w-xl text-center">
-          <p className="mb-2 text-sm font-semibold brand-blue">How it works</p>
+          <p className="mb-2 text-sm font-semibold brand-blue">{t("learningPath.tag")}</p>
           <h2 className="font-display text-[32px] font-extrabold ink sm:text-[40px]">
-            Your path from beginner to hired
+            {t("learningPath.title")}
           </h2>
           <p className="mt-3 text-[15px] muted2">
-            A clear, guided journey — every step designed to move your career forward.
+            {t("learningPath.desc")}
           </p>
         </Reveal>
 

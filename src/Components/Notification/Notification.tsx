@@ -6,6 +6,7 @@ import {
   type AppNotification,
 } from "../../services/notificationService";
 import { getEcho, disconnectEcho } from "../../utils/echo";
+import { useLanguage } from "../../context/LanguageContext";
 import "./Notification.css";
 
 // Polling is kept as a silent fallback in case the WebSocket drops.
@@ -26,6 +27,7 @@ function getConfig(type: string) {
 
 export default function Notification() {
   const { isAuthenticated, user, refreshUser } = useAuth();
+  const { t } = useLanguage();
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
@@ -123,18 +125,18 @@ export default function Notification() {
   const formatTime = (iso: string) => {
     const diff = Date.now() - new Date(iso).getTime();
     const m = Math.floor(diff / 60_000);
-    if (m < 1) return "Just now";
-    if (m < 60) return `${m}m ago`;
+    if (m < 1) return t("notification.justNow");
+    if (m < 60) return `${m}${t("notification.minAgoSuffix")}`;
     const h = Math.floor(m / 60);
-    if (h < 24) return `${h}h ago`;
-    return `${Math.floor(h / 24)}d ago`;
+    if (h < 24) return `${h}${t("notification.hourAgoSuffix")}`;
+    return `${Math.floor(h / 24)}${t("notification.dayAgoSuffix")}`;
   };
 
   if (!isAuthenticated) return null;
 
   return (
     <div className="notif-wrap" ref={dropdownRef}>
-      <button className="notif-bell" onClick={() => setOpen((v) => !v)} aria-label="Notifications">
+      <button className="notif-bell" onClick={() => setOpen((v) => !v)} aria-label={t("notification.bellAria")}>
         <Bell size={18} />
         {unreadCount > 0 && (
           <span className="notif-badge">{unreadCount > 99 ? "99+" : unreadCount}</span>
@@ -145,14 +147,14 @@ export default function Notification() {
         <div className="notif-dropdown">
           <div className="notif-header">
             <span className="notif-header__title">
-              Notifications
+              {t("notification.title")}
               {unreadCount > 0 && (
                 <span className="notif-header__count">{unreadCount}</span>
               )}
             </span>
             {unreadCount > 0 && (
               <button className="notif-header__mark-all" onClick={handleMarkAllRead}>
-                Mark all read
+                {t("notification.markAllRead")}
               </button>
             )}
           </div>
@@ -161,7 +163,7 @@ export default function Notification() {
             {notifications.length === 0 ? (
               <div className="notif-empty">
                 <span className="notif-empty__icon">🔔</span>
-                <p>No notifications yet.</p>
+                <p>{t("notification.emptyText")}</p>
               </div>
             ) : (
               notifications.map((n) => {

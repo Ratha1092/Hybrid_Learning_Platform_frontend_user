@@ -2,17 +2,19 @@ import { Check, ArrowRight, Wallet, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Reveal } from "../../utils/anim";
 import { usePlatformStats } from "../../utils/usePlatformStats";
+import { useLanguage } from "../../context/LanguageContext";
 
 export default function BecomeInstructor() {
   const stats = usePlatformStats();
   const students = stats?.total_students ?? 30000;
   const topEarnings = stats?.top_instructor_monthly_earnings ?? 12480;
+  const { t } = useLanguage();
 
   const perks = [
-    `Reach a global audience of ${students.toLocaleString()}+ learners`,
-    "Secure monthly payouts & transparent revenue reports",
-    "Powerful analytics dashboard for every course",
-    "Dedicated instructor success & marketing support",
+    `${t("becomeInstructor.perk1Before")} ${students.toLocaleString()}${t("becomeInstructor.perk1After")}`,
+    t("becomeInstructor.perk2"),
+    t("becomeInstructor.perk3"),
+    t("becomeInstructor.perk4"),
   ];
 
   return (
@@ -24,14 +26,13 @@ export default function BecomeInstructor() {
 
             <Reveal>
               <span className="inline-flex items-center gap-2 rounded-full glass-dark px-3.5 py-1.5 text-[13px] font-semibold text-blue-200">
-                <Wallet className="h-3.5 w-3.5" /> Instructor Marketplace
+                <Wallet className="h-3.5 w-3.5" /> {t("becomeInstructor.tag")}
               </span>
               <h2 className="mt-5 font-display text-[32px] font-extrabold leading-tight text-white sm:text-[42px]">
-                Turn your knowledge into income
+                {t("becomeInstructor.title")}
               </h2>
               <p className="mt-4 max-w-md text-[15px] leading-relaxed text-slate-300">
-                Publish courses on our marketplace and earn monthly from a global
-                community of motivated learners.
+                {t("becomeInstructor.desc")}
               </p>
               <ul className="mt-7 space-y-3">
                 {perks.map((p) => (
@@ -47,7 +48,7 @@ export default function BecomeInstructor() {
                 to="/instructor/register"
                 className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3.5 text-sm font-semibold text-slate-900 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-glow"
               >
-                Start Teaching <ArrowRight className="h-4 w-4" />
+                {t("becomeInstructor.startTeaching")} <ArrowRight className="h-4 w-4" />
               </Link>
             </Reveal>
 
@@ -63,14 +64,14 @@ export default function BecomeInstructor() {
                     <TrendingUp className="h-5 w-5 text-emerald-500" />
                   </span>
                   <div className="leading-tight">
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Monthly earnings</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">{t("becomeInstructor.monthlyEarnings")}</p>
                     <p className="font-display text-lg font-extrabold text-slate-900 dark:text-white">
                       {topEarnings > 0 ? `$${Math.round(topEarnings).toLocaleString()}` : "—"}
                     </p>
                   </div>
                 </div>
                 <div className="animate-floaty2 absolute -bottom-5 -right-8 z-10 rounded-2xl bg-white/95 px-4 py-3 shadow-card backdrop-blur-md dark:bg-slate-800 dark:ring-1 dark:ring-slate-600">
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Active students</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">{t("becomeInstructor.activeStudents")}</p>
                   <p className="font-display text-lg font-extrabold text-slate-900 dark:text-white">{students > 0 ? students.toLocaleString() : "—"}</p>
                 </div>
               </div>

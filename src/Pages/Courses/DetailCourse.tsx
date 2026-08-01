@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { courseService, type CourseDetail, type Section } from "../../services/courseService";
 import EnrollButton from "./EnrollButton";
+import { useLanguage } from "../../context/LanguageContext";
 import "./DetailCourse.css";
 
 function fmtDuration(seconds: number) {
@@ -21,6 +22,7 @@ function SectionAccordion({ section, index, open, onToggle }: {
   onToggle: () => void;
 }) {
   const total = sectionTotalDuration(section);
+  const { t } = useLanguage();
   return (
     <div className={`accordion${open ? " accordion--open" : ""}`}>
       <button className="accordion__header" onClick={onToggle}>
@@ -29,7 +31,7 @@ function SectionAccordion({ section, index, open, onToggle }: {
           <div>
             <p className="accordion__title">{section.title}</p>
             <p className="accordion__meta">
-              {section.lessons.length} lessons · {fmtDuration(total)}
+              {section.lessons.length} {t("detailCourse.lessons")} · {fmtDuration(total)}
             </p>
           </div>
         </div>
@@ -52,7 +54,7 @@ function SectionAccordion({ section, index, open, onToggle }: {
               <span className="lesson-row__title">{lesson.title}</span>
               <div className="lesson-row__right">
                 {lesson.is_preview && (
-                  <span className="lesson-row__preview">Preview</span>
+                  <span className="lesson-row__preview">{t("detailCourse.preview")}</span>
                 )}
                 <span className="lesson-row__dur">{fmtDuration(lesson.duration)}</span>
               </div>
@@ -73,6 +75,7 @@ function resolveUrl(url: string | null): string | null {
 function DetailCourse() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const [course, setCourse] = useState<CourseDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -94,7 +97,7 @@ function DetailCourse() {
     courseService.getBySlug(slug)
       .then(({ data }) => setCourse(data.data))
       .catch((err: unknown) =>
-        setError((err as { message?: string }).message ?? "Failed to load course.")
+        setError((err as { message?: string }).message ?? t("detailCourse.loadFailed"))
       )
       .finally(() => setLoading(false));
   }, [slug]);
@@ -111,7 +114,7 @@ function DetailCourse() {
     return (
       <div className="detail-state">
         <div className="detail-spinner" />
-        <p>Loading course...</p>
+        <p>{t("detailCourse.loading")}</p>
       </div>
     );
   }
@@ -120,7 +123,7 @@ function DetailCourse() {
     return (
       <div className="detail-state detail-state--error">
         <p>⚠ {error}</p>
-        <button onClick={() => navigate(-1)}>← Go Back</button>
+        <button onClick={() => navigate(-1)}>{t("detailCourse.goBack")}</button>
       </div>
     );
   }
@@ -128,8 +131,8 @@ function DetailCourse() {
   if (!course) {
     return (
       <div className="detail-state">
-        <p>Course not found.</p>
-        <button onClick={() => navigate(-1)}>← Go Back</button>
+        <p>{t("detailCourse.courseNotFound")}</p>
+        <button onClick={() => navigate(-1)}>{t("detailCourse.goBack")}</button>
       </div>
     );
   }
@@ -149,7 +152,7 @@ function DetailCourse() {
         <div className="detail-hero__overlay" />
         <button className="detail-back" onClick={() => navigate(-1)}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
-          Back
+          {t("detailCourse.back")}
         </button>
         <div className="detail-hero__content">
           <span className="detail-badge">{course.level}</span>
@@ -170,11 +173,11 @@ function DetailCourse() {
             )}
             <span className="detail-meta__item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"/></svg>
-              {course.sections?.length ?? 0} sections
+              {course.sections?.length ?? 0} {t("detailCourse.sections")}
             </span>
             <span className="detail-meta__item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
-              {totalLessons} lessons
+              {totalLessons} {t("detailCourse.lessons")}
             </span>
             <span className="detail-meta__item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -183,17 +186,17 @@ function DetailCourse() {
             <button
               className={`detail-meta__item detail-copy-btn${copied ? " detail-copy-btn--copied" : ""}`}
               onClick={handleCopyLink}
-              title="Copy course link"
+              title={t("detailCourse.copyTooltip")}
             >
               {copied ? (
                 <>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                  Copied!
+                  {t("detailCourse.copied")}
                 </>
               ) : (
                 <>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                  Share
+                  {t("detailCourse.share")}
                 </>
               )}
             </button>
@@ -207,7 +210,7 @@ function DetailCourse() {
         <div className="detail-main">
           {/* Description */}
           <section className="detail-section">
-            <h2>About This Course</h2>
+            <h2>{t("detailCourse.aboutTitle")}</h2>
             <p>{course.description || course.short_description}</p>
           </section>
 
@@ -215,9 +218,9 @@ function DetailCourse() {
           {course.sections && course.sections.length > 0 && (
             <section className="detail-section">
               <div className="detail-section__head">
-                <h2>Course Content</h2>
+                <h2>{t("detailCourse.courseContent")}</h2>
                 <span className="detail-section__summary">
-                  {course.sections.length} sections · {totalLessons} lessons · {fmtDuration(totalDuration)}
+                  {course.sections.length} {t("detailCourse.sections")} · {totalLessons} {t("detailCourse.lessons")} · {fmtDuration(totalDuration)}
                 </span>
               </div>
 
@@ -243,7 +246,7 @@ function DetailCourse() {
         <aside className="detail-card">
           <div className="detail-card__price">
             {Number(course.price) === 0 ? (
-              <span className="detail-card__price--free">Free</span>
+              <span className="detail-card__price--free">{t("detailCourse.free")}</span>
             ) : (
               `$${course.price}`
             )}
@@ -251,13 +254,13 @@ function DetailCourse() {
           <EnrollButton course={course} />
           <ul className="detail-card__info">
             {course.instructor?.name && (
-              <li><span>Instructor</span><strong>{course.instructor.name}</strong></li>
+              <li><span>{t("detailCourse.instructor")}</span><strong>{course.instructor.name}</strong></li>
             )}
-            <li><span>Level</span><strong>{course.level}</strong></li>
-            {course.language && <li><span>Language</span><strong>{course.language}</strong></li>}
-            <li><span>Sections</span><strong>{course.sections?.length ?? 0}</strong></li>
-            <li><span>Lessons</span><strong>{totalLessons}</strong></li>
-            <li><span>Duration</span><strong>{fmtDuration(totalDuration)}</strong></li>
+            <li><span>{t("detailCourse.level")}</span><strong>{course.level}</strong></li>
+            {course.language && <li><span>{t("detailCourse.language")}</span><strong>{course.language}</strong></li>}
+            <li><span>{t("detailCourse.sectionsLabel")}</span><strong>{course.sections?.length ?? 0}</strong></li>
+            <li><span>{t("detailCourse.lessonsLabel")}</span><strong>{totalLessons}</strong></li>
+            <li><span>{t("detailCourse.duration")}</span><strong>{fmtDuration(totalDuration)}</strong></li>
           </ul>
         </aside>
       </div>

@@ -4,6 +4,7 @@ import { BookOpen, CheckCircle2, Play, Clock, Search, X, RotateCcw, GraduationCa
 import { courseService, type EnrolledCourse } from "../../services/courseService";
 import { useAuth } from "../../context/AuthContext";
 import { useAuthModal } from "../../context/AuthModalContext";
+import { useLanguage } from "../../context/LanguageContext";
 import "./Library.css";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
@@ -57,6 +58,7 @@ type Tab = "all" | "in-progress" | "completed";
 export default function Library() {
   const { user, isAuthenticated } = useAuth();
   const { openLogin, openRegister } = useAuthModal();
+  const { t } = useLanguage();
   const [courses, setCourses] = useState<EnrolledCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +71,7 @@ export default function Library() {
     courseService
       .getEnrolled()
       .then(({ data }) => setCourses(data.data ?? []))
-      .catch(() => setError("Failed to load your library. Please try again."))
+      .catch(() => setError(t("libraryPage.loadFailed")))
       .finally(() => setLoading(false));
   }
 
@@ -78,7 +80,7 @@ export default function Library() {
     else setLoading(false);
   }, [isAuthenticated]);
 
-  const firstName = user?.name?.split(" ")[0] ?? "there";
+  const firstName = user?.name?.split(" ")[0] ?? t("libraryPage.thereFallback");
 
   const stats = useMemo(() => ({
     total:      courses.length,
@@ -103,16 +105,16 @@ export default function Library() {
             <div style={{ width: 72, height: 72, borderRadius: 20, background: "linear-gradient(135deg,#2563EB,#3B82F6)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
               <BookOpen size={34} color="#fff" />
             </div>
-            <h2 className="lb-state-title">Your learning library</h2>
+            <h2 className="lb-state-title">{t("libraryPage.guestTitle")}</h2>
             <p className="lb-state-msg" style={{ maxWidth: 380 }}>
-              Sign in to access your enrolled courses, track your progress, and continue where you left off.
+              {t("libraryPage.guestMsg")}
             </p>
             <div style={{ display: "flex", gap: 12, marginTop: 8 }}>
               <button className="lb-btn-browse" onClick={openLogin} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                <LogIn size={16} /> Sign In
+                <LogIn size={16} /> {t("libraryPage.signIn")}
               </button>
               <button className="lb-btn-retry" onClick={openRegister} style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                Create Account
+                {t("libraryPage.createAccount")}
               </button>
             </div>
           </div>
@@ -127,25 +129,25 @@ export default function Library() {
           <div className="lb-hero-inner">
             <div>
               <h1 className="lb-hero-title">
-                Welcome back, <span className="lb-hero-name">{firstName}</span>
+                {t("libraryPage.welcomeBack")} <span className="lb-hero-name">{firstName}</span>
               </h1>
-              <p className="lb-hero-sub">Pick up where you left off — your courses are waiting.</p>
+              <p className="lb-hero-sub">{t("libraryPage.heroSub")}</p>
             </div>
             {!loading && courses.length > 0 && (
               <div className="lb-hero-stats">
                 <div className="lb-stat">
                   <span className="lb-stat-val">{stats.total}</span>
-                  <span className="lb-stat-label">Enrolled</span>
+                  <span className="lb-stat-label">{t("libraryPage.enrolled")}</span>
                 </div>
                 <div className="lb-stat-sep" />
                 <div className="lb-stat">
                   <span className="lb-stat-val">{stats.inProgress}</span>
-                  <span className="lb-stat-label">In Progress</span>
+                  <span className="lb-stat-label">{t("libraryPage.inProgress")}</span>
                 </div>
                 <div className="lb-stat-sep" />
                 <div className="lb-stat">
                   <span className="lb-stat-val">{stats.completed}</span>
-                  <span className="lb-stat-label">Completed</span>
+                  <span className="lb-stat-label">{t("libraryPage.completed")}</span>
                 </div>
               </div>
             )}
@@ -161,15 +163,15 @@ export default function Library() {
           {!loading && !error && courses.length > 0 && (
             <div className="lb-toolbar">
               <div className="lb-tabs">
-                {(["all", "in-progress", "completed"] as Tab[]).map(t => (
+                {(["all", "in-progress", "completed"] as Tab[]).map(tabKey => (
                   <button
-                    key={t}
-                    className={`lb-tab ${tab === t ? "lb-tab--active" : ""}`}
-                    onClick={() => setTab(t)}
+                    key={tabKey}
+                    className={`lb-tab ${tab === tabKey ? "lb-tab--active" : ""}`}
+                    onClick={() => setTab(tabKey)}
                   >
-                    {t === "all"         ? `All (${stats.total})`          : null}
-                    {t === "in-progress" ? `In Progress (${stats.inProgress})` : null}
-                    {t === "completed"   ? `Completed (${stats.completed})`   : null}
+                    {tabKey === "all"         ? `${t("libraryPage.all")} (${stats.total})`          : null}
+                    {tabKey === "in-progress" ? `${t("libraryPage.inProgress")} (${stats.inProgress})` : null}
+                    {tabKey === "completed"   ? `${t("libraryPage.completed")} (${stats.completed})`   : null}
                   </button>
                 ))}
               </div>
@@ -178,7 +180,7 @@ export default function Library() {
                 <Search size={16} className="lb-search-icon" />
                 <input
                   className="lb-search"
-                  placeholder="Search your courses…"
+                  placeholder={t("libraryPage.searchPlaceholder")}
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                 />
@@ -204,7 +206,7 @@ export default function Library() {
               <GraduationCap size={48} className="lb-state-icon lb-state-icon--muted" />
               <p className="lb-state-msg">{error}</p>
               <button className="lb-btn-retry" onClick={load}>
-                <RotateCcw size={15} /> Try again
+                <RotateCcw size={15} /> {t("categories.tryAgain")}
               </button>
             </div>
           )}
@@ -213,9 +215,9 @@ export default function Library() {
           {!loading && !error && courses.length === 0 && (
             <div className="lb-state">
               <BookOpen size={52} className="lb-state-icon lb-state-icon--blue" />
-              <h2 className="lb-state-title">Your library is empty</h2>
-              <p className="lb-state-msg">You haven't enrolled in any courses yet. Find something you love and start learning today.</p>
-              <Link to="/courses" className="lb-btn-browse">Browse Courses</Link>
+              <h2 className="lb-state-title">{t("libraryPage.emptyTitle")}</h2>
+              <p className="lb-state-msg">{t("libraryPage.emptyMsg")}</p>
+              <Link to="/courses" className="lb-btn-browse">{t("finalCta.browseCourses")}</Link>
             </div>
           )}
 
@@ -223,9 +225,9 @@ export default function Library() {
           {!loading && !error && courses.length > 0 && filtered.length === 0 && (
             <div className="lb-state">
               <Search size={40} className="lb-state-icon lb-state-icon--muted" />
-              <p className="lb-state-msg">No courses match your filters.</p>
+              <p className="lb-state-msg">{t("coursesPage.noMatchFilters")}</p>
               <button className="lb-btn-retry" onClick={() => { setSearch(""); setTab("all"); }}>
-                Clear filters
+                {t("coursesPage.clearFilters")}
               </button>
             </div>
           )}
@@ -243,7 +245,7 @@ export default function Library() {
                       <Thumb url={course.course_thumbnail} title={course.course_title} />
                       {done && (
                         <div className="lb-completed-badge">
-                          <CheckCircle2 size={14} /> Completed
+                          <CheckCircle2 size={14} /> {t("libraryPage.completed")}
                         </div>
                       )}
                     </div>
@@ -275,11 +277,11 @@ export default function Library() {
                         className={`lb-continue-btn ${done ? "lb-continue-btn--done" : ""}`}
                       >
                         {done ? (
-                          <><CheckCircle2 size={15} /> Review Course</>
+                          <><CheckCircle2 size={15} /> {t("libraryPage.reviewCourse")}</>
                         ) : started ? (
-                          <><Play size={13} fill="currentColor" /> Continue</>
+                          <><Play size={13} fill="currentColor" /> {t("libraryPage.continue")}</>
                         ) : (
-                          <><Play size={13} fill="currentColor" /> Start Learning</>
+                          <><Play size={13} fill="currentColor" /> {t("libraryPage.startLearning")}</>
                         )}
                       </Link>
                     </div>

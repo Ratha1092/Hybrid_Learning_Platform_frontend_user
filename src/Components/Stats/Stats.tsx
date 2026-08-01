@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useCountUp, Reveal } from "../../utils/anim";
 import api from "../../api/axios";
+import { useLanguage } from "../../context/LanguageContext";
 
 interface PlatformStats { total_students: number; total_courses: number; total_instructors: number; }
 
@@ -19,16 +20,17 @@ function StatItem({ end, suffix, label, sub }: { end: number; suffix: string; la
 
 export default function Stats() {
   const [stats, setStats] = useState<PlatformStats | null>(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     api.get("/stats").then((res) => setStats(res.data.data)).catch(() => {});
   }, []);
 
   const items = [
-    { end: stats?.total_students    ?? 30000, suffix: "+", label: "Active Students",  sub: "learning every day" },
-    { end: stats?.total_courses     ?? 2000,  suffix: "+", label: "Expert Courses",   sub: "in 15+ categories" },
-    { end: stats?.total_instructors ?? 450,   suffix: "+", label: "Pro Instructors",  sub: "from top companies" },
-    { end: 97,                                suffix: "%", label: "Completion Rate",  sub: "industry-leading" },
+    { end: stats?.total_students    ?? 30000, suffix: "+", label: t("stats.activeStudents"), sub: t("stats.activeStudentsSub") },
+    { end: stats?.total_courses     ?? 2000,  suffix: "+", label: t("stats.expertCourses"),  sub: t("stats.expertCoursesSub") },
+    { end: stats?.total_instructors ?? 450,   suffix: "+", label: t("stats.proInstructors"), sub: t("stats.proInstructorsSub") },
+    { end: 97,                                suffix: "%", label: t("stats.completionRate"), sub: t("stats.completionRateSub") },
   ];
 
   return (

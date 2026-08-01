@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { BookOpen, Users, Search, GraduationCap } from "lucide-react";
 import api from "../../api/axios";
 import { Reveal } from "../../utils/anim";
+import { useLanguage } from "../../context/LanguageContext";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
@@ -23,6 +24,7 @@ function resolveAvatar(url: string | null): string | null {
 
 function InstructorCard({ instructor }: { instructor: Instructor }) {
   const [imgErr, setImgErr] = useState(false);
+  const { t } = useLanguage();
   const src = resolveAvatar(instructor.avatar);
   const hasImg = !!src && !imgErr;
   const initial = instructor.name.charAt(0).toUpperCase();
@@ -61,7 +63,7 @@ function InstructorCard({ instructor }: { instructor: Instructor }) {
         )}
         <p className="mt-3 flex items-center gap-1.5 text-[12.5px] muted2">
           <Users className="h-3.5 w-3.5 brand-blue" />
-          {instructor.students.toLocaleString()} students
+          {instructor.students.toLocaleString()} {t("topInstructors.students")}
         </p>
       </div>
     </Link>
@@ -87,6 +89,7 @@ export default function Instructors() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const { t } = useLanguage();
 
   function load() {
     setLoading(true);
@@ -98,7 +101,7 @@ export default function Instructors() {
         setInstructors(data);
         setFiltered(data);
       })
-      .catch(() => setError("Failed to load instructors. Please try again."))
+      .catch(() => setError(t("instructorsPage.loadFailed")))
       .finally(() => setLoading(false));
   }
 
@@ -126,12 +129,12 @@ export default function Instructors() {
         <div className="pointer-events-none absolute -bottom-24 right-0 h-[400px] w-[400px] rounded-full bg-cyan-100 opacity-40 blur-[80px]" />
         <div className="relative mx-auto max-w-[1400px] px-4 text-center sm:px-6">
           <Reveal>
-            <p className="mb-2 text-sm font-semibold brand-blue">Meet the mentors</p>
+            <p className="mb-2 text-sm font-semibold brand-blue">{t("topInstructors.tag")}</p>
             <h1 className="font-display text-[32px] font-extrabold ink sm:text-[40px]">
-              Learn from top instructors
+              {t("topInstructors.title")}
             </h1>
             <p className="mx-auto mt-4 max-w-xl text-base muted2">
-              Our instructors are industry professionals and seasoned educators who bring real-world experience to every course they teach.
+              {t("instructorsPage.desc")}
             </p>
           </Reveal>
 
@@ -143,7 +146,7 @@ export default function Instructors() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search instructors…"
+                placeholder={t("instructorsPage.searchPlaceholder")}
                 className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm text-slate-700 shadow-e1 outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:placeholder:text-slate-500 dark:focus:border-blue-500"
               />
             </div>
@@ -170,7 +173,7 @@ export default function Instructors() {
               className="rounded-xl bg-brand px-6 py-2.5 text-sm font-semibold text-white shadow-glow hover:bg-blue-700"
               onClick={load}
             >
-              Try again
+              {t("categories.tryAgain")}
             </button>
           </div>
         )}
@@ -180,14 +183,14 @@ export default function Instructors() {
           <div className="flex flex-col items-center gap-4 py-24 text-center">
             <Users className="h-12 w-12 text-slate-300" />
             <p className="text-sm muted2">
-              {search ? "No instructors match your search." : "No instructors available yet."}
+              {search ? t("instructorsPage.noMatchSearch") : t("instructorsPage.noneAvailable")}
             </p>
             {search && (
               <button
                 className="text-sm font-semibold brand-blue hover:underline"
                 onClick={() => setSearch("")}
               >
-                Clear search
+                {t("instructorsPage.clearSearch")}
               </button>
             )}
           </div>
@@ -197,8 +200,8 @@ export default function Instructors() {
         {!loading && !error && filtered.length > 0 && (
           <p className="mb-6 text-sm muted2">
             {search
-              ? `${filtered.length} result${filtered.length !== 1 ? "s" : ""} for "${search}"`
-              : `${filtered.length} instructor${filtered.length !== 1 ? "s" : ""}`}
+              ? `${filtered.length} ${filtered.length !== 1 ? t("instructorsPage.resultPlural") : t("instructorsPage.resultSingular")} ${t("instructorsPage.forQuery")} "${search}"`
+              : `${filtered.length} ${filtered.length !== 1 ? t("instructorsPage.instructorPlural") : t("instructorsPage.instructorSingular")}`}
           </p>
         )}
 

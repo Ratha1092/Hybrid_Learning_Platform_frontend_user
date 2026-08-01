@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, X } from "lucide-react";
 import { searchService, type SearchResults } from "../../services/searchService";
+import { useLanguage } from "../../context/LanguageContext";
 import "./SearchBar.css";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
@@ -27,6 +28,7 @@ type FlatItem =
 
 export default function SearchBar() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResults | null>(null);
   const [loading, setLoading] = useState(false);
@@ -138,7 +140,7 @@ export default function SearchBar() {
           ref={inputRef}
           className="sb-input"
           type="text"
-          placeholder="Search courses, topics…"
+          placeholder={t("search.placeholder")}
           value={query}
           onChange={e => { setQuery(e.target.value); if (e.target.value.trim().length >= 2) setOpen(true); }}
           onFocus={() => { if (results && query.trim().length >= 2) setOpen(true); }}
@@ -146,7 +148,7 @@ export default function SearchBar() {
           autoComplete="off"
         />
         {query && (
-          <button className="sb-clear" onClick={clear} aria-label="Clear search" tabIndex={-1}>
+          <button className="sb-clear" onClick={clear} aria-label={t("search.clearAria")} tabIndex={-1}>
             <X size={13} />
           </button>
         )}
@@ -170,7 +172,7 @@ export default function SearchBar() {
 
           {!loading && !hasResults && results && (
             <div className="sb-empty">
-              No results for <strong>"{results.query}"</strong>
+              {t("search.noResultsFor")} <strong>"{results.query}"</strong>
             </div>
           )}
 
@@ -178,7 +180,7 @@ export default function SearchBar() {
             <>
               {results!.courses.length > 0 && (
                 <div className="sb-group">
-                  <div className="sb-group__label">Courses</div>
+                  <div className="sb-group__label">{t("hero.courses")}</div>
                   {results!.courses.map((c, i) => {
                     const fi = flatIndex("course", i);
                     const thumb = resolveImg(c.thumbnail);
@@ -201,7 +203,7 @@ export default function SearchBar() {
                         </div>
                         {c.price > 0
                           ? <span className="sb-item__badge sb-item__badge--price">${c.price}</span>
-                          : <span className="sb-item__badge sb-item__badge--free">Free</span>
+                          : <span className="sb-item__badge sb-item__badge--free">{t("search.free")}</span>
                         }
                       </button>
                     );
@@ -211,7 +213,7 @@ export default function SearchBar() {
 
               {results!.instructors.length > 0 && (
                 <div className="sb-group">
-                  <div className="sb-group__label">Instructors</div>
+                  <div className="sb-group__label">{t("hero.instructors")}</div>
                   {results!.instructors.map((ins, i) => {
                     const fi = flatIndex("instructor", i);
                     const avatar = resolveImg(ins.avatar);
@@ -230,9 +232,9 @@ export default function SearchBar() {
                         </div>
                         <div className="sb-item__body">
                           <span className="sb-item__title">{ins.name}</span>
-                          <span className="sb-item__sub">{ins.courses} course{ins.courses !== 1 ? "s" : ""}</span>
+                          <span className="sb-item__sub">{ins.courses} {ins.courses !== 1 ? t("search.coursePlural") : t("search.courseSingular")}</span>
                         </div>
-                        <span className="sb-item__badge sb-item__badge--instructor">Instructor</span>
+                        <span className="sb-item__badge sb-item__badge--instructor">{t("search.instructorBadge")}</span>
                       </button>
                     );
                   })}
@@ -241,7 +243,7 @@ export default function SearchBar() {
 
               {results!.categories.length > 0 && (
                 <div className="sb-group">
-                  <div className="sb-group__label">Categories</div>
+                  <div className="sb-group__label">{t("footer.categories")}</div>
                   {results!.categories.map((cat, i) => {
                     const fi = flatIndex("category", i);
                     return (
@@ -256,7 +258,7 @@ export default function SearchBar() {
                         </div>
                         <div className="sb-item__body">
                           <span className="sb-item__title">{cat.name}</span>
-                          <span className="sb-item__sub">{cat.courses} course{cat.courses !== 1 ? "s" : ""}</span>
+                          <span className="sb-item__sub">{cat.courses} {cat.courses !== 1 ? t("search.coursePlural") : t("search.courseSingular")}</span>
                         </div>
                       </button>
                     );
@@ -266,7 +268,7 @@ export default function SearchBar() {
 
               <div className="sb-footer">
                 <button className="sb-footer__all" onClick={() => { navigate(`/courses?q=${encodeURIComponent(query)}`); setOpen(false); setQuery(""); }}>
-                  See all results for <strong>"{query}"</strong>
+                  {t("search.seeAllFor")} <strong>"{query}"</strong>
                 </button>
               </div>
             </>

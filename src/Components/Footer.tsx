@@ -1,13 +1,7 @@
 import { GraduationCap, MapPin, Phone, Mail } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import { useSettings } from "../context/SettingsContext";
-
-const cols = [
-  { title: "Explore",  items: [{ label: "All Courses",    to: "/courses" }, { label: "Categories",    to: "/categories" }, { label: "Library",      to: "/library" }, { label: "Certificates", to: "/courses" }] },
-  { title: "Programs", items: [{ label: "Design",         to: "/courses?category=design" }, { label: "Programming",  to: "/courses?category=programming" }, { label: "AI & Data",    to: "/courses?category=ai" }, { label: "Business",     to: "/courses?category=business" }] },
-  { title: "Company",  items: [{ label: "About",          to: "/contact" }, { label: "Become Instructor", to: "/instructor/register" }, { label: "Contact",      to: "/contact" }, { label: "Blog",         to: "/" }] },
-  { title: "Support",  items: [{ label: "Help Center",    to: "/contact" }, { label: "Contact",      to: "/contact" }, { label: "Privacy",      to: "/" }, { label: "Terms",        to: "/" }] },
-];
+import { useLanguage } from "../context/LanguageContext";
 
 const socialIcons: { key: "social_facebook" | "social_twitter" | "social_youtube" | "social_linkedin"; path: string }[] = [
   { key: "social_facebook", path: "M22 12a10 10 0 1 0-11.5 9.9v-7H8v-2.9h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6v1.9h2.8L15.7 15h-2.2v7A10 10 0 0 0 22 12Z" },
@@ -18,6 +12,15 @@ const socialIcons: { key: "social_facebook" | "social_twitter" | "social_youtube
 
 export default function Footer() {
   const { settings } = useSettings();
+  const { t } = useLanguage();
+
+  const cols = [
+    { title: t("footer.explore"),  items: [{ label: t("footer.allCourses"), to: "/courses" }, { label: t("footer.categories"), to: "/categories" }, { label: t("footer.library"), to: "/library" }, { label: t("footer.certificates"), to: "/courses" }] },
+    { title: t("footer.programs"), items: [{ label: t("footer.design"), to: "/courses?category=design" }, { label: t("footer.programming"), to: "/courses?category=programming" }, { label: t("footer.aiData"), to: "/courses?category=ai" }, { label: t("footer.business"), to: "/courses?category=business" }] },
+    { title: t("footer.company"),  items: [{ label: t("footer.about"), to: "/contact" }, { label: t("footer.becomeInstructor"), to: "/instructor/register" }, { label: t("footer.contact"), to: "/contact" }, { label: t("footer.blog"), to: "/" }] },
+    { title: t("footer.support"),  items: [{ label: t("footer.helpCenter"), to: "/contact" }, { label: t("footer.contact"), to: "/contact" }, { label: t("footer.privacy"), to: "/" }, { label: t("footer.terms"), to: "/" }] },
+  ];
+
   const siteName = settings.site_name || "Hybrid Learning";
   const nameParts = siteName.split(" ");
   const brandFirst = nameParts[0];
@@ -48,7 +51,7 @@ export default function Footer() {
               </span>
             </NavLink>
             <p className="mt-3.5 max-w-xs text-[13.5px] leading-relaxed text-slate-400">
-              {settings.site_description || "A modern learning marketplace helping students and instructors grow — without limits."}
+              {settings.site_description || t("footer.description")}
             </p>
             <div className="mt-4 space-y-2 text-[13px] text-slate-400">
               <p className="flex items-start gap-2"><MapPin className="mt-0.5 h-4 w-4 shrink-0 brand-blue" /> {address}</p>
@@ -79,7 +82,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="mt-9 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 sm:flex-row">
           <p className="text-xs text-slate-500">
-            {settings.footer_text || `© ${new Date().getFullYear()} ${siteName}. All rights reserved.`}
+            {settings.footer_text || `© ${new Date().getFullYear()} ${siteName}. ${t("footer.rights")}`}
           </p>
           <div className="flex gap-2">
             {socialIcons

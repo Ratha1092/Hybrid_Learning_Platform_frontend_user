@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { MapPin, Phone, Mail, Clock, Send, CheckCircle, ChevronDown, MessageSquare, Headphones, BookOpen } from "lucide-react";
 import { useSettings } from "../../context/SettingsContext";
+import { useLanguage } from "../../context/LanguageContext";
 import api from "../../api/axios";
 import "./Contact.css";
 
@@ -13,31 +14,17 @@ interface FormState {
 
 const INIT: FormState = { name: "", email: "", subject: "", message: "" };
 
-const FAQS = [
-  {
-    q: "How do I enroll in a course?",
-    a: "Browse the Courses page, click on any course you're interested in, and hit the Enroll button. If it's a paid course, you'll be guided through the payment flow.",
-  },
-  {
-    q: "Can I get a refund if I'm not satisfied?",
-    a: "Yes — we offer a 7-day money-back guarantee on all purchases. Reach out to our support team within 7 days of purchase and we'll process your refund.",
-  },
-  {
-    q: "How do I become an instructor?",
-    a: "Log in, then click \"Become an Instructor\" in the navbar. Fill out your application and our team will review it within 3–5 business days.",
-  },
-  {
-    q: "Do courses expire after purchase?",
-    a: "No — once you purchase a course it's yours for life, including any future updates the instructor adds.",
-  },
-  {
-    q: "Is there a mobile app?",
-    a: "We're currently web-first and fully responsive on all screen sizes. A dedicated mobile app is on our roadmap.",
-  },
-];
-
 export default function Contact() {
   const { settings } = useSettings();
+  const { t } = useLanguage();
+
+  const FAQS = [
+    { q: t("contact.faq1q"), a: t("contact.faq1a") },
+    { q: t("contact.faq2q"), a: t("contact.faq2a") },
+    { q: t("contact.faq3q"), a: t("contact.faq3a") },
+    { q: t("contact.faq4q"), a: t("contact.faq4a") },
+    { q: t("contact.faq5q"), a: t("contact.faq5a") },
+  ];
   const [form, setForm] = useState<FormState>(INIT);
   const [errors, setErrors] = useState<Partial<FormState>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -53,11 +40,11 @@ export default function Contact() {
 
   function validate(): boolean {
     const e: Partial<FormState> = {};
-    if (!form.name.trim())    e.name    = "Name is required";
-    if (!form.email.trim())   e.email   = "Email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Enter a valid email";
-    if (!form.subject.trim()) e.subject = "Subject is required";
-    if (!form.message.trim()) e.message = "Message is required";
+    if (!form.name.trim())    e.name    = t("contact.nameRequired");
+    if (!form.email.trim())   e.email   = t("contact.emailRequired");
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = t("contact.emailInvalid");
+    if (!form.subject.trim()) e.subject = t("contact.subjectRequired");
+    if (!form.message.trim()) e.message = t("contact.messageRequired");
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -73,7 +60,7 @@ export default function Contact() {
       setForm(INIT);
     } catch (err: any) {
       const msg = err.response?.data?.message;
-      setServerError(msg || "Something went wrong. Please try again or email us directly.");
+      setServerError(msg || t("contact.genericError"));
     } finally {
       setSubmitting(false);
     }
@@ -102,9 +89,9 @@ export default function Contact() {
       {/* ── Hero ── */}
       <div className="ct-hero">
         <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
-          <h1 className="ct-hero-title">Get in Touch</h1>
+          <h1 className="ct-hero-title">{t("contact.heroTitle")}</h1>
           <p className="ct-hero-sub">
-            Have a question, feedback, or just want to say hello? We'd love to hear from you.
+            {t("contact.heroSub")}
           </p>
         </div>
       </div>
@@ -117,28 +104,28 @@ export default function Contact() {
               <div className="ct-card-icon ct-card-icon--blue">
                 <MapPin size={22} />
               </div>
-              <h3 className="ct-card-title">Our Location</h3>
+              <h3 className="ct-card-title">{t("contact.locationTitle")}</h3>
               <p className="ct-card-text">{address}</p>
             </div>
             <div className="ct-card">
               <div className="ct-card-icon ct-card-icon--orange">
                 <Phone size={22} />
               </div>
-              <h3 className="ct-card-title">Phone</h3>
+              <h3 className="ct-card-title">{t("contact.phoneTitle")}</h3>
               <p className="ct-card-text">
                 <a href={`tel:${phone}`}>{phone}</a>
               </p>
-              <p className="ct-card-note">Mon – Fri, 8 am – 6 pm</p>
+              <p className="ct-card-note">{t("contact.phoneNote")}</p>
             </div>
             <div className="ct-card">
               <div className="ct-card-icon ct-card-icon--indigo">
                 <Mail size={22} />
               </div>
-              <h3 className="ct-card-title">Email</h3>
+              <h3 className="ct-card-title">{t("contact.emailTitle")}</h3>
               <p className="ct-card-text">
                 <a href={`mailto:${email}`}>{email}</a>
               </p>
-              <p className="ct-card-note">We reply within 24 hours</p>
+              <p className="ct-card-note">{t("contact.emailNote")}</p>
             </div>
           </div>
         </div>
@@ -155,34 +142,34 @@ export default function Contact() {
                 {sent ? (
                   <div className="ct-success">
                     <CheckCircle size={48} className="ct-success-icon" />
-                    <h2 className="ct-success-title">Message Sent!</h2>
+                    <h2 className="ct-success-title">{t("contact.messageSentTitle")}</h2>
                     <p className="ct-success-text">
-                      Thanks for reaching out. We'll get back to you within 24 hours.
+                      {t("contact.messageSentText")}
                     </p>
                     <button className="ct-btn-reset" onClick={() => setSent(false)}>
-                      Send another message
+                      {t("contact.sendAnother")}
                     </button>
                   </div>
                 ) : (
                   <>
-                    <h2 className="ct-form-title">Send us a message</h2>
-                    <p className="ct-form-sub">Fill in the form and our team will be in touch shortly.</p>
+                    <h2 className="ct-form-title">{t("contact.formTitle")}</h2>
+                    <p className="ct-form-sub">{t("contact.formSub")}</p>
 
                     <form className="ct-form" onSubmit={handleSubmit} noValidate>
                       <div className="ct-row">
-                        {field("name", "Your name")}
-                        {field("email", "Email address", "email")}
+                        {field("name", t("contact.yourName"))}
+                        {field("email", t("contact.emailAddress"), "email")}
                       </div>
-                      {field("subject", "Subject")}
+                      {field("subject", t("contact.subject"))}
 
                       <div className={`ct-field ${errors.message ? "ct-field--error" : ""}`}>
-                        <label className="ct-label" htmlFor="ct-message">Message</label>
+                        <label className="ct-label" htmlFor="ct-message">{t("contact.message")}</label>
                         <textarea
                           id="ct-message"
                           value={form.message}
                           onChange={e => { setForm(f => ({ ...f, message: e.target.value })); setErrors(ev => ({ ...ev, message: undefined })); }}
                           className="ct-textarea"
-                          placeholder="Write your message here…"
+                          placeholder={t("contact.messagePlaceholder")}
                           rows={5}
                         />
                         {errors.message && <span className="ct-field-error">{errors.message}</span>}
@@ -192,9 +179,9 @@ export default function Contact() {
 
                       <button type="submit" className="ct-submit" disabled={submitting}>
                         {submitting ? (
-                          <><span className="ct-spinner" /> Sending…</>
+                          <><span className="ct-spinner" /> {t("contact.sending")}</>
                         ) : (
-                          <><Send size={16} /> Send Message</>
+                          <><Send size={16} /> {t("contact.sendMessage")}</>
                         )}
                       </button>
                     </form>
@@ -207,12 +194,12 @@ export default function Contact() {
             <div className="ct-side-col">
               <div className="ct-side-card ct-side-card--hours">
                 <div className="ct-side-icon"><Clock size={20} /></div>
-                <h3 className="ct-side-title">Business Hours</h3>
+                <h3 className="ct-side-title">{t("contact.businessHours")}</h3>
                 <ul className="ct-hours">
-                  <li><span>Monday – Friday</span><span>{hoursWd}</span></li>
-                  <li><span>Saturday</span><span>{hoursSat}</span></li>
+                  <li><span>{t("contact.mondayFriday")}</span><span>{hoursWd}</span></li>
+                  <li><span>{t("contact.saturday")}</span><span>{hoursSat}</span></li>
                   <li>
-                    <span>Sunday</span>
+                    <span>{t("contact.sunday")}</span>
                     <span className={hoursSun.toLowerCase() === "closed" ? "ct-closed" : ""}>{hoursSun}</span>
                   </li>
                 </ul>
@@ -220,19 +207,19 @@ export default function Contact() {
 
               <div className="ct-side-card ct-side-card--support">
                 <div className="ct-side-icon ct-side-icon--orange"><Headphones size={20} /></div>
-                <h3 className="ct-side-title">Support Channels</h3>
+                <h3 className="ct-side-title">{t("contact.supportChannels")}</h3>
                 <ul className="ct-support-list">
                   <li>
                     <MessageSquare size={15} />
-                    <span>Live chat inside any course page</span>
+                    <span>{t("contact.liveChat")}</span>
                   </li>
                   <li>
                     <Mail size={15} />
-                    <a href={`mailto:${email}`}>Email support</a>
+                    <a href={`mailto:${email}`}>{t("contact.emailSupport")}</a>
                   </li>
                   <li>
                     <BookOpen size={15} />
-                    <a href="/courses">Browse our help center</a>
+                    <a href="/courses">{t("contact.browseHelpCenter")}</a>
                   </li>
                 </ul>
               </div>
@@ -246,8 +233,8 @@ export default function Contact() {
       <section className="ct-faq-section">
         <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
           <div className="ct-faq-header">
-            <h2 className="ct-faq-title">Frequently Asked Questions</h2>
-            <p className="ct-faq-sub">Can't find what you're looking for? <a href={`mailto:${email}`}>Email us</a>.</p>
+            <h2 className="ct-faq-title">{t("contact.faqTitle")}</h2>
+            <p className="ct-faq-sub">{t("contact.faqSubBefore")} <a href={`mailto:${email}`}>{t("contact.emailUs")}</a>.</p>
           </div>
           <div className="ct-faq-list">
             {FAQS.map((item, i) => (

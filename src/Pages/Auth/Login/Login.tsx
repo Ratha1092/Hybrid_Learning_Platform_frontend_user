@@ -5,6 +5,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { authService } from "../../../services/authService";
 import OAuthButtons from "../../../Components/OAuthButtons/OAuthButtons";
 import { useAuthModal } from "../../../context/AuthModalContext";
+import { useLanguage } from "../../../context/LanguageContext";
 import "./Login.css";
 
 interface LoginForm {
@@ -76,6 +77,7 @@ const IconSpinner = () => (
 export default function Login() {
   const { login } = useAuth();
   const { openRegister, close } = useAuthModal();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from;
@@ -90,8 +92,8 @@ export default function Login() {
 
   const validate = (): LoginErrors => {
     const e: LoginErrors = {};
-    if (!form.email.trim()) e.email = "Email is required.";
-    if (!form.password) e.password = "Password is required.";
+    if (!form.email.trim()) e.email = t("login.emailRequired");
+    if (!form.password) e.password = t("login.passwordRequired");
     return e;
   };
 
@@ -118,7 +120,7 @@ export default function Login() {
       const { data } = await authService.login(form);
       login(data.data.user);
       setStatus("success");
-      setServerMessage(data.message || "Login successful!");
+      setServerMessage(data.message || t("login.loginSuccess"));
       const redirectTo = sessionStorage.getItem("authRedirectTo") ?? from ?? "/";
       sessionStorage.removeItem("authRedirectTo");
       setTimeout(() => { close(); navigate(redirectTo, { replace: true }); }, 1000);
@@ -139,7 +141,7 @@ export default function Login() {
       if (emailMessage === VERIFY_EMAIL_MESSAGE) {
         setNeedsVerification(true);
       }
-      setServerMessage(res?.data?.message || "Login failed. Please try again.");
+      setServerMessage(res?.data?.message || t("login.loginFailed"));
     }
   };
 
@@ -163,7 +165,7 @@ export default function Login() {
           <div className="login-brand__logo">HL</div>
           <div>
             <div className="login-brand__name">Hybrid Learning</div>
-            <div className="login-brand__sub">Learning Platform</div>
+            <div className="login-brand__sub">{t("login.brandSub")}</div>
           </div>
         </div>
 
@@ -175,24 +177,24 @@ export default function Login() {
             <span className="c4">succeed();</span>
           </div>
           <p className="login-hero__desc">
-            Your unified platform for online learning — courses, instructors, and community in one place.
+            {t("login.heroDesc")}
           </p>
         </div>
 
         <div className="login-stats">
           <div className="login-stat">
             <div className="login-stat__num">{stats?.total_students ?? "—"}</div>
-            <div className="login-stat__label">Students</div>
+            <div className="login-stat__label">{t("hero.students")}</div>
             <div className="login-stat__trend">↑ 12.5%</div>
           </div>
           <div className="login-stat">
             <div className="login-stat__num">{stats?.total_courses ?? "—"}</div>
-            <div className="login-stat__label">Courses</div>
+            <div className="login-stat__label">{t("hero.courses")}</div>
             <div className="login-stat__trend">↑ 8.3%</div>
           </div>
           <div className="login-stat">
             <div className="login-stat__num">{stats?.total_instructors ?? "—"}</div>
-            <div className="login-stat__label">Instructors</div>
+            <div className="login-stat__label">{t("hero.instructors")}</div>
             <div className="login-stat__trend">↑ 5.7%</div>
           </div>
         </div>
@@ -201,8 +203,8 @@ export default function Login() {
       {/* ── Right form panel ── */}
       <div className="login-right">
         <div className="login-form-panel">
-          <h1 className="login-title">Welcome Back</h1>
-          <p className="login-subtitle">Sign in to continue your learning journey</p>
+          <h1 className="login-title">{t("auth.loginTitle")}</h1>
+          <p className="login-subtitle">{t("login.subtitle")}</p>
 
           {status === "success" && (
             <div className="login-alert login-alert--success">
@@ -218,7 +220,7 @@ export default function Login() {
           {needsVerification && (
             <div className="login-alert login-alert--error" style={{ marginTop: -8 }}>
               {resendStatus === "sent" ? (
-                <span>✓ Verification email sent. Please check your inbox.</span>
+                <span>{t("login.verificationSent")}</span>
               ) : (
                 <button
                   type="button"
@@ -234,7 +236,7 @@ export default function Login() {
                   onClick={handleResendVerification}
                   disabled={resendStatus === "sending"}
                 >
-                  {resendStatus === "sending" ? "Sending..." : "Resend verification email"}
+                  {resendStatus === "sending" ? t("login.resendSending") : t("login.resendVerification")}
                 </button>
               )}
             </div>
@@ -242,7 +244,7 @@ export default function Login() {
 
           <div className="login-fields">
             <div>
-              <label className="login-field-label">Email address *</label>
+              <label className="login-field-label">{t("login.emailLabel")}</label>
               <div className="login-input-wrap">
                 <span className="login-input-icon"><IconMail /></span>
                 <input
@@ -258,7 +260,7 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="login-field-label">Password *</label>
+              <label className="login-field-label">{t("login.passwordLabel")}</label>
               <div className="login-input-wrap">
                 <span className="login-input-icon"><IconLock /></span>
                 <input
@@ -278,7 +280,7 @@ export default function Login() {
           </div>
 
           <button className="login-submit" onClick={handleSubmit} disabled={status === "loading"}>
-            {status === "loading" ? <><IconSpinner />Signing in...</> : "Sign In"}
+            {status === "loading" ? <><IconSpinner />{t("login.signingIn")}</> : t("login.signIn")}
           </button>
 
           <OAuthButtons
@@ -288,11 +290,11 @@ export default function Login() {
           />
 
           <p className="login-footer">
-            Don't have an account? <button className="login-link-btn" onClick={openRegister}>Register</button>
+            {t("login.noAccount")} <button className="login-link-btn" onClick={openRegister}>{t("nav.register")}</button>
           </p>
 
           <div className="login-secure">
-            🛡 256-bit SSL &nbsp;·&nbsp; Authorized Students Only
+            🛡 {t("login.secure")}
           </div>
         </div>
       </div>

@@ -4,6 +4,7 @@ import { ArrowRight, Star, Clock, BookOpen, BarChart3, Heart, Award } from "luci
 import { courseService, type Course } from "../services/courseService";
 import { Reveal } from "../utils/anim";
 import { useWishlist } from "../context/WishlistContext";
+import { useLanguage } from "../context/LanguageContext";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
@@ -34,6 +35,7 @@ function SkeletonCard() {
 
 export default function FeaturedCourses() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { toggle, isWishlisted } = useWishlist();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,16 +61,16 @@ export default function FeaturedCourses() {
       <div className="mx-auto max-w-[1400px] px-4 py-20 sm:px-6 md:py-28">
         <Reveal className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
           <div>
-            <p className="mb-2 text-sm font-semibold brand-blue">Featured courses</p>
+            <p className="mb-2 text-sm font-semibold brand-blue">{t("featured.tag")}</p>
             <h2 className="font-display text-[32px] font-extrabold ink sm:text-[40px]">
-              Most popular this week
+              {t("featured.title")}
             </h2>
           </div>
           <button
             onClick={() => navigate("/courses")}
             className="group inline-flex items-center gap-2 rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold ink transition-colors hover:border-blue-300 hover:text-blue-600 dark:border-slate-700 dark:text-slate-200 dark:hover:border-blue-500 dark:hover:text-blue-400"
           >
-            View all courses <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            {t("featured.viewAll")} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </button>
         </Reveal>
 

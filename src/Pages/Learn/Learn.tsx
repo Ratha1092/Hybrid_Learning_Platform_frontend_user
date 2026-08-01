@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import { classifyVideoUrl } from "../../utils/videoUrl";
+import { useLanguage } from "../../context/LanguageContext";
 import "./Learn.css";
 
 function buildYouTubeEmbed(url: string): string {
@@ -42,6 +43,7 @@ interface CourseData {
 export default function Learn() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const [course, setCourse] = useState<CourseData | null>(null);
   const [activeLesson, setActiveLesson] = useState<LessonItem | null>(null);
@@ -74,7 +76,7 @@ export default function Learn() {
         });
         setCompletedIds(done);
       })
-      .catch(() => setError("Failed to load course."))
+      .catch(() => setError(t("learnPage.loadCourseFailed")))
       .finally(() => setLoading(false));
   }, [slug, navigate]);
 
@@ -94,7 +96,7 @@ export default function Learn() {
     } catch {
       // Roll back and show error
       setCompletedIds((prev) => { const next = new Set(prev); next.delete(lessonId); return next; });
-      setCompleteError("Could not save progress. Please try again.");
+      setCompleteError(t("learnPage.saveProgressFailed"));
     }
   };
 
@@ -112,7 +114,7 @@ export default function Learn() {
     return (
       <div className="learn-state">
         <div className="learn-spinner" />
-        <p>Loading course...</p>
+        <p>{t("learnPage.loading")}</p>
       </div>
     );
   }
@@ -120,8 +122,8 @@ export default function Learn() {
   if (error || !course) {
     return (
       <div className="learn-state learn-state--error">
-        <p>⚠ {error ?? "Course not found."}</p>
-        <button onClick={() => navigate("/courses")}>← Back to Courses</button>
+        <p>⚠ {error ?? t("learnPage.courseNotFound")}</p>
+        <button onClick={() => navigate("/courses")}>{t("learnPage.backToCourses")}</button>
       </div>
     );
   }
@@ -131,10 +133,10 @@ export default function Learn() {
       {/* ── Sidebar ── */}
       <aside className="learn-sidebar">
         <div className="learn-sidebar__head">
-          <button className="learn-back" onClick={() => navigate("/courses")}>← Exit</button>
+          <button className="learn-back" onClick={() => navigate("/courses")}>{t("learnPage.exit")}</button>
           <h3 className="learn-sidebar__title">{course.title}</h3>
           <p className="learn-sidebar__progress">
-            {completedIds.size} / {totalLessons} lessons
+            {completedIds.size} / {totalLessons} {t("learnPage.lessonsSuffix")}
           </p>
           <div className="learn-progressbar">
             <div
@@ -186,8 +188,8 @@ export default function Learn() {
       <main className="learn-main">
         {course.access_expired && (
           <div className="learn-expired-banner">
-            <span>⏳ Your access to this course has expired.</span>
-            <button onClick={() => navigate(`/courses/${course.slug}`)}>Renew Access</button>
+            <span>{t("learnPage.accessExpiredBanner")}</span>
+            <button onClick={() => navigate(`/courses/${course.slug}`)}>{t("learnPage.renewAccess")}</button>
           </div>
         )}
         {activeLesson ? (
@@ -226,19 +228,19 @@ export default function Learn() {
                   if (activeLesson.video_url) return (
                     <div className="learn-no-video">
                       <span>🚫</span>
-                      <p>Invalid video URL.</p>
+                      <p>{t("learnPage.invalidVideoUrl")}</p>
                     </div>
                   );
                   if (course.access_expired && !activeLesson.is_preview) return (
                     <div className="learn-no-video">
                       <span>⏳</span>
-                      <p>Your access has expired. Renew to keep watching.</p>
+                      <p>{t("learnPage.accessExpiredRenew")}</p>
                     </div>
                   );
                   return (
                     <div className="learn-no-video">
                       <span>🎬</span>
-                      <p>No video URL provided for this lesson.</p>
+                      <p>{t("learnPage.noVideoUrl")}</p>
                     </div>
                   );
                 })()}
@@ -251,7 +253,7 @@ export default function Learn() {
                 {activeLesson.content ? (
                   <p>{activeLesson.content}</p>
                 ) : (
-                  <p className="learn-empty">No content provided for this lesson.</p>
+                  <p className="learn-empty">{t("learnPage.noContent")}</p>
                 )}
               </div>
             )}
@@ -260,7 +262,7 @@ export default function Learn() {
             {activeLesson.type === "quiz" && (
               <div className="learn-quiz-placeholder">
                 <span>📝</span>
-                <p>Quiz coming soon.</p>
+                <p>{t("learnPage.quizComingSoon")}</p>
               </div>
             )}
 
@@ -277,17 +279,17 @@ export default function Learn() {
                     className="learn-complete-btn"
                     onClick={() => handleComplete(activeLesson.id)}
                   >
-                    ✓ Mark as Complete
+                    {t("learnPage.markComplete")}
                   </button>
                 ) : (
-                  <span className="learn-completed-badge">✓ Completed</span>
+                  <span className="learn-completed-badge">{t("learnPage.completed")}</span>
                 )}
               </div>
             </div>
           </>
         ) : (
           <div className="learn-state">
-            <p>Select a lesson from the sidebar to start learning.</p>
+            <p>{t("learnPage.selectLesson")}</p>
           </div>
         )}
       </main>

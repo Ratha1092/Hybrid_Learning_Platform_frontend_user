@@ -3,6 +3,7 @@ import { Users, BookOpen, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Reveal } from "../../utils/anim";
 import api from "../../api/axios";
+import { useLanguage } from "../../context/LanguageContext";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
@@ -22,6 +23,7 @@ function resolveAvatar(url: string | null): string | null {
 
 function InstructorCard({ m }: { m: Instructor }) {
   const [imgErr, setImgErr] = useState(false);
+  const { t } = useLanguage();
   const src = resolveAvatar(m.avatar);
   const hasImg = !!src && !imgErr;
   const initial = m.name.charAt(0).toUpperCase();
@@ -55,7 +57,7 @@ function InstructorCard({ m }: { m: Instructor }) {
         )}
         <p className="mt-3 flex items-center gap-1.5 text-[12.5px] muted2">
           <Users className="h-3.5 w-3.5 brand-blue" />
-          {m.students.toLocaleString()} students
+          {m.students.toLocaleString()} {t("topInstructors.students")}
         </p>
       </div>
     </Link>
@@ -78,6 +80,7 @@ function SkeletonCard() {
 export default function TopInstructors() {
   const [instructors, setInstructors] = useState<Instructor[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     api.get("/instructors?limit=4")
@@ -93,16 +96,16 @@ export default function TopInstructors() {
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
         <Reveal className="flex flex-col items-center justify-between gap-6 sm:flex-row sm:items-end">
           <div className="text-center sm:text-left">
-            <p className="mb-2 text-sm font-semibold brand-blue">Meet the mentors</p>
+            <p className="mb-2 text-sm font-semibold brand-blue">{t("topInstructors.tag")}</p>
             <h2 className="font-display text-[32px] font-extrabold ink sm:text-[40px]">
-              Learn from top instructors
+              {t("topInstructors.title")}
             </h2>
           </div>
           <Link
             to="/instructors"
             className="group inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold ink shadow-e1 transition-colors hover:border-blue-300 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-500 dark:hover:text-blue-400"
           >
-            View all instructors <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            {t("topInstructors.viewAll")} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </Link>
         </Reveal>
 

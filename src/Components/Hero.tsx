@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { useAuthModal } from "../context/AuthModalContext";
 import { useCountUp } from "../utils/anim";
 import { usePlatformStats } from "../utils/usePlatformStats";
+import { useLanguage } from "../context/LanguageContext";
 
 function StatPill({ end, suffix, label }: { end: number; suffix: string; label: string }) {
   const { ref, val } = useCountUp(end, 1400);
@@ -22,6 +23,7 @@ function Hero() {
   const { isAuthenticated } = useAuth();
   const { openRegister } = useAuthModal();
   const stats = usePlatformStats();
+  const { t } = useLanguage();
 
   const students = stats?.total_students    ?? 0; // 0 while loading; real value triggers count-up
   const courses  = stats?.total_courses     ?? 0;
@@ -40,16 +42,15 @@ function Hero() {
           <div className="max-w-xl">
             <span className="mb-5 inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-blue-50 px-3.5 py-1.5 text-[13px] font-semibold text-blue-600 dark:border-white/[0.12] dark:bg-white/[0.08] dark:text-blue-200">
               <span className="h-2 w-2 animate-pulse rounded-full bg-blue-500 dark:bg-blue-400" />
-              Online Learning Platform
+              {t("hero.badge")}
             </span>
 
             <h1 className="font-display text-[40px] font-extrabold leading-tight text-slate-900 dark:text-white sm:text-[56px]">
-              <span className="grad-text">Studying</span> Online is now much easier
+              <span className="grad-text">{t("hero.titleHighlight")}</span> {t("hero.titleRest")}
             </h1>
 
             <p className="mt-5 max-w-md text-[16px] leading-relaxed text-slate-600 dark:text-slate-300">
-              Hybrid Learning is a modern platform that will teach you in a more
-              interactive and engaging way.
+              {t("hero.desc")}
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -58,31 +59,31 @@ function Hero() {
                   to="/courses"
                   className="inline-flex items-center gap-2 rounded-xl grad-blue px-6 py-3.5 text-sm font-semibold text-white shadow-glow transition-transform hover:-translate-y-0.5"
                 >
-                  Start Learning <ArrowRight className="h-4 w-4" />
+                  {t("hero.startLearning")} <ArrowRight className="h-4 w-4" />
                 </Link>
               ) : (
                 <button
                   onClick={openRegister}
                   className="inline-flex items-center gap-2 rounded-xl grad-blue px-6 py-3.5 text-sm font-semibold text-white shadow-glow transition-transform hover:-translate-y-0.5"
                 >
-                  Get Started Free <ArrowRight className="h-4 w-4" />
+                  {t("hero.getStartedFree")} <ArrowRight className="h-4 w-4" />
                 </button>
               )}
               <button className="inline-flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-6 py-3.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-100 dark:border-white/20 dark:bg-white/10 dark:text-white dark:hover:bg-white/15">
                 <span className="grid h-8 w-8 place-items-center rounded-full grad-blue shadow-glow">
                   <Play className="h-3.5 w-3.5 fill-white text-white" />
                 </span>
-                Watch how it works
+                {t("hero.watchHow")}
               </button>
             </div>
 
             {/* Stats row */}
             <div className="mt-10 flex items-center gap-6 rounded-2xl border border-slate-100 bg-white px-6 py-4 shadow-e1 dark:border-white/[0.12] dark:bg-white/[0.08] dark:shadow-none sm:gap-8">
-              <StatPill end={students} suffix="+" label="Students" />
+              <StatPill end={students} suffix="+" label={t("hero.students")} />
               <div className="h-8 w-px bg-slate-200 dark:bg-white/10" />
-              <StatPill end={courses}  suffix="+" label="Courses" />
+              <StatPill end={courses}  suffix="+" label={t("hero.courses")} />
               <div className="h-8 w-px bg-slate-200 dark:bg-white/10" />
-              <StatPill end={instrs}   suffix="+" label="Instructors" />
+              <StatPill end={instrs}   suffix="+" label={t("hero.instructors")} />
             </div>
           </div>
 
@@ -102,14 +103,14 @@ function Hero() {
                 <CheckCircle2 className="h-5 w-5 text-emerald-500" />
               </span>
               <div className="leading-tight">
-                <p className="text-[11px] text-slate-500">Course Completed</p>
-                <p className="font-display text-[14px] font-bold text-slate-900">User Experience Design</p>
+                <p className="text-[11px] text-slate-500">{t("hero.courseCompleted")}</p>
+                <p className="font-display text-[14px] font-bold text-slate-900">{t("hero.uxDesign")}</p>
               </div>
             </div>
 
             {/* Floating badge — bottom right (real student count) */}
             <div className="animate-floaty2 absolute -bottom-4 -right-6 z-20 rounded-2xl glass px-4 py-3 shadow-card">
-              <p className="text-[11px] text-slate-500">Total learners enrolled</p>
+              <p className="text-[11px] text-slate-500">{t("hero.totalLearners")}</p>
               <p className="flex items-center gap-1 font-display text-xl font-extrabold text-slate-900">
                 <Users className="h-4 w-4 text-blue-600" />
                 {students > 0 ? `${students.toLocaleString()}+` : "—"}
@@ -118,7 +119,7 @@ function Hero() {
 
             {/* Floating badge — right middle */}
             <div className="animate-floaty absolute right-0 top-1/2 z-20 -translate-y-1/2 translate-x-6 rounded-2xl glass px-4 py-3 shadow-card">
-              <p className="text-[11px] text-slate-500">Live Teaching</p>
+              <p className="text-[11px] text-slate-500">{t("hero.liveTeaching")}</p>
               <div className="mt-1 flex items-center gap-2">
                 <div className="flex -space-x-1.5">
                   {[BookOpen, GraduationCap].map((Icon, i) => (
@@ -127,7 +128,7 @@ function Hero() {
                     </span>
                   ))}
                 </div>
-                <p className="font-display text-[13px] font-bold text-slate-900">Starting soon</p>
+                <p className="font-display text-[13px] font-bold text-slate-900">{t("hero.startingSoon")}</p>
               </div>
             </div>
           </div>

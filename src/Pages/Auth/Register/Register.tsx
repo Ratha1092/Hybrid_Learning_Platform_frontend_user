@@ -4,6 +4,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { useAuthModal } from "../../../context/AuthModalContext";
 import { authService } from "../../../services/authService";
 import OAuthButtons from "../../../Components/OAuthButtons/OAuthButtons";
+import { useLanguage } from "../../../context/LanguageContext";
 import "./Register.css";
 
 interface FormState {
@@ -68,6 +69,7 @@ const OTP_TTL = 300;
 export default function Register() {
   const { login } = useAuth();
   const { close, openLogin } = useAuthModal();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from;
@@ -122,16 +124,16 @@ export default function Register() {
 
   const validate = (): FormErrors => {
     const e: FormErrors = {};
-    if (!form.name.trim()) e.name = "Name is required.";
-    if (!form.email.trim()) e.email = "Email is required.";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Invalid email format.";
-    if (!form.password) e.password = "Password is required.";
-    else if (form.password.length < 8) e.password = "Password must be at least 8 characters.";
-    else if (!/[A-Z]/.test(form.password)) e.password = "Password must contain at least one uppercase letter.";
-    else if (!/[0-9]/.test(form.password)) e.password = "Password must contain at least one number.";
-    else if (!/[^A-Za-z0-9]/.test(form.password)) e.password = "Password must contain at least one symbol (e.g. @, #, !).";
-    if (!form.password_confirmation) e.password_confirmation = "Please confirm your password.";
-    else if (form.password !== form.password_confirmation) e.password_confirmation = "Passwords do not match.";
+    if (!form.name.trim()) e.name = t("register.nameRequired");
+    if (!form.email.trim()) e.email = t("login.emailRequired");
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = t("register.invalidEmailFormat");
+    if (!form.password) e.password = t("login.passwordRequired");
+    else if (form.password.length < 8) e.password = t("register.passwordMinLength");
+    else if (!/[A-Z]/.test(form.password)) e.password = t("register.passwordUppercase");
+    else if (!/[0-9]/.test(form.password)) e.password = t("register.passwordNumber");
+    else if (!/[^A-Za-z0-9]/.test(form.password)) e.password = t("register.passwordSymbol");
+    if (!form.password_confirmation) e.password_confirmation = t("register.confirmPasswordRequired");
+    else if (form.password !== form.password_confirmation) e.password_confirmation = t("register.passwordsDoNotMatch");
     return e;
   };
 
@@ -157,7 +159,7 @@ export default function Register() {
       setTimeout(() => otpRefs.current[0]?.focus(), 80);
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } }).response?.data?.message
-        ?? "Failed to send verification code. Please try again.";
+        ?? t("register.failedSendCode");
       setSendError(msg);
       setErrors((e) => ({ ...e, email: msg }));
       setSendStatus("error");
@@ -193,7 +195,7 @@ export default function Register() {
   const handleVerify = async () => {
     if (submittingRef.current) return;
     const code = otp.join("");
-    if (code.length < OTP_LENGTH) { setOtpError("Please enter the full 6-digit code."); return; }
+    if (code.length < OTP_LENGTH) { setOtpError(t("register.otpFullCode")); return; }
 
     submittingRef.current = true;
     setOtpStatus("loading");
@@ -207,7 +209,7 @@ export default function Register() {
       submittingRef.current = false;
       setOtpStatus("idle");
       const msg = (err as { response?: { data?: { message?: string } } }).response?.data?.message
-        ?? "OTP verification failed. Please try again.";
+        ?? t("register.otpVerifyFailed");
       setOtpError(`[OTP] ${msg}`);
       return;
     }
@@ -215,7 +217,7 @@ export default function Register() {
     if (!otpData.success) {
       submittingRef.current = false;
       setOtpStatus("idle");
-      setOtpError(`[OTP] ${otpData.message || "Verification failed."}`);
+      setOtpError(`[OTP] ${otpData.message || t("register.verificationFailed")}`);
       return;
     }
 
@@ -234,11 +236,11 @@ export default function Register() {
       const errData = res?.data;
 
       if (res?.status === 400) {
-        setRegistrationDisabled(errData?.message ?? "Registration is currently disabled.");
+        setRegistrationDisabled(errData?.message ?? t("register.registrationDisabledDefault"));
         return;
       }
 
-      let msg = errData?.message ?? "Registration failed after verification.";
+      let msg = errData?.message ?? t("register.registrationFailedAfterVerification");
       if (errData?.errors) {
         const details = Object.entries(errData.errors)
           .map(([field, msgs]) => `${field}: ${(msgs as string[]).join(", ")}`)
@@ -269,49 +271,49 @@ export default function Register() {
 
   const leftContent = step === "form" ? (
     <>
-      <div className="rg-tag">✦ Get started free</div>
-      <h2 className="rg-how-title">How registration works</h2>
-      <p className="rg-how-intro">Create your account in three simple steps — takes less than 2 minutes.</p>
+      <div className="rg-tag">{t("register.getStartedTag")}</div>
+      <h2 className="rg-how-title">{t("register.howTitle")}</h2>
+      <p className="rg-how-intro">{t("register.howIntro")}</p>
 
       <div className="rg-how-steps">
         <div className="rg-how-step">
           <div className="rg-how-num">1</div>
           <div className="rg-how-text">
-            <div className="rg-how-step-title">Fill in your details</div>
-            <div className="rg-how-step-desc">Enter your full name, email address, and choose a strong password.</div>
+            <div className="rg-how-step-title">{t("register.step1Title")}</div>
+            <div className="rg-how-step-desc">{t("register.step1Desc")}</div>
           </div>
         </div>
         <div className="rg-how-connector" />
         <div className="rg-how-step">
           <div className="rg-how-num">2</div>
           <div className="rg-how-text">
-            <div className="rg-how-step-title">Verify your email</div>
-            <div className="rg-how-step-desc">We'll send a 6-digit code to your inbox. Enter it to confirm your identity.</div>
+            <div className="rg-how-step-title">{t("register.step2Title")}</div>
+            <div className="rg-how-step-desc">{t("register.step2Desc")}</div>
           </div>
         </div>
         <div className="rg-how-connector" />
         <div className="rg-how-step">
           <div className="rg-how-num">3</div>
           <div className="rg-how-text">
-            <div className="rg-how-step-title">Start learning</div>
-            <div className="rg-how-step-desc">Your account is ready. Browse courses and enroll instantly — free forever.</div>
+            <div className="rg-how-step-title">{t("register.step3Title")}</div>
+            <div className="rg-how-step-desc">{t("register.step3Desc")}</div>
           </div>
         </div>
       </div>
     </>
   ) : (
     <>
-      <div className="rg-tag">✦ One step left</div>
+      <div className="rg-tag">{t("register.oneStepLeftTag")}</div>
       <h2 className="rg-left-heading">
         <span className="rg-c4">verify</span><span className="rg-c3">()</span><span className="rg-c2">;</span><br />
         <span className="rg-c1">confirm</span><span className="rg-c3">()</span><span className="rg-c2">;</span><br />
         <span className="rg-c4">join</span><span className="rg-c3">()</span><span className="rg-c2">;</span>
       </h2>
-      <p className="rg-left-desc">Enter the 6-digit code we sent to your email to confirm your identity before creating your account.</p>
+      <p className="rg-left-desc">{t("register.otpLeftDesc")}</p>
       <div className="rg-otp-info">
-        <div className="rg-otp-info__row">🔐 Code expires in {formatTime(timeLeft)}</div>
-        <div className="rg-otp-info__row">📧 Sent to {form.email}</div>
-        <div className="rg-otp-info__row">🔄 Single-use code</div>
+        <div className="rg-otp-info__row">{t("register.codeExpiresIn")} {formatTime(timeLeft)}</div>
+        <div className="rg-otp-info__row">{t("register.sentTo")} {form.email}</div>
+        <div className="rg-otp-info__row">{t("register.singleUseCode")}</div>
       </div>
     </>
   );
@@ -331,11 +333,11 @@ export default function Register() {
             <div className="rg-brand__logo">HL</div>
             <div>
               <div className="rg-brand__name">Hybrid Learning</div>
-              <div className="rg-brand__sub">Learning Platform</div>
+              <div className="rg-brand__sub">{t("login.brandSub")}</div>
             </div>
           </div>
           <div className="rg-left-content">{leftContent}</div>
-          <p className="rg-left-footer">🛡 Secure · Free forever · No credit card</p>
+          <p className="rg-left-footer">{t("register.secureFooter")}</p>
         </div>
 
         {/* Right panel */}
@@ -344,36 +346,36 @@ export default function Register() {
           {/* ══════════════ STEP 1 — FORM ══════════════ */}
           {step === "form" && (
             <>
-              <h1 className="rg-title">Create account_</h1>
-              <p className="rg-subtitle">Fill in your details — we'll send a code to verify your email</p>
+              <h1 className="rg-title">{t("register.createAccountTitle")}</h1>
+              <p className="rg-subtitle">{t("register.formSubtitle")}</p>
 
               {sendStatus === "error" && (
-                <div className="rg-alert rg-alert--error">⚠ {sendError || "Failed to send verification code. Please try again."}</div>
+                <div className="rg-alert rg-alert--error">⚠ {sendError || t("register.failedSendCode")}</div>
               )}
 
               <div className="rg-field">
-                <label className="rg-label">Full name</label>
+                <label className="rg-label">{t("register.fullName")}</label>
                 <div className={`rg-input-row ${errors.name ? "rg-input-row--err" : ""}`}>
                   <span className="rg-input-icon">👤</span>
-                  <input name="name" type="text" placeholder="Your Full Name" value={form.name} onChange={handleChange} className="rg-input" />
+                  <input name="name" type="text" placeholder={t("register.namePlaceholder")} value={form.name} onChange={handleChange} className="rg-input" />
                 </div>
                 {errors.name && <p className="rg-err-msg">{errors.name}</p>}
               </div>
 
               <div className="rg-field">
-                <label className="rg-label">Email address</label>
+                <label className="rg-label">{t("register.emailAddress")}</label>
                 <div className={`rg-input-row ${errors.email ? "rg-input-row--err" : ""}`}>
                   <span className="rg-input-icon"><IconMail /></span>
-                  <input name="email" type="email" placeholder="Your Email Address" value={form.email} onChange={handleChange} className="rg-input" />
+                  <input name="email" type="email" placeholder={t("register.emailPlaceholder")} value={form.email} onChange={handleChange} className="rg-input" />
                 </div>
                 {errors.email && <p className="rg-err-msg">{errors.email}</p>}
               </div>
 
               <div className="rg-field">
-                <label className="rg-label">Password</label>
+                <label className="rg-label">{t("auth.password")}</label>
                 <div className={`rg-input-row ${errors.password ? "rg-input-row--err" : ""}`}>
                   <span className="rg-input-icon"><IconLock /></span>
-                  <input name="password" type={showPass ? "text" : "password"} placeholder="Min. 8 characters" value={form.password} onChange={handleChange} className="rg-input" />
+                  <input name="password" type={showPass ? "text" : "password"} placeholder={t("register.passwordPlaceholder")} value={form.password} onChange={handleChange} className="rg-input" />
                   <button type="button" className="rg-eye" onClick={() => setShowPass((v) => !v)}>
                     {showPass ? <IconEyeOff /> : <IconEye />}
                   </button>
@@ -388,15 +390,15 @@ export default function Register() {
                     <span className="rg-strength-lbl" style={{ color: strengthColor }}>{strength.label}</span>
                   </div>
                 )}
-                <p className="rg-hint">Must include <strong>uppercase</strong>, <strong>number</strong>, and <strong>special character</strong>.</p>
+                <p className="rg-hint">{t("register.hintMustInclude")} <strong>{t("register.hintUppercase")}</strong>, <strong>{t("register.hintNumber")}</strong>, {t("register.hintAnd")} <strong>{t("register.hintSpecial")}</strong>.</p>
                 {errors.password && <p className="rg-err-msg">{errors.password}</p>}
               </div>
 
               <div className="rg-field">
-                <label className="rg-label">Confirm password</label>
+                <label className="rg-label">{t("register.confirmPassword")}</label>
                 <div className={`rg-input-row ${errors.password_confirmation ? "rg-input-row--err" : ""}`}>
                   <span className="rg-input-icon"><IconLock /></span>
-                  <input name="password_confirmation" type={showConfirm ? "text" : "password"} placeholder="Repeat password" value={form.password_confirmation} onChange={handleChange} className="rg-input" />
+                  <input name="password_confirmation" type={showConfirm ? "text" : "password"} placeholder={t("register.confirmPlaceholder")} value={form.password_confirmation} onChange={handleChange} className="rg-input" />
                   <button type="button" className="rg-eye" onClick={() => setShowConfirm((v) => !v)}>
                     {showConfirm ? <IconEyeOff /> : <IconEye />}
                   </button>
@@ -407,30 +409,30 @@ export default function Register() {
               <div className="rg-terms">
                 <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} id="terms" />
                 <label htmlFor="terms">
-                  I agree to the <Link to="/terms">Terms of Service</Link> and <Link to="/privacy">Privacy Policy</Link>
+                  {t("register.termsBefore")} <Link to="/terms">{t("register.termsOfService")}</Link> {t("register.termsAnd")} <Link to="/privacy">{t("register.privacyPolicy")}</Link>
                 </label>
               </div>
 
               <button className="rg-btn" onClick={handleSendOtp} disabled={sendStatus === "loading" || !agreed}>
-                {sendStatus === "loading" ? <span className="rg-spinner" /> : "Send verification code →"}
+                {sendStatus === "loading" ? <span className="rg-spinner" /> : t("register.sendCode")}
               </button>
 
               <OAuthButtons from={from} onSuccess={close} onError={(msg) => { setSendStatus("error"); setSendError(msg); }} />
 
-              <p className="rg-footer">Already have an account? <Link to="/PageLogin">Sign in</Link></p>
+              <p className="rg-footer">{t("register.alreadyHaveAccount")} <Link to="/PageLogin">{t("register.signIn")}</Link></p>
             </>
           )}
 
           {/* ══════════════ STEP 2 — OTP ══════════════ */}
           {step === "otp" && (
             <>
-              <h1 className="rg-title">Check your email_</h1>
+              <h1 className="rg-title">{t("register.checkEmailTitle")}</h1>
               <p className="rg-subtitle">
-                We sent a 6-digit code to <strong>{form.email}</strong>
+                {t("register.weSentCode")} <strong>{form.email}</strong>
               </p>
 
               {otpStatus === "success" && (
-                <div className="rg-alert rg-alert--success">✓ Email verified! Creating your account…</div>
+                <div className="rg-alert rg-alert--success">{t("register.emailVerifiedCreating")}</div>
               )}
 
               {registrationDisabled && (
@@ -459,9 +461,9 @@ export default function Register() {
 
               <div className="rg-otp-timer">
                 {timeLeft > 0 ? (
-                  <span>Code expires in <strong>{formatTime(timeLeft)}</strong></span>
+                  <span>{t("register.codeExpiresInOtp")} <strong>{formatTime(timeLeft)}</strong></span>
                 ) : (
-                  <span className="rg-otp-timer--expired">Code expired</span>
+                  <span className="rg-otp-timer--expired">{t("register.codeExpired")}</span>
                 )}
               </div>
 
@@ -470,12 +472,12 @@ export default function Register() {
                 onClick={handleVerify}
                 disabled={otpStatus === "loading" || otpStatus === "success" || !!registrationDisabled || otp.join("").length < OTP_LENGTH}
               >
-                {otpStatus === "loading" ? <span className="rg-spinner" /> : "Verify & Create Account →"}
+                {otpStatus === "loading" ? <span className="rg-spinner" /> : t("register.verifyCreateAccount")}
               </button>
 
               <div className="rg-otp-resend">
                 {resendStatus === "sent" ? (
-                  <span className="rg-otp-resend--ok">✓ New code sent!</span>
+                  <span className="rg-otp-resend--ok">{t("register.newCodeSent")}</span>
                 ) : (
                   <button
                     className="rg-otp-resend__btn"
@@ -483,17 +485,17 @@ export default function Register() {
                     disabled={resendStatus === "sending" || resendCooldown > 0}
                   >
                     {resendStatus === "sending"
-                      ? "Sending…"
+                      ? t("register.sendingDots")
                       : resendCooldown > 0
-                      ? `Resend in ${resendCooldown}s`
-                      : "Resend code"}
+                      ? `${t("register.resendIn")} ${resendCooldown}s`
+                      : t("register.resendCode")}
                   </button>
                 )}
               </div>
 
               <p className="rg-login-link">
-                Already have an account?{" "}
-                <button className="rg-link-btn" onClick={openLogin}>Sign in</button>
+                {t("register.alreadyHaveAccount")}{" "}
+                <button className="rg-link-btn" onClick={openLogin}>{t("register.signIn")}</button>
               </p>
             </>
           )}

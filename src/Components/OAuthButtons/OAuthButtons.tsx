@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { authService } from "../../services/authService";
+import { useLanguage } from "../../context/LanguageContext";
 import "./OAuthButtons.css";
 
 const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID as string;
@@ -25,10 +26,11 @@ let googleInitialized = false;
 export default function OAuthButtons({ onError, onSuccess, from }: Props) {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [googleLoading, setGoogleLoading] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
-  const latestRef = useRef({ onError, onSuccess, from, login, navigate, setGoogleLoading });
-  latestRef.current = { onError, onSuccess, from, login, navigate, setGoogleLoading };
+  const latestRef = useRef({ onError, onSuccess, from, login, navigate, setGoogleLoading, t });
+  latestRef.current = { onError, onSuccess, from, login, navigate, setGoogleLoading, t };
 
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return;
@@ -40,7 +42,7 @@ export default function OAuthButtons({ onError, onSuccess, from }: Props) {
         google.accounts.id.initialize({
           client_id: GOOGLE_CLIENT_ID,
           callback: async (response) => {
-            const { onError, onSuccess, from, login, navigate, setGoogleLoading } = latestRef.current;
+            const { onError, onSuccess, from, login, navigate, setGoogleLoading, t } = latestRef.current;
             setGoogleLoading(true);
             try {
               const payload = JSON.parse(atob(response.credential.split(".")[1])) as {
@@ -54,13 +56,13 @@ export default function OAuthButtons({ onError, onSuccess, from }: Props) {
                 name: payload.name,
                 avatar: payload.picture ?? null,
               });
-              if (!data.success) { onError?.(data.message || "Google sign-in failed."); return; }
+              if (!data.success) { onError?.(data.message || t("oauth.googleSignInFailed")); return; }
               login(data.data.user);
               onSuccess?.();
               navigate(from ?? "/", { replace: true });
             } catch (err: unknown) {
               const msg = (err as { response?: { data?: { message?: string } } }).response?.data?.message
-                ?? "Google sign-in failed. Please try again.";
+                ?? t("oauth.googleSignInFailedRetry");
               onError?.(msg);
             } finally {
               setGoogleLoading(false);
@@ -108,7 +110,7 @@ export default function OAuthButtons({ onError, onSuccess, from }: Props) {
     <div className="oauth-wrap">
       <div className="oauth-divider">
         <span className="oauth-divider__line" />
-        <span className="oauth-divider__text">or continue with</span>
+        <span className="oauth-divider__text">{t("oauth.orContinueWith")}</span>
         <span className="oauth-divider__line" />
       </div>
 

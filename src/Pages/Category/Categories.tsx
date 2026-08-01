@@ -3,6 +3,7 @@ import { ArrowUpRight, ArrowRight, BookOpen, Code2, PenTool, FlaskConical, Camer
 import { useNavigate } from "react-router-dom";
 import { categoryService, type Category } from "../../services/categoryService";
 import { Reveal } from "../../utils/anim";
+import { useLanguage } from "../../context/LanguageContext";
 
 const ICON_MAP: Record<string, { Icon: React.ElementType; tint: string; ic: string }> = {
   programming: { Icon: Code2,         tint: "from-blue-500/15 to-blue-500/5",     ic: "text-blue-600" },
@@ -37,6 +38,7 @@ export default function Categories() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading]       = useState(true);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   useEffect(() => {
     categoryService.getAll()
@@ -50,19 +52,19 @@ export default function Categories() {
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
         <Reveal className="flex flex-col items-center justify-between gap-6 sm:flex-row sm:items-end">
           <div>
-            <p className="mb-2 text-sm font-semibold brand-blue">Browse by category</p>
+            <p className="mb-2 text-sm font-semibold brand-blue">{t("categories.tag")}</p>
             <h2 className="font-display text-[32px] font-extrabold ink sm:text-[40px]">
-              Explore top categories
+              {t("categories.title")}
             </h2>
             <p className="mt-2 text-[15px] muted2">
-              From code to creativity — find the right track for your goals.
+              {t("categories.desc")}
             </p>
           </div>
           <button
             onClick={() => navigate("/categories")}
             className="group inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold ink shadow-e1 transition-colors hover:border-blue-300 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-500 dark:hover:text-blue-400"
           >
-            View all categories <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            {t("categories.viewAll")} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </button>
         </Reveal>
 
@@ -91,7 +93,7 @@ export default function Categories() {
                     </span>
                     <div className="min-w-0 flex-1 text-left">
                       <h3 className="font-display text-[15px] font-bold leading-tight ink">{cat.name}</h3>
-                      <p className="text-[13px] muted2">{cat.courses_count} courses</p>
+                      <p className="text-[13px] muted2">{cat.courses_count} {cat.courses_count !== 1 ? t("search.coursePlural") : t("search.courseSingular")}</p>
                     </div>
                     <ArrowUpRight className="h-4 w-4 shrink-0 text-slate-300 transition-all duration-300 group-hover:text-blue-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 dark:text-slate-600" />
                   </button>

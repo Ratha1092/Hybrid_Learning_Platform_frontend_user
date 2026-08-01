@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BookOpen, Code2, PenTool, FlaskConical, Camera, DollarSign, Video, Award, TrendingUp, Users, MessageSquare } from "lucide-react";
 import { categoryService, type Category } from "../../services/categoryService";
+import { useLanguage } from "../../context/LanguageContext";
 import "./Categories.css";
 import "./PageCategories.css";
 
@@ -29,22 +30,23 @@ export default function PageCategories() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   useEffect(() => {
     categoryService
       .getAll()
       .then(({ data }) => setCategories(data.data ?? []))
-      .catch(() => setError("Failed to load categories. Please try again."))
+      .catch(() => setError(t("categories.loadFailed")))
       .finally(() => setLoading(false));
-  }, []);
+  }, [t]);
 
   return (
     <>
       {/* Page hero */}
       <div className="pc-hero">
         <div className="container">
-          <h1 className="pc-title">All Categories</h1>
-          <p className="pc-subtitle">Browse every subject area — find your next skill.</p>
+          <h1 className="pc-title">{t("categories.allTitle")}</h1>
+          <p className="pc-subtitle">{t("categories.allSubtitle")}</p>
         </div>
       </div>
 
@@ -54,28 +56,28 @@ export default function PageCategories() {
           {loading && (
             <div className="pc-state">
               <div className="pc-spinner" />
-              <p>Loading categories…</p>
+              <p>{t("categories.loading")}</p>
             </div>
           )}
 
           {!loading && error && (
             <div className="pc-state pc-state--error">
               <p>{error}</p>
-              <button className="btn btn-primary" onClick={() => { setError(null); setLoading(true); categoryService.getAll().then(({ data }) => setCategories(data.data ?? [])).catch(() => setError("Failed to load categories. Please try again.")).finally(() => setLoading(false)); }}>
-                Try again
+              <button className="btn btn-primary" onClick={() => { setError(null); setLoading(true); categoryService.getAll().then(({ data }) => setCategories(data.data ?? [])).catch(() => setError(t("categories.loadFailed"))).finally(() => setLoading(false)); }}>
+                {t("categories.tryAgain")}
               </button>
             </div>
           )}
 
           {!loading && !error && categories.length === 0 && (
             <div className="pc-state">
-              <p>No categories found.</p>
+              <p>{t("categories.noCategories")}</p>
             </div>
           )}
 
           {!loading && !error && categories.length > 0 && (
             <>
-              <p className="pc-count">{categories.length} categories available</p>
+              <p className="pc-count">{categories.length} {t("categories.countAvailable")}</p>
               <div className="categories-grid">
                 {categories.map((category) => {
                   const Icon = getIcon(category);
@@ -93,7 +95,7 @@ export default function PageCategories() {
                       </div>
                       <div className="cat-body">
                         <div className="cat-label">{category.name}</div>
-                        <div className="cat-count">{category.courses_count} Courses</div>
+                        <div className="cat-count">{category.courses_count} {t("hero.courses")}</div>
                       </div>
                     </div>
                   );

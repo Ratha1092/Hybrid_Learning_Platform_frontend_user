@@ -4,6 +4,7 @@ import { ArrowRight, Star, Clock, BookOpen, BarChart3, Heart, Award } from "luci
 import { courseService, type Course } from "../../services/courseService";
 import { categoryService, type Category } from "../../services/categoryService";
 import { useWishlist } from "../../context/WishlistContext";
+import { useLanguage } from "../../context/LanguageContext";
 import "./Page_Courses.css";
 
 const SKELETON_COUNT = 6;
@@ -36,6 +37,7 @@ function SkeletonCard() {
 
 function Courses() {
   const { toggle, isWishlisted } = useWishlist();
+  const { t } = useLanguage();
   const [courses, setCourses] = useState<Course[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,7 +71,7 @@ function Courses() {
       }
       setCourses(list);
     } catch (err: unknown) {
-      setError((err as { message?: string }).message ?? "Failed to load courses.");
+      setError((err as { message?: string }).message ?? t("coursesPage.loadFailedDefault"));
     }
     setLoading(false);
   };
@@ -106,7 +108,7 @@ function Courses() {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
-          Browse all courses
+          {t("coursesPage.browseAll")}
         </button>
       )}
 
@@ -115,14 +117,14 @@ function Courses() {
         <div>
           <h1 className="courses-header__title">
             {instructorName
-              ? `Courses by ${instructorName}`
+              ? `${t("coursesPage.coursesBy")} ${instructorName}`
               : category
-              ? `${categoryName ?? category} Courses`
-              : "All Courses"}
+              ? `${categoryName ?? category} ${t("coursesPage.coursesSuffix")}`
+              : t("coursesPage.allCourses")}
             <span className="courses-header__accent">✦</span>
           </h1>
           <p className="courses-header__sub">
-            {loading ? "Loading..." : `${filtered.length} course${filtered.length !== 1 ? "s" : ""} available`}
+            {loading ? t("coursesPage.loading") : `${filtered.length} ${filtered.length !== 1 ? t("search.coursePlural") : t("search.courseSingular")} ${t("coursesPage.available")}`}
           </p>
         </div>
       </div>
@@ -134,7 +136,7 @@ function Courses() {
             className={`cat-chip${!category ? " cat-chip--active" : ""}`}
             onClick={() => navigate("/courses")}
           >
-            All
+            {t("coursesPage.all")}
           </button>
           {categories.map((cat) => (
             <button
@@ -156,10 +158,10 @@ function Courses() {
         <div className="error-banner">
           <span className="error-banner__icon">⚠</span>
           <div>
-            <strong>Failed to load</strong>
+            <strong>{t("coursesPage.failedToLoad")}</strong>
             <p>{error}</p>
           </div>
-          <button className="error-banner__retry" onClick={() => load(search)}>Retry</button>
+          <button className="error-banner__retry" onClick={() => load(search)}>{t("coursesPage.retry")}</button>
         </div>
       )}
 
@@ -170,7 +172,7 @@ function Courses() {
           <span className="filters__search-icon">⌕</span>
           <input
             className="filters__search"
-            placeholder="Search courses..."
+            placeholder={t("coursesPage.searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -186,10 +188,10 @@ function Courses() {
             value={level}
             onChange={(e) => setLevel(e.target.value)}
           >
-            <option value="All">All Levels</option>
-            <option value="beginner">Beginner</option>
-            <option value="intermediate">Intermediate</option>
-            <option value="advanced">Advanced</option>
+            <option value="All">{t("coursesPage.allLevels")}</option>
+            <option value="beginner">{t("coursesPage.beginner")}</option>
+            <option value="intermediate">{t("coursesPage.intermediate")}</option>
+            <option value="advanced">{t("coursesPage.advanced")}</option>
           </select>
           <svg className="filter-select__chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M6 9l6 6 6-6" />
@@ -205,7 +207,7 @@ function Courses() {
             <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" />
             <path d="M12 6v12M8 10h6a2 2 0 0 1 0 4H8" />
           </svg>
-          Free Courses
+          {t("coursesPage.freeCourses")}
         </button>
       </div>
 
@@ -216,9 +218,9 @@ function Courses() {
         ) : filtered.length === 0 ? (
           <div className="empty-state">
             <span className="empty-state__icon">📚</span>
-            <p>{search || level !== "All" || freeOnly ? "No courses match your filters." : "No courses available."}</p>
+            <p>{search || level !== "All" || freeOnly ? t("coursesPage.noMatchFilters") : t("coursesPage.noCoursesAvailable")}</p>
             <button className="empty-state__clear" onClick={clearFilters}>
-              Clear filters
+              {t("coursesPage.clearFilters")}
             </button>
           </div>
         ) : (
@@ -245,12 +247,12 @@ function Courses() {
                     </div>
                   )}
                   <span className={`absolute left-3 top-3 rounded-lg px-2.5 py-1 text-[11px] font-bold text-white shadow ${isFree ? "bg-emerald-500" : "bg-brand"}`}>
-                    {isFree ? "Free" : `$${course.price}`}
+                    {isFree ? t("search.free") : `$${course.price}`}
                   </span>
                   <button
                     onClick={(e) => { e.stopPropagation(); toggle({ id: course.id, slug: course.slug, title: course.title, thumbnail_url: course.thumbnail_url, price: course.price, level: course.level, instructor: course.instructor ?? null }); }}
                     className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full glass text-slate-600 transition-colors hover:text-rose-500"
-                    aria-label="Add to wishlist"
+                    aria-label={t("coursesPage.addToWishlist")}
                   >
                     <Heart className={`h-4 w-4 ${isWishlisted(course.id) ? "fill-rose-500 text-rose-500" : ""}`} />
                   </button>
@@ -265,7 +267,7 @@ function Courses() {
                     <div className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-600">
                       {(course.instructor?.name ?? "?").charAt(0).toUpperCase()}
                     </div>
-                    <span className="text-[13px] muted2 truncate">{course.instructor?.name ?? "Instructor"}</span>
+                    <span className="text-[13px] muted2 truncate">{course.instructor?.name ?? t("detailCourse.instructor")}</span>
                     {(course.reviews_count ?? 0) > 0 && (
                       <span className="ml-auto flex items-center gap-1 text-[13px] font-bold text-amber-500">
                         <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
@@ -279,24 +281,24 @@ function Courses() {
                   </h3>
 
                   <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12.5px] muted2">
-                    <span className="flex items-center gap-1.5"><BookOpen className="h-3.5 w-3.5 brand-blue" /> {course.sections_count ?? 0} sections</span>
-                    <span className="flex items-center gap-1.5"><BarChart3 className="h-3.5 w-3.5 brand-blue" /> {course.students_count ?? 0} students</span>
+                    <span className="flex items-center gap-1.5"><BookOpen className="h-3.5 w-3.5 brand-blue" /> {course.sections_count ?? 0} {t("detailCourse.sections")}</span>
+                    <span className="flex items-center gap-1.5"><BarChart3 className="h-3.5 w-3.5 brand-blue" /> {course.students_count ?? 0} {t("topInstructors.students")}</span>
                     {course.language && <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 brand-blue" /> {course.language}</span>}
                   </div>
 
                   <div className="mt-5 flex items-center justify-between border-t border-slate-200 pt-4 dark:border-slate-700">
                     <span className="font-display text-xl font-extrabold ink">
-                      {isFree ? "Free" : `$${course.price}`}
+                      {isFree ? t("search.free") : `$${course.price}`}
                     </span>
                     <button
                       onClick={(e) => { e.stopPropagation(); navigate(`/courses/${slug}`); }}
                       className="inline-flex items-center gap-1 rounded-lg bg-brand px-4 py-2 text-[13px] font-semibold text-white transition-all hover:gap-2 hover:bg-blue-700"
                     >
-                      Enroll <ArrowRight className="h-3.5 w-3.5" />
+                      {t("coursesPage.enrollBtn")} <ArrowRight className="h-3.5 w-3.5" />
                     </button>
                   </div>
                   <p className="mt-3 flex items-center gap-1.5 text-[11.5px] muted2">
-                    <Award className="h-3.5 w-3.5 text-emerald-500" /> Certificate included
+                    <Award className="h-3.5 w-3.5 text-emerald-500" /> {t("coursesPage.certificateIncluded")}
                   </p>
                 </div>
               </div>

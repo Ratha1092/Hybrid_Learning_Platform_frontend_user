@@ -1,4 +1,5 @@
 import { Reveal } from "../../utils/anim";
+import { useLanguage } from "../../context/LanguageContext";
 
 const partners = [
   { name: "Google",  color: "from-blue-500 to-blue-600" },
@@ -10,12 +11,13 @@ const partners = [
 ];
 
 export default function TrustLogos() {
+  const { t } = useLanguage();
   return (
     <section className="border-y border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
       <div className="mx-auto max-w-[1400px] px-4 py-10 sm:px-6">
         <Reveal>
           <p className="text-center text-[12px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-600">
-            Learners hired at and certified with
+            {t("trustLogos.tag")}
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 sm:gap-x-14">
             {partners.map((p) => (

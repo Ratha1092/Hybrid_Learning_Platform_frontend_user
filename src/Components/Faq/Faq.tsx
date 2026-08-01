@@ -1,24 +1,26 @@
 import { useState } from "react";
 import { Plus, Minus } from "lucide-react";
 import { Reveal } from "../../utils/anim";
-
-const faqs = [
-  { q: "Do I get a certificate after completing a course?", a: "Yes. Every course includes a verifiable certificate of completion you can share on LinkedIn or with employers." },
-  { q: "Can I learn at my own pace?", a: "Absolutely. All courses offer lifetime access, so you can start, pause and resume whenever it suits your schedule." },
-  { q: "How do I enroll in a course?", a: "Browse our catalog, pick a course, and click Enroll. Free courses are instantly accessible; paid courses go through a secure checkout." },
-  { q: "What payment methods are accepted?", a: "We accept major credit and debit cards, PayPal, and various regional payment methods depending on your location." },
-  { q: "Can I become an instructor?", a: "Yes! Apply through the 'Become an Instructor' page. Our team reviews applications and helps you get your first course live." },
-];
+import { useLanguage } from "../../context/LanguageContext";
 
 export default function Faq() {
   const [open, setOpen] = useState<number | null>(0);
+  const { t } = useLanguage();
+
+  const faqs = [
+    { q: t("faq.q1"), a: t("faq.a1") },
+    { q: t("faq.q2"), a: t("faq.a2") },
+    { q: t("faq.q3"), a: t("faq.a3") },
+    { q: t("faq.q4"), a: t("faq.a4") },
+    { q: t("faq.q5"), a: t("faq.a5") },
+  ];
 
   return (
     <section className="mx-auto max-w-[820px] px-4 py-20 sm:px-6 md:py-28">
       <Reveal className="text-center">
-        <p className="mb-2 text-sm font-semibold brand-blue">FAQ</p>
+        <p className="mb-2 text-sm font-semibold brand-blue">{t("faq.tag")}</p>
         <h2 className="font-display text-[32px] font-extrabold ink sm:text-[40px]">
-          Frequently asked questions
+          {t("faq.title")}
         </h2>
       </Reveal>
 

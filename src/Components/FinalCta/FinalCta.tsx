@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useAuthModal } from "../../context/AuthModalContext";
 import { Reveal } from "../../utils/anim";
 import { usePlatformStats } from "../../utils/usePlatformStats";
+import { useLanguage } from "../../context/LanguageContext";
 
 export default function FinalCta() {
   const { isAuthenticated } = useAuth();
@@ -11,6 +12,7 @@ export default function FinalCta() {
   const navigate = useNavigate();
   const stats = usePlatformStats();
   const students = stats?.total_students ?? 30000;
+  const { t } = useLanguage();
 
   return (
     <section className="mx-auto max-w-[1400px] px-4 pb-20 sm:px-6 md:pb-28">
@@ -22,14 +24,13 @@ export default function FinalCta() {
           </div>
           <div className="relative">
             <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-[13px] font-semibold text-white">
-              <Sparkles className="h-3.5 w-3.5" /> Start your journey today
+              <Sparkles className="h-3.5 w-3.5" /> {t("finalCta.tag")}
             </span>
             <h2 className="mx-auto mt-5 max-w-2xl font-display text-[32px] font-extrabold leading-tight text-white sm:text-[46px]">
-              Ready to master skills that get you hired?
+              {t("finalCta.title")}
             </h2>
             <p className="mx-auto mt-4 max-w-lg text-[15px] text-blue-50">
-              Join {students.toLocaleString()}+ learners building real, career-changing skills — with
-              lifetime access and a 30-day money-back guarantee.
+              {t("finalCta.descBefore")} {students.toLocaleString()}+{t("finalCta.descAfter")}
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               {isAuthenticated ? (
@@ -37,21 +38,21 @@ export default function FinalCta() {
                   onClick={() => navigate("/courses")}
                   className="inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 text-sm font-semibold brand-blue transition-transform hover:-translate-y-0.5"
                 >
-                  Browse Courses <ArrowRight className="h-4 w-4" />
+                  {t("finalCta.browseCourses")} <ArrowRight className="h-4 w-4" />
                 </button>
               ) : (
                 <button
                   onClick={openRegister}
                   className="inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 text-sm font-semibold brand-blue transition-transform hover:-translate-y-0.5"
                 >
-                  Get Started Free <ArrowRight className="h-4 w-4" />
+                  {t("hero.getStartedFree")} <ArrowRight className="h-4 w-4" />
                 </button>
               )}
               <button
                 onClick={() => navigate("/courses")}
                 className="rounded-xl border border-white/40 px-7 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
               >
-                Browse Courses
+                {t("finalCta.browseCourses")}
               </button>
             </div>
           </div>

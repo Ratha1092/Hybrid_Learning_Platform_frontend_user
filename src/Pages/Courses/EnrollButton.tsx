@@ -7,6 +7,7 @@ import { orderService } from "../../services/orderService";
 import { billingService, type BillingAddress } from "../../services/billingService";
 import { useAuthModal } from "../../context/AuthModalContext";
 import { useAuth } from "../../context/AuthContext";
+import { useLanguage } from "../../context/LanguageContext";
 
 type Step = "idle" | "loading" | "review" | "qr" | "done" | "error";
 type CouponStatus = "idle" | "checking" | "valid" | "invalid";
@@ -46,6 +47,7 @@ export default function EnrollButton({ course }: Props) {
   const [showAddressSelect, setShowAddressSelect] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const { openLogin } = useAuthModal();
+  const { t } = useLanguage();
 
   const isEnrolled = !!course.is_enrolled;
   const isExpired = !!course.access_expired;
@@ -98,7 +100,7 @@ export default function EnrollButton({ course }: Props) {
           setStep("done");
         } else if (pay.status === "expired" || pay.status === "failed" || (typeof pay.expires_in_seconds === "number" && pay.expires_in_seconds <= 0)) {
           stopPolling();
-          setErrorMsg("Payment expired or failed.");
+          setErrorMsg(t("enroll.paymentExpiredFailed"));
           setStep("error");
         } else if (!hasQr && pay.qr_code_image) {
           // QR just arrived — restart with slower interval
@@ -130,7 +132,7 @@ export default function EnrollButton({ course }: Props) {
     try {
       const { data } = await paymentService.checkout(course.id, couponCode, selectedAddressId);
       if (!data.success) {
-        const msg = data.message ?? "Failed to create order.";
+        const msg = data.message ?? t("enroll.failedCreateOrder");
         if (couponCode) { setCheckoutError(msg); setStep("review"); }
         else { setErrorMsg(msg); setStep("error"); }
         return;
@@ -151,7 +153,7 @@ export default function EnrollButton({ course }: Props) {
 
       const pay = data.data.payment;
       if (!pay) {
-        setErrorMsg("Payment data missing.");
+        setErrorMsg(t("enroll.paymentDataMissing"));
         setStep("error");
         return;
       }
@@ -161,7 +163,7 @@ export default function EnrollButton({ course }: Props) {
       startPolling(pay.id, !!pay.qr_code_image);
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } }; message?: string };
-      const msg = e.response?.data?.message ?? e.message ?? "Network error.";
+      const msg = e.response?.data?.message ?? e.message ?? t("enroll.networkError");
       if (couponCode) { setCheckoutError(msg); setStep("review"); }
       else { setErrorMsg(msg); setStep("error"); }
     }
@@ -204,7 +206,7 @@ export default function EnrollButton({ course }: Props) {
       const e = err as { response?: { data?: { message?: string } }; message?: string };
       setCouponResult(null);
       setCouponStatus("invalid");
-      setCouponError(e.response?.data?.message ?? "Invalid or expired coupon.");
+      setCouponError(e.response?.data?.message ?? t("enroll.invalidExpiredCoupon"));
     }
   };
 
@@ -227,7 +229,7 @@ export default function EnrollButton({ course }: Props) {
       await orderService.downloadReceipt(orderInfo.id, orderInfo.order_number);
       setReceiptStatus("idle");
     } catch (err: unknown) {
-      let msg = "Failed to download receipt.";
+      let msg = t("enroll.failedDownloadReceipt");
       const e = err as { response?: { data?: unknown }; message?: string };
       const data = e.response?.data;
       if (data instanceof Blob) {
@@ -265,7 +267,7 @@ export default function EnrollButton({ course }: Props) {
       return (
         <div className="enroll-loading">
           <div className="enroll-loading__spinner" />
-          <p>Preparing checkout…</p>
+          <p>{t("enroll.preparingCheckout")}</p>
         </div>
       );
     }
@@ -276,19 +278,19 @@ export default function EnrollButton({ course }: Props) {
 
       return (
         <div className="enroll-review">
-          <h3 className="enroll-review__title">Review Order</h3>
+          <h3 className="enroll-review__title">{t("enroll.reviewOrder")}</h3>
           <div className="enroll-review__row">
-            <span>Course price</span>
+            <span>{t("enroll.coursePrice")}</span>
             <span>${price.toFixed(2)}</span>
           </div>
           {couponStatus === "valid" && couponResult && (
             <>
               <div className="enroll-review__row enroll-review__row--discount">
-                <span>Discount ({couponResult.code})</span>
+                <span>{t("enroll.discount")} ({couponResult.code})</span>
                 <span>-${Number(couponResult.discount_amount).toFixed(2)}</span>
               </div>
               <div className="enroll-review__row enroll-review__row--total">
-                <span>Total</span>
+                <span>{t("enroll.total")}</span>
                 <span>${Number(couponResult.final_amount).toFixed(2)}</span>
               </div>
             </>
@@ -297,7 +299,7 @@ export default function EnrollButton({ course }: Props) {
           <div className="enroll-review__coupon">
             <input
               type="text"
-              placeholder="Coupon code"
+              placeholder={t("enroll.couponCodePlaceholder")}
               value={couponInput}
               onChange={(e) => handleCouponInputChange(e.target.value)}
               className="enroll-review__coupon-input"
@@ -309,16 +311,16 @@ export default function EnrollButton({ course }: Props) {
               onClick={handleApplyCoupon}
               disabled={!couponInput.trim() || couponStatus === "checking"}
             >
-              {couponStatus === "checking" ? "Checking..." : "Apply"}
+              {couponStatus === "checking" ? t("enroll.checking") : t("enroll.apply")}
             </button>
           </div>
-          {couponStatus === "valid" && <p className="enroll-review__coupon-ok">✓ Coupon applied</p>}
+          {couponStatus === "valid" && <p className="enroll-review__coupon-ok">{t("enroll.couponApplied")}</p>}
           {couponStatus === "invalid" && <p className="enroll-review__coupon-err">⚠ {couponError}</p>}
 
           {/* Billing address */}
           {billingAddresses.length > 0 ? (
             <div className="enroll-review__billing">
-              <span className="enroll-review__billing-label">Billing address</span>
+              <span className="enroll-review__billing-label">{t("enroll.billingAddress")}</span>
               {showAddressSelect ? (
                 <select
                   className="enroll-review__billing-select"
@@ -345,22 +347,22 @@ export default function EnrollButton({ course }: Props) {
                     })()}
                   </span>
                   <button type="button" className="enroll-review__billing-change" onClick={() => setShowAddressSelect(true)}>
-                    Change
+                    {t("enroll.change")}
                   </button>
                 </div>
               )}
             </div>
           ) : (
-            <p className="enroll-review__billing-note">No billing address saved — invoice will use account details.</p>
+            <p className="enroll-review__billing-note">{t("enroll.noBillingAddress")}</p>
           )}
 
           {checkoutError && <div className="enroll-error">⚠ {checkoutError}</div>}
 
           <button className="detail-enroll-btn" onClick={handleContinueToPayment}>
-            Continue to Payment — ${total.toFixed(2)}
+            {t("enroll.continueToPayment")}{total.toFixed(2)}
           </button>
           <button className="enroll-qr__cancel" onClick={closeModal}>
-            Cancel
+            {t("enroll.cancel")}
           </button>
         </div>
       );
@@ -373,11 +375,11 @@ export default function EnrollButton({ course }: Props) {
 
       return (
         <div className="enroll-qr">
-          <h3 className="enroll-qr__title">Scan to Pay</h3>
+          <h3 className="enroll-qr__title">{t("enroll.scanToPay")}</h3>
           <p className="enroll-qr__meta">
-            Amount: <strong>${Number(payment.amount).toFixed(2)}</strong>
+            {t("enroll.amountLabel")} <strong>${Number(payment.amount).toFixed(2)}</strong>
             {expiresIn !== null && (
-              <> · Expires in <strong>{expiresIn} min</strong></>
+              <> · {t("enroll.expiresInLabel")} <strong>{expiresIn} {t("enroll.minSuffix")}</strong></>
             )}
           </p>
           {payment.qr_code_image ? (
@@ -387,15 +389,15 @@ export default function EnrollButton({ course }: Props) {
               className="enroll-qr__img"
             />
           ) : (
-            <div className="enroll-qr__placeholder">QR loading...</div>
+            <div className="enroll-qr__placeholder">{t("enroll.qrLoading")}</div>
           )}
-          <p className="enroll-qr__hint">Scan with Bakong / ABA / Wing app</p>
+          <p className="enroll-qr__hint">{t("enroll.scanHint")}</p>
           <p className="enroll-qr__auto">
-            <span className="enroll-qr__pulse" /> Waiting for payment confirmation…
+            <span className="enroll-qr__pulse" /> {t("enroll.waitingConfirmation")}
           </p>
           <div className="enroll-qr__actions">
             <button className="enroll-qr__cancel" onClick={() => handleCancel(payment.id)} disabled={cancelling}>
-              {cancelling ? "Cancelling..." : "Cancel"}
+              {cancelling ? t("enroll.cancelling") : t("enroll.cancel")}
             </button>
           </div>
         </div>
@@ -406,15 +408,15 @@ export default function EnrollButton({ course }: Props) {
       return (
         <div className="enroll-success">
           <div className="enroll-success__icon">🎉</div>
-          <h3 className="enroll-success__title">Enrolled Successfully!</h3>
-          <p className="enroll-success__sub">You can now access all course content.</p>
+          <h3 className="enroll-success__title">{t("enroll.enrolledSuccessTitle")}</h3>
+          <p className="enroll-success__sub">{t("enroll.accessAllContent")}</p>
           {!!orderInfo?.discount_amount && (
             <p className="enroll-success__discount">
-              You saved ${Number(orderInfo.discount_amount).toFixed(2)}!
+              {t("enroll.youSaved")}{Number(orderInfo.discount_amount).toFixed(2)}!
             </p>
           )}
           <a href={`/learn/${course.slug}`} className="enroll-success__link">
-            Start Learning →
+            {t("enroll.startLearning")}
           </a>
           {orderInfo && (
             <div className="enroll-success__receipt">
@@ -423,13 +425,13 @@ export default function EnrollButton({ course }: Props) {
                 onClick={handleDownloadReceipt}
                 disabled={receiptStatus === "downloading"}
               >
-                {receiptStatus === "downloading" ? "Downloading..." : "Download Receipt"}
+                {receiptStatus === "downloading" ? t("enroll.downloading") : t("enroll.downloadReceipt")}
               </button>
               {receiptStatus === "error" && <p className="enroll-error">⚠ {receiptError}</p>}
             </div>
           )}
           <button className="enroll-modal__done-close" onClick={closeModal}>
-            Done
+            {t("enroll.done")}
           </button>
         </div>
       );
@@ -444,7 +446,7 @@ export default function EnrollButton({ course }: Props) {
             onClick={() => setStep("idle")}
             style={{ marginTop: 8 }}
           >
-            Try Again
+            {t("enroll.tryAgain")}
           </button>
         </div>
       );
@@ -458,11 +460,11 @@ export default function EnrollButton({ course }: Props) {
       {hasActiveAccess ? (
         <div className="enroll-success">
           <div className="enroll-success__icon">✅</div>
-          <h3 className="enroll-success__title">You're Enrolled!</h3>
-          <p className="enroll-success__sub">You have access to all course content.</p>
+          <h3 className="enroll-success__title">{t("enroll.enrolledTitle")}</h3>
+          <p className="enroll-success__sub">{t("enroll.haveAccessContent")}</p>
           {course.access_expires_at && (
             <p className="enroll-success__expiry">
-              Access expires on{" "}
+              {t("enroll.accessExpiresOn")}{" "}
               {new Date(course.access_expires_at).toLocaleDateString("en-US", {
                 month: "long",
                 day: "numeric",
@@ -471,21 +473,21 @@ export default function EnrollButton({ course }: Props) {
             </p>
           )}
           <a href={`/learn/${course.slug}`} className="enroll-success__link">
-            Start Learning →
+            {t("enroll.startLearning")}
           </a>
         </div>
       ) : isEnrolled && isExpired ? (
         <div className="enroll-expired">
           <div className="enroll-expired__icon">⏳</div>
-          <h3 className="enroll-expired__title">Access Expired</h3>
-          <p className="enroll-expired__sub">Renew to keep learning and regain access to all course content.</p>
+          <h3 className="enroll-expired__title">{t("enroll.accessExpiredTitle")}</h3>
+          <p className="enroll-expired__sub">{t("enroll.renewSub")}</p>
           <button
             className="detail-enroll-btn"
             onClick={handleEnroll}
             disabled={step === "loading"}
             style={step === "loading" ? { background: "#94a3b8", boxShadow: "none", cursor: "not-allowed" } : undefined}
           >
-            {step === "loading" ? "Processing..." : `Renew Access — $${course.price}`}
+            {step === "loading" ? t("enroll.processing") : `${t("enroll.renewAccess")}${course.price}`}
           </button>
         </div>
       ) : (
@@ -496,10 +498,10 @@ export default function EnrollButton({ course }: Props) {
           style={step === "loading" ? { background: "#94a3b8", boxShadow: "none", cursor: "not-allowed" } : undefined}
         >
           {step === "loading"
-            ? "Processing..."
+            ? t("enroll.processing")
             : Number(course.price) === 0
-            ? "Enroll for Free"
-            : `Buy Now — $${course.price}`}
+            ? t("enroll.enrollFree")
+            : `${t("enroll.buyNow")}${course.price}`}
         </button>
       )}
 
