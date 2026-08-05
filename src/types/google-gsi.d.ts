@@ -8,6 +8,7 @@ interface GoogleIdConfiguration {
   callback: (response: GoogleCredentialResponse) => void;
   auto_select?: boolean;
   cancel_on_tap_outside?: boolean;
+  use_fedcm_for_button?: boolean;
 }
 
 interface Google {
