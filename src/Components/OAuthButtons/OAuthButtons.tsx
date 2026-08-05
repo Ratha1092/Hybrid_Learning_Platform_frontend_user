@@ -46,6 +46,7 @@ export default function OAuthButtons({ onError, onSuccess, from }: Props) {
       if (!googleInitialized) {
         google.accounts.id.initialize({
           client_id: GOOGLE_CLIENT_ID,
+          use_fedcm_for_button: true,
           callback: async (response) => {
             const { onError, onSuccess, from, login, navigate, setGoogleLoading } = googleCallbacks!;
             setGoogleLoading(true);
