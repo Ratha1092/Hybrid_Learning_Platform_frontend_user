@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 @layer base {
-  html { scroll-behavior: smooth; overflow-x: hidden; scrollbar-gutter: stable; }
+  html { scroll-behavior: smooth; overflow-x: hidden; }
   body { font-family: "DM Sans", sans-serif; background: #EEF1F6; -webkit-font-smoothing: antialiased; }
   h1, h2, h3, h4, h5, h6 { font-family: "Plus Jakarta Sans", sans-serif; }
   img { display: block; max-width: 100%; }
@@ -14,11 +14,16 @@
   #root { min-height: 100vh; }
 }
 
+/* Reserve space for the desktop scrollbar only above the "lg" breakpoint —
+   on real mobile/touch devices scrollbars overlay content (zero width), so
+   reserving a gutter there just eats into the viewport for no benefit; at
+   desktop widths it still prevents content from shifting when a page's
+   height crosses the scrollbar threshold. */
+@media (min-width: 1024px) {
+  html { scrollbar-gutter: stable; }
+}
+
 @layer utilities {
-  /* Gradients
-     var(--color-primary)/(--color-secondary) are set at runtime from the
-     admin Settings' primary_color/secondary_color (see SettingsContext.tsx);
-     the hex values here are the fallback when no setting is configured. */
   .grad-blue { background: linear-gradient(135deg, var(--color-primary, #2563EB), var(--color-secondary, #3B82F6)); }
   .grad-navy { background: linear-gradient(160deg, #0B1220 0%, #0f2044 100%); }
   .grad-text {
@@ -126,14 +131,17 @@ html.dark .hero-section.grad-navy { background: linear-gradient(160deg, #0B1220 
   background: rgba(255, 255, 255, 0.95);
   border: 1px solid rgba(148, 163, 184, 0.2);
 }
+.flip-navy.grad-navy { background: white; }
+html.dark .flip-navy.grad-navy { background: linear-gradient(160deg, #0B1220 0%, #0f2044 100%); }
 
-/* Always-dark sections (grad-navy): floating glass badges use blue glass in dark mode */
-html.dark .grad-navy .glass {
-  background: rgba(37, 99, 235, 0.2);
-  border: 1px solid rgba(99, 149, 255, 0.25);
+.flip-navy .glass-dark {
+  background: rgba(37, 99, 235, 0.06);
+  border: 1px solid rgba(37, 99, 235, 0.15);
 }
-html.dark .grad-navy .glass .text-slate-500 { color: #94a3b8; }
-html.dark .grad-navy .glass .text-slate-900 { color: #f1f5f9; }
+html.dark .flip-navy .glass-dark {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
 
 /* Colour utilities that need dark flips */
 html.dark .ink    { color: #f1f5f9; }

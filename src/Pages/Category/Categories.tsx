@@ -58,18 +58,12 @@ export default function Categories() {
               From code to creativity — find the right track for your goals.
             </p>
           </div>
-          {/* <button
-            onClick={() => navigate("/categories")}
-            className="group inline-flex shrink-0 items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold ink shadow-e1 transition-colors hover:border-blue-300 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-500 dark:hover:text-blue-400"
-          >
-            View all categories <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-          </button> */}
         </Reveal>
 
         {loading ? (
           <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="h-20 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800" />
+              <div key={i} className="h-44 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-800" />
             ))}
           </div>
         ) : (
@@ -79,21 +73,33 @@ export default function Categories() {
               return (
                 <Reveal key={cat.id} delay={i * 60}>
                   <button
-                    onClick={() => navigate(`/courses?category=${cat.slug}&name=${encodeURIComponent(cat.name)}`)}
-                    className="group relative flex w-full items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-e1 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-card sm:p-5 dark:border-slate-700 dark:bg-slate-800"
+                    onClick={() => navigate(`/courses?category=${cat.slug}`)}
+                    className="group flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-e1 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-card dark:border-slate-700 dark:bg-slate-800"
                   >
-                    <span className={`grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br ${tint} transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 sm:h-14 sm:w-14`}>
-                      {cat.image_url ? (
-                        <img src={cat.image_url} alt={cat.name} className="h-7 w-7 object-contain" />
-                      ) : (
-                        <Icon className={`h-6 w-6 ${ic}`} strokeWidth={2} />
-                      )}
-                    </span>
-                    <div className="min-w-0 flex-1 text-left">
+                    {/* Icon / thumbnail panel */}
+                    {cat.image_url ? (
+                      <div className="h-24 w-full overflow-hidden sm:h-28">
+                        <img
+                          src={cat.image_url}
+                          alt={cat.name}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      </div>
+                    ) : (
+                      <span className={`flex h-24 w-full items-center justify-center bg-gradient-to-br ${tint} transition-transform duration-300 group-hover:scale-105 sm:h-28`}>
+                        <Icon className={`h-8 w-8 ${ic}`} strokeWidth={2} />
+                      </span>
+                    )}
+
+                    {/* Body */}
+                    <div className="flex flex-1 flex-col p-4 text-left">
                       <h3 className="font-display text-[15px] font-bold leading-tight ink">{cat.name}</h3>
-                      <p className="text-[13px] muted2">{cat.courses_count} courses</p>
+                      <p className="mt-1 text-[13px] muted2">{cat.courses_count} courses</p>
+                      <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-3 dark:border-slate-700">
+                        <span className="text-[12.5px] font-semibold brand-blue">Explore</span>
+                        <ArrowUpRight className="h-4 w-4 shrink-0 text-slate-300 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-blue-600 dark:text-slate-600" />
+                      </div>
                     </div>
-                    <ArrowUpRight className="h-4 w-4 shrink-0 text-slate-300 transition-all duration-300 group-hover:text-blue-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 dark:text-slate-600" />
                   </button>
                 </Reveal>
               );

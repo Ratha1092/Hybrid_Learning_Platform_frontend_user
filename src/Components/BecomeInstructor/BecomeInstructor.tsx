@@ -20,26 +20,26 @@ export default function BecomeInstructor() {
   return (
     <section className="bg-[#EEF1F6] dark:bg-slate-900 py-16 sm:py-20">
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
-        <div className="grad-navy relative overflow-hidden rounded-[32px] px-6 py-12 shadow-soft-dark sm:px-12 sm:py-16">
-          <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-blue-600/20 blur-3xl" />
+        <div className="flip-navy grad-navy relative overflow-hidden rounded-[32px] px-6 py-12 shadow-soft dark:shadow-soft-dark sm:px-12 sm:py-16">
+          <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-blue-600/10 blur-3xl dark:bg-blue-600/20" />
           <div className="grid items-center gap-12 md:grid-cols-2">
 
             <Reveal>
-              <span className="inline-flex items-center gap-2 rounded-full glass-dark px-3.5 py-1.5 text-[13px] font-semibold text-blue-200">
+              <span className="inline-flex items-center gap-2 rounded-full glass-dark px-3.5 py-1.5 text-[13px] font-semibold text-blue-700 dark:text-blue-200">
                 <Wallet className="h-3.5 w-3.5" /> Instructor Marketplace
               </span>
-              <h2 className="mt-5 font-display text-[32px] font-extrabold leading-tight text-white sm:text-[42px]">
+              <h2 className="mt-5 font-display text-[32px] font-extrabold leading-tight text-slate-900 dark:text-white sm:text-[42px]">
                 Turn your knowledge into income
               </h2>
-              <p className="mt-4 max-w-md text-[15px] leading-relaxed text-slate-300">
+              <p className="mt-4 max-w-md text-[15px] leading-relaxed text-slate-600 dark:text-slate-300">
                 Publish courses on our marketplace and earn monthly from a global
                 community of motivated learners.
               </p>
               <ul className="mt-7 space-y-3">
                 {perks.map((p) => (
-                  <li key={p} className="flex items-start gap-3 text-[14.5px] text-slate-200">
-                    <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-500/20">
-                      <Check className="h-3 w-3 text-emerald-400" strokeWidth={3} />
+                  <li key={p} className="flex items-start gap-3 text-[14.5px] text-slate-700 dark:text-slate-200">
+                    <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-emerald-500/10 dark:bg-emerald-500/20">
+                      <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400" strokeWidth={3} />
                     </span>
                     {p}
                   </li>
@@ -47,7 +47,7 @@ export default function BecomeInstructor() {
               </ul>
               <Link
                 to="/instructor/register"
-                className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3.5 text-sm font-semibold text-slate-900 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-slate-50 hover:shadow-glow"
+                className="mt-8 inline-flex items-center gap-2 rounded-xl bg-brand px-6 py-3.5 text-sm font-semibold text-white shadow-glow transition-all hover:-translate-y-0.5 hover:bg-blue-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-50"
               >
                 Start Teaching <ArrowRight className="h-4 w-4" />
               </Link>

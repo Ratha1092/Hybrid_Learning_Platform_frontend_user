@@ -1,4 +1,4 @@
-/* ── My Courses (mc-*) ─────────────────────────────────────────────────── */
+/* My Courses (mc-*)─ */
 
 .mc-loading {
   display: flex;
@@ -18,14 +18,14 @@
 
 @keyframes mc-spin { to { transform: rotate(360deg); } }
 
-/* ── Page ── */
+/* Page */
 .mc-page {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-/* ── Header ── */
+/* Header */
 .mc-header {
   display: flex;
   align-items: center;
@@ -60,7 +60,7 @@
 
 .mc-btn-create:hover { background: var(--pt-ink-3, #2E313A); }
 
-/* ── Error banner ── */
+/* Error banner */
 .mc-error {
   background: var(--pt-rose-s, #FBECE9);
   border: 1px solid #F0B8B0;
@@ -71,7 +71,7 @@
   font-weight: 500;
 }
 
-/* ── Empty state ── */
+/* Empty state */
 .mc-empty {
   background: var(--pt-card, #fff);
   border: 1px solid var(--pt-line, #E7E3D9);
@@ -93,7 +93,7 @@
   margin: 0;
 }
 
-/* ── Course list ── */
+/* Course list */
 .mc-list {
   display: flex;
   flex-direction: column;
@@ -257,7 +257,7 @@
   background: #F0B8B0;
 }
 
-/* ── Responsive ── */
+/* Responsive */
 @media (max-width: 640px) {
   .mc-row { flex-wrap: wrap; }
   .mc-row__thumb { width: 56px; height: 42px; }
@@ -265,7 +265,7 @@
   .mc-title { font-size: 1.4rem; }
 }
 
-/* ── Delete confirm modal ───────────────────────────── */
+/* Delete confirm modal─ */
 .mc-modal-backdrop {
   position: fixed;
   inset: 0;

@@ -97,15 +97,15 @@ function Hero() {
                 <CheckCircle2 className="h-5 w-5 text-emerald-500" />
               </span>
               <div className="leading-tight">
-                <p className="text-[11px] text-slate-500">Course Completed</p>
-                <p className="font-display text-[14px] font-bold text-slate-900">User Experience Design</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">Course Completed</p>
+                <p className="font-display text-[14px] font-bold text-slate-900 dark:text-white">User Experience Design</p>
               </div>
             </div>
 
             {/* Floating badge — bottom right (real student count) */}
             <div className="animate-floaty2 absolute -bottom-4 -right-6 z-20 rounded-2xl glass px-4 py-3 shadow-card">
-              <p className="text-[11px] text-slate-500">Total learners enrolled</p>
-              <p className="flex items-center gap-1 font-display text-xl font-extrabold text-slate-900">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">Total learners enrolled</p>
+              <p className="flex items-center gap-1 font-display text-xl font-extrabold text-slate-900 dark:text-white">
                 <Users className="h-4 w-4 text-blue-600" />
                 {students > 0 ? `${students.toLocaleString()}+` : "—"}
               </p>
@@ -113,7 +113,7 @@ function Hero() {
 
             {/* Floating badge — right middle */}
             <div className="animate-floaty absolute right-0 top-1/2 z-20 -translate-y-1/2 translate-x-6 rounded-2xl glass px-4 py-3 shadow-card">
-              <p className="text-[11px] text-slate-500">Live Teaching</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">Live Teaching</p>
               <div className="mt-1 flex items-center gap-2">
                 <div className="flex -space-x-1.5">
                   {[BookOpen, GraduationCap].map((Icon, i) => (
@@ -122,7 +122,7 @@ function Hero() {
                     </span>
                   ))}
                 </div>
-                <p className="font-display text-[13px] font-bold text-slate-900">Starting soon</p>
+                <p className="font-display text-[13px] font-bold text-slate-900 dark:text-white">Starting soon</p>
               </div>
             </div>
           </div>

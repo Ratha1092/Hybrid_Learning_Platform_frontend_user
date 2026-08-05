@@ -1,12 +1,10 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRef, useState } from "react";
 import {
   Upload, Trash2, ShieldCheck, CircleCheck, Plus,
 } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
-import { profileService } from "../../../services/profileService";
+import { profileService, type DashboardData } from "../../../services/profileService";
 import { billingService, type BillingAddress, type BillingAddressInput } from "../../../services/billingService";
-import ProfileLayout from "./ProfileLayout";
 
 const PRESET_INTERESTS = [
   "Web Development", "UI/UX Design", "Data Science", "Mobile Development",
@@ -29,9 +27,13 @@ interface FormState {
 }
 
 export function formEqual(a: FormState, b: FormState) {
+  // Interests are a set, not a sequence — toggling one off and back on
+  // re-appends it at the end instead of restoring its original position,
+  // so this must compare membership, not order, or an unchanged set of
+  // interests would still be flagged as dirty.
   return a.name === b.name && a.phone === b.phone && a.bio === b.bio &&
     a.learning_goals === b.learning_goals && a.github === b.github && a.linkedin === b.linkedin &&
-    a.interests.length === b.interests.length && a.interests.every((v, i) => v === b.interests[i]);
+    a.interests.length === b.interests.length && a.interests.every(v => b.interests.includes(v));
 }
 
 /* ── Local helper components ── */
@@ -59,17 +61,34 @@ const inputCls =
   "dark:border-slate-600 dark:bg-slate-700/50 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-500 dark:focus:ring-blue-500/20";
 
 /* ── Main export ── */
-export function EditProfilePanel() {
-  const { user, isAuthenticated, updateUser } = useAuth();
-  const navigate = useNavigate();
+interface EditProfilePanelProps {
+  profile: DashboardData["profile"];
+  initialAddresses: BillingAddress[];
+}
 
-  const [form, setForm] = useState<FormState>({
-    name: "", phone: "", bio: "", learning_goals: "", interests: [], github: "", linkedin: "",
-  });
+function computeFormState(profile: DashboardData["profile"], fallbackName: string | undefined, uid: number | undefined): FormState {
+  // Fallback to localStorage for fields the backend may not persist (interests, bio, etc.)
+  const local: Partial<FormState> = uid
+    ? JSON.parse(localStorage.getItem(`profile_extra_${uid}`) ?? "{}")
+    : {};
+  return {
+    name: profile.name ?? fallbackName ?? "",
+    phone: profile.phone ?? "",
+    bio: profile.bio ?? local.bio ?? "",
+    learning_goals: profile.learning_goals ?? local.learning_goals ?? "",
+    interests: (profile.interests?.length ? profile.interests : null) ?? local.interests ?? [],
+    github: profile.github ?? local.github ?? "",
+    linkedin: profile.linkedin ?? local.linkedin ?? "",
+  };
+}
+
+export function EditProfilePanel({ profile, initialAddresses }: EditProfilePanelProps) {
+  const { user, updateUser } = useAuth();
+
+  const [form, setForm] = useState<FormState>(() => computeFormState(profile, user?.name, user?.id));
   const initialForm = useRef<FormState>(form);
   const isDirty = !formEqual(form, initialForm.current);
 
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -79,40 +98,13 @@ export function EditProfilePanel() {
   const [twoFA, setTwoFA] = useState(false);
 
   // Billing address state
-  const [addresses, setAddresses] = useState<BillingAddress[]>([]);
+  const [addresses, setAddresses] = useState<BillingAddress[]>(initialAddresses);
   const [addressForm, setAddressForm] = useState<BillingAddressInput | null>(null);
   const [editingAddressId, setEditingAddressId] = useState<number | null>(null);
   const [addressSaving, setAddressSaving] = useState(false);
   const [addressError, setAddressError] = useState("");
   const [deletingAddressId, setDeletingAddressId] = useState<number | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (!isAuthenticated) { navigate("/"); return; }
-    profileService.getDashboard()
-      .then(({ data }) => {
-        const p = data.data.profile;
-        // Fallback to localStorage for fields the backend may not persist (interests, bio, etc.)
-        const uid = user?.id;
-        const local: Partial<FormState> = uid
-          ? JSON.parse(localStorage.getItem(`profile_extra_${uid}`) ?? "{}")
-          : {};
-        const loaded: FormState = {
-          name: p.name ?? user?.name ?? "",
-          phone: p.phone ?? "",
-          bio: p.bio ?? local.bio ?? "",
-          learning_goals: p.learning_goals ?? local.learning_goals ?? "",
-          interests: (p.interests?.length ? p.interests : null) ?? local.interests ?? [],
-          github: p.github ?? local.github ?? "",
-          linkedin: p.linkedin ?? local.linkedin ?? "",
-        };
-        setForm(loaded);
-        initialForm.current = loaded;
-        setAddresses(data.data.addresses ?? []);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [isAuthenticated, navigate, user]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -235,15 +227,6 @@ export function EditProfilePanel() {
     setConfirmDeleteId(null);
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center gap-3 py-12 text-[14px] muted2">
-        <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600" />
-        Loading profile…
-      </div>
-    );
-  }
-
   const displayName = form.name || user?.name || "?";
   const avatarSrc = avatarPreview ?? user?.avatar_url ?? null;
   const joinedStr = user?.created_at
@@ -253,7 +236,7 @@ export function EditProfilePanel() {
 
   return (
     <>
-      <div className="space-y-6 pb-24">
+      <div className="space-y-6">
 
         {/* Header */}
         <div>
@@ -549,7 +532,13 @@ export function EditProfilePanel() {
                 <div className="mt-2 space-y-4 rounded-xl border border-slate-200 bg-slate-50/60 p-4 dark:border-slate-700 dark:bg-slate-700/30">
                   <label className="block">
                     <FieldLabel req>Full name</FieldLabel>
-                    <input className={inputCls} name="name" value={addressForm.name} onChange={handleAddressFieldChange} placeholder="e.g. Torn Ratha" />
+                    <input
+                      className={inputCls}
+                      name="address_name"
+                      value={addressForm.name}
+                      onChange={e => setAddressForm(prev => prev ? { ...prev, name: e.target.value } : prev)}
+                      placeholder="e.g. Torn Ratha"
+                    />
                   </label>
                   <label className="block">
                     <FieldLabel req>Address line 1</FieldLabel>
@@ -611,7 +600,7 @@ export function EditProfilePanel() {
 
       {/* Fixed save bar */}
       <div
-        className={`fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/90 backdrop-blur transition-transform dark:border-slate-700 dark:bg-slate-900/90 ${
+        className={`sticky bottom-0 inset-x-0 z-30 border-t border-slate-200 bg-white/90 backdrop-blur transition-transform dark:border-slate-700 dark:bg-slate-900/90 ${
           isDirty ? "translate-y-0" : "translate-y-full"
         }`}
       >
@@ -645,13 +634,5 @@ export function EditProfilePanel() {
         </div>
       </div>
     </>
-  );
-}
-
-export default function StudentProfileEdit() {
-  return (
-    <ProfileLayout activeLabel="Profile">
-      <EditProfilePanel />
-    </ProfileLayout>
   );
 }

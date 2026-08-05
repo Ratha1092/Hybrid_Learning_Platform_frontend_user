@@ -28,7 +28,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }, [settings.site_favicon]);
   
   useEffect(() => {
-    // Brand color is fixed blue — ignore any admin-stored purple/violet value.
     document.documentElement.style.setProperty("--color-primary",   "#2563eb");
     document.documentElement.style.setProperty("--color-secondary", "#3b82f6");
   }, []);

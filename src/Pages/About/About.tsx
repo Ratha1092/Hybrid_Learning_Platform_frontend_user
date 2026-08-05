@@ -1,9 +1,8 @@
-import { ArrowRight, Globe2, ShieldCheck, Sparkles, Users2, Target, Heart } from "lucide-react";
+import { ArrowRight, Globe2, ShieldCheck, Sparkles, Users2, Target } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Reveal } from "../../utils/anim";
 import { useSettings } from "../../context/SettingsContext";
 import Stats from "../../Components/Stats/Stats";
-import FinalCta from "../../Components/FinalCta/FinalCta";
 
 const VALUES = [
   {

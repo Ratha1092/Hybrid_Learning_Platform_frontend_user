@@ -9,6 +9,7 @@ import {
   type PayoutRequest,
   type InstructorPayoutAccount,
 } from "../../../../services/instructorService";
+import { useFinanceRefresh } from "../../../../hooks/useFinanceRefresh";
 
 const STATUS_CFG: Record<string, { label: string; cls: string }> = {
   pending:  { label: "Pending",  cls: "bg-amber-50 text-amber-600 ring-1 ring-amber-200" },
@@ -67,29 +68,45 @@ export default function Revenue() {
   const [downloadingId, setDownloadingId] = useState<number | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchWallet = () =>
     instructorService.getWallet()
       .then((r) => setWallet(r.data.data))
       .catch(() => {})
       .finally(() => setLoadingWallet(false));
+
+  const fetchTxns = () =>
+    instructorService.getTransactions()
+      .then((r) => setTxns(Array.isArray(r.data.data) ? r.data.data : []))
+      .catch(() => {})
+      .finally(() => setLoadingTxns(false));
+
+  const fetchAccount = () =>
+    instructorService.getPayoutAccount()
+      .then((r) => setPayoutAccount(r.data.data))
+      .catch(() => {})
+      .finally(() => setLoadingAccount(false));
+
+  useEffect(() => {
+    fetchWallet();
 
     instructorService.getEarnings()
       .then((r) => setEarnings(r.data.data))
       .catch(() => {})
       .finally(() => setLoadingEarnings(false));
 
-    instructorService.getTransactions()
-      .then((r) => setTxns(Array.isArray(r.data.data) ? r.data.data : []))
-      .catch(() => {})
-      .finally(() => setLoadingTxns(false));
-
-    instructorService.getPayoutAccount()
-      .then((r) => setPayoutAccount(r.data.data))
-      .catch(() => {})
-      .finally(() => setLoadingAccount(false));
-
+    fetchTxns();
+    fetchAccount();
     fetchPayouts(1);
   }, []);
+
+  // Refetch wallet/account/payouts when an admin approves/rejects an account
+  // or payout, or a monthly auto-payout is created — no manual reload needed.
+  useFinanceRefresh(() => {
+    fetchWallet();
+    fetchTxns();
+    fetchAccount();
+    fetchPayouts(1);
+  });
 
   const fetchPayouts = async (page: number) => {
     setLoadingPayouts(true);
@@ -438,7 +455,17 @@ export default function Revenue() {
                           })}
                         </td>
                         <td className="px-6 py-4 capitalize text-slate-500 dark:text-slate-400">
-                          {p.payment_method.replace(/_/g, " ")}
+                          <span className="inline-flex items-center gap-1.5">
+                            {p.payment_method.replace(/_/g, " ")}
+                            {p.source === "monthly_auto" && (
+                              <span
+                                title="Automatically requested on month end"
+                                className="inline-block shrink-0 rounded-full bg-violet-50 px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wide text-violet-600 ring-1 ring-violet-200 dark:bg-violet-500/10 dark:text-violet-400 dark:ring-violet-500/30"
+                              >
+                                Auto
+                              </span>
+                            )}
+                          </span>
                         </td>
                         <td className="px-6 py-4 font-semibold text-slate-900 dark:text-white">
                           ${fmt(safeNum(p.amount))}

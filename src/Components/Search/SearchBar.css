@@ -18,6 +18,16 @@
   transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 
+/* Below the "lg" breakpoint (1024px) the navbar still shows the hamburger
+   menu button alongside the full utility row (search, language, theme,
+   login/register) rather than collapsing them, so there's no room for a
+   fixed 220px search box in that whole range — let it shrink instead of
+   forcing overflow. */
+@media (max-width: 1100px) {
+  .sb-wrap { flex-shrink: 1; min-width: 0; }
+  .sb-field { width: clamp(110px, 18vw, 220px); }
+}
+
 .sb-field--open,
 .sb-field:focus-within {
   background: #fff;

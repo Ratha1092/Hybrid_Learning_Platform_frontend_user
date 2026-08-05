@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { CheckCircle, Clock, XCircle, ShieldCheck, Banknote, QrCode } from "lucide-react";
 import { instructorService, type InstructorPayoutAccount } from "../../../../services/instructorService";
+import { useFinanceRefresh } from "../../../../hooks/useFinanceRefresh";
 import PayoutAccountSection from "./PayoutAccountSection";
 
 function Spinner() {
@@ -22,16 +23,21 @@ export default function PayoutAccount() {
   const [loading, setLoading]   = useState(true);
   const [apiError, setApiError] = useState(false);
 
-  useEffect(() => {
+  const fetchAccount = (showSpinner = false) => {
+    if (showSpinner) setLoading(true);
     instructorService.getPayoutAccount()
       .then((res) => setAccount(res.data.data))
       .catch((err) => {
         const status = (err as { response?: { status?: number } })?.response?.status;
-        // Only hard-fail on auth errors; anything else (500, network) → treat as no account
         if (status === 401 || status === 403) setApiError(true);
       })
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { fetchAccount(true); }, []);
+
+  // Refetch when an admin verifies/rejects the account, instead of requiring a manual reload.
+  useFinanceRefresh(() => fetchAccount(false));
 
   if (loading) return <Spinner />;
 

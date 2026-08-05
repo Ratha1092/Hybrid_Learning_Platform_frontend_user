@@ -58,6 +58,7 @@ export interface PayoutRequest {
   id: number;
   amount: number;
   payment_method: string;
+  source: "manual" | "monthly_auto";
   status: "pending" | "approved" | "rejected";
   notes?: string | null;
   created_at: string;
