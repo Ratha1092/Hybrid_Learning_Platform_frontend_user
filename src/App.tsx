@@ -25,7 +25,6 @@ import PageCourses from "./Pages/Courses/Page_Courses";
 import FeaturedCourses from "./Components/FeaturedCourses";
 import DetailCourse from "./Pages/Courses/DetailCourse";
 
-import PageCategories from "./Pages/Category/Pagecategoires";
 import Profile from "./Pages/User/Profile/StudentProfile";
 import InstructorRegister from "./Pages/Auth/Register/Apply_to_Instructor";
 import CreateSections from "./Pages/User/Instructor/Sivbar/CreateSection";
@@ -190,7 +189,6 @@ function App() {
           <Route path="/home" element={<MainPage />} />
           <Route path="/courses" element={<WithFooter><PageCourses /></WithFooter>} />
           <Route path="/courses/:slug" element={<WithFooter><DetailCourse /></WithFooter>} />
-          <Route path="/categories" element={<WithFooter><PageCategories /></WithFooter>} />
           <Route path="/instructors" element={<WithFooter><Instructors /></WithFooter>} />
           <Route path="/about" element={<WithFooter><About /></WithFooter>} />
           <Route path="/contact" element={<WithFooter><Contact /></WithFooter>} />

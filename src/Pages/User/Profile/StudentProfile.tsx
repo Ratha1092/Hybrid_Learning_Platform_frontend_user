@@ -8,7 +8,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { useWishlist } from "../../../context/WishlistContext";
 import type { EnrolledCourse } from "../../../services/courseService";
 import { orderService, type Order } from "../../../services/orderService";
-import { billingService, type Invoice } from "../../../services/billingService";
+import { billingService, type Invoice, type BillingAddress } from "../../../services/billingService";
 import { profileService, type DashboardData } from "../../../services/profileService";
 import ProfileLayout from "./ProfileLayout";
 import { EditProfilePanel } from "./StudentProfileEdit";
@@ -67,6 +67,7 @@ export default function StudentProfile() {
 
   const [editMounted, setEditMounted] = useState(false);
   const [studentProfile, setStudentProfile] = useState<DashboardData["profile"] | null>(null);
+  const [billingAddresses, setBillingAddresses] = useState<BillingAddress[]>([]);
   const [courses, setCourses] = useState<EnrolledCourse[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [coursesError, setCoursesError] = useState(false);
@@ -93,7 +94,7 @@ export default function StudentProfile() {
   useEffect(() => {
     if (!isAuthenticated) return;
     profileService.getDashboard()
-      .then(({ data }) => { setStudentProfile(data.data.profile); setCourses(data.data.courses ?? []); })
+      .then(({ data }) => { setStudentProfile(data.data.profile); setCourses(data.data.courses ?? []); setBillingAddresses(data.data.addresses ?? []); })
       .catch(() => setCoursesError(true))
       .finally(() => setLoadingCourses(false));
   }, [isAuthenticated]);
@@ -254,7 +255,7 @@ export default function StudentProfile() {
     <ProfileLayout activeLabel={activeLabel}>
       <div key={view} className="flex min-w-0 flex-col gap-6">
 
-        {/* ══════════════════ OVERVIEW ══════════════════ */}
+        {/* OVERVIEW */}
         {view === "overview" && (
           <>
             {/* Date + greeting row */}
@@ -447,7 +448,7 @@ export default function StudentProfile() {
           </>
         )}
 
-        {/* ══════════════════ MY COURSES ══════════════════ */}
+        {/* MY COURSES */}
         {view === "courses" && (
           <>
             <div>
@@ -458,8 +459,8 @@ export default function StudentProfile() {
 
             {/* Filter tabs */}
             <div className="flex gap-2">
-              {(["inprogress", "completed", "all"] as const).map(f => {
-                const labels = { inprogress: "In progress", completed: "Completed", all: "All" };
+              {(["all","inprogress", "completed"] as const).map(f => {
+                const labels = { all: "All", inprogress: "In progress", completed: "Completed" };
                 const active = courseFilter === f;
                 return (
                   <button
@@ -549,7 +550,7 @@ export default function StudentProfile() {
           </>
         )}
 
-        {/* ══════════════════ ORDERS ══════════════════ */}
+        {/* ORDERS */}
         {view === "orders" && (
           <>
             <div>
@@ -665,7 +666,7 @@ export default function StudentProfile() {
           </>
         )}
 
-        {/* ══════════════════ WISHLIST ══════════════════ */}
+        {/* WISHLIST */}
         {view === "wishlist" && (
           <>
             <div>
@@ -754,7 +755,7 @@ export default function StudentProfile() {
           </>
         )}
 
-        {/* ══════════════════ CERTIFICATES ══════════════════ */}
+        {/* CERTIFICATES */}
         {view === "certificates" && (
           <>
             <div>
@@ -824,7 +825,7 @@ export default function StudentProfile() {
           </>
         )}
 
-        {/* ══════════════════ REVIEWS ══════════════════ */}
+        {/* REVIEWS */}
         {view === "reviews" && (
           <>
             <div>
@@ -850,7 +851,7 @@ export default function StudentProfile() {
           </>
         )}
 
-        {/* ══════════════════ SETTINGS ══════════════════ */}
+        {/* SETTINGS */}
         {view === "settings" && (
           <>
             <div>
@@ -930,10 +931,10 @@ export default function StudentProfile() {
           </>
         )}
 
-        {/* ══════════════════ EDIT PROFILE ══════════════════ */}
-        {editMounted && (
+        {/* EDIT PROFILE */}
+        {editMounted && studentProfile && (
           <div style={{ display: view === "edit" ? "block" : "none" }}>
-            <EditProfilePanel />
+            <EditProfilePanel profile={studentProfile} initialAddresses={billingAddresses} />
           </div>
         )}
 

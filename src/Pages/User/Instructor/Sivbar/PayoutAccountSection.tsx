@@ -23,6 +23,11 @@ interface Props {
   onSaved: (a: InstructorPayoutAccount) => void;
 }
 
+const API_BASE = import.meta.env.VITE_API_URL ?? "";
+function resolveQrUrl(path: string) {
+  return path.startsWith("http") ? path : `${API_BASE}/storage/${path}`;
+}
+
 export default function PayoutAccountSection({ account, onSaved }: Props) {
   const [editing, setEditing] = useState(!account || account.status === "rejected");
   const [form, setForm] = useState({
@@ -135,9 +140,11 @@ export default function PayoutAccountSection({ account, onSaved }: Props) {
               {account.qr_code_path && (
                 <>
                   <span className="text-slate-300 dark:text-slate-600">·</span>
-                  <span className="inline-flex items-center gap-1 text-[14px] font-medium text-blue-600 dark:text-blue-400">
-                    <span>📷</span> QR on file
-                  </span>
+                  <img
+                    src={resolveQrUrl(account.qr_code_path)}
+                    alt="Payout QR code"
+                    className="h-10 w-10 rounded-lg border border-slate-200 object-contain p-0.5 dark:border-slate-600"
+                  />
                 </>
               )}
             </div>
@@ -313,9 +320,11 @@ export default function PayoutAccountSection({ account, onSaved }: Props) {
               >
                 {account?.qr_code_path ? (
                   <>
-                    <div className="grid h-11 w-11 place-items-center rounded-xl bg-emerald-100 dark:bg-emerald-500/15">
-                      <span className="text-xl">📷</span>
-                    </div>
+                    <img
+                      src={resolveQrUrl(account.qr_code_path)}
+                      alt="Payout QR code on file"
+                      className="h-36 w-36 rounded-xl border border-slate-200 object-contain p-1.5 dark:border-slate-600"
+                    />
                     <p className="text-[14.5px] font-semibold text-emerald-600 dark:text-emerald-400">QR image on file</p>
                     <p className="text-[14.5px] text-slate-400">Click or drag to replace</p>
                   </>

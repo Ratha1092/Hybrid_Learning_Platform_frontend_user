@@ -24,10 +24,10 @@ function StatPill({ end, suffix, label }: { end: number; suffix: string; label: 
   const { ref, val } = useCountUp(end);
   return (
     <div className="flex flex-col items-center text-center">
-      <span ref={ref} className="font-display text-[30px] font-extrabold text-white sm:text-[38px]">
+      <span ref={ref} className="font-display text-[30px] font-extrabold text-slate-900 dark:text-white sm:text-[38px]">
         {val.toLocaleString()}{suffix}
       </span>
-      <p className="mt-1 text-[13px] text-slate-400">{label}</p>
+      <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">{label}</p>
     </div>
   );
 }
@@ -36,14 +36,14 @@ export default function Testimonials() {
   const stats = usePlatformStats();
 
   return (
-    <section className="grad-navy relative overflow-hidden py-20 sm:py-28">
-      <div className="pointer-events-none absolute -left-20 top-10 h-72 w-72 rounded-full bg-blue-600/20 blur-3xl" />
-      <div className="pointer-events-none absolute -right-20 bottom-10 h-64 w-64 rounded-full bg-cyan-600/10 blur-3xl" />
+    <section className="flip-navy grad-navy relative overflow-hidden py-20 sm:py-28">
+      <div className="pointer-events-none absolute -left-20 top-10 h-72 w-72 rounded-full bg-blue-600/10 blur-3xl dark:bg-blue-600/20" />
+      <div className="pointer-events-none absolute -right-20 bottom-10 h-64 w-64 rounded-full bg-cyan-600/5 blur-3xl dark:bg-cyan-600/10" />
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
 
         <Reveal className="mx-auto max-w-xl text-center">
-          <p className="mb-2 text-sm font-semibold text-blue-300">Student success stories</p>
-          <h2 className="font-display text-[32px] font-extrabold text-white sm:text-[40px]">
+          <p className="mb-2 text-sm font-semibold text-blue-700 dark:text-blue-300">Student success stories</p>
+          <h2 className="font-display text-[32px] font-extrabold text-slate-900 dark:text-white sm:text-[40px]">
             Loved by learners worldwide
           </h2>
         </Reveal>
@@ -54,24 +54,24 @@ export default function Testimonials() {
           <StatPill end={stats?.total_courses     ?? 0} suffix="+" label="Expert courses" />
           <StatPill end={stats?.total_instructors ?? 0} suffix="+" label="Pro instructors" />
           <div className="flex flex-col items-center text-center">
-            <span className="font-display text-[30px] font-extrabold text-white sm:text-[38px]">4.8★</span>
-            <p className="mt-1 text-[13px] text-slate-400">Average rating</p>
+            <span className="font-display text-[30px] font-extrabold text-slate-900 dark:text-white sm:text-[38px]">4.8★</span>
+            <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">Average rating</p>
           </div>
         </Reveal>
 
-        <div className="mx-auto mt-12 border-t border-white/10" />
+        <div className="mx-auto mt-12 border-t border-slate-200 dark:border-white/10" />
 
         <div className="mt-12 grid gap-6 lg:grid-cols-3">
           {testimonials.map((t, i) => (
             <Reveal key={t.name} delay={i * 100}>
-              <div className="flex h-full flex-col rounded-2xl glass-dark p-6 shadow-soft-dark">
-                <Quote className="h-8 w-8 text-blue-400/60" fill="currentColor" />
-                <p className="mt-4 flex-1 text-[15px] leading-relaxed text-slate-200">"{t.text}"</p>
-                <div className="mt-6 flex items-center gap-3 border-t border-white/10 pt-5">
-                  <img src={t.image} alt={t.name} className="h-11 w-11 rounded-full object-cover ring-2 ring-white/20" />
+              <div className="flex h-full flex-col rounded-2xl glass-dark p-6 shadow-soft dark:shadow-soft-dark">
+                <Quote className="h-8 w-8 text-blue-500/50 dark:text-blue-400/60" fill="currentColor" />
+                <p className="mt-4 flex-1 text-[15px] leading-relaxed text-slate-700 dark:text-slate-200">"{t.text}"</p>
+                <div className="mt-6 flex items-center gap-3 border-t border-slate-200 pt-5 dark:border-white/10">
+                  <img src={t.image} alt={t.name} className="h-11 w-11 rounded-full object-cover ring-2 ring-slate-200 dark:ring-white/20" />
                   <div className="min-w-0">
-                    <p className="font-display text-[15px] font-bold text-white">{t.name}</p>
-                    <p className="truncate text-[12.5px] text-slate-400">{t.role} · {t.company}</p>
+                    <p className="font-display text-[15px] font-bold text-slate-900 dark:text-white">{t.name}</p>
+                    <p className="truncate text-[12.5px] text-slate-500 dark:text-slate-400">{t.role} · {t.company}</p>
                   </div>
                   <div className="ml-auto flex gap-0.5">
                     {Array.from({ length: 5 }).map((_, k) => (

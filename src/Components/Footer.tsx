@@ -2,12 +2,12 @@ import { GraduationCap, MapPin, Phone, Mail } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import { useSettings } from "../context/SettingsContext";
 
-const cols = [
-  { title: "Explore",  items: [{ label: "All Courses",    to: "/courses" }, { label: "Categories",    to: "/categories" }, { label: "Library",      to: "/library" }, { label: "Certificates", to: "/courses" }] },
-  { title: "Programs", items: [{ label: "Design",         to: "/courses?category=design" }, { label: "Programming",  to: "/courses?category=programming" }, { label: "AI & Data",    to: "/courses?category=ai" }, { label: "Business",     to: "/courses?category=business" }] },
-  { title: "Company",  items: [{ label: "About",          to: "/about" }, { label: "Become Instructor", to: "/instructor/register" }, { label: "Contact",      to: "/contact" }, { label: "Blog",         to: "/" }] },
-  { title: "Support",  items: [{ label: "Help Center",    to: "/contact" }, { label: "Contact",      to: "/contact" }, { label: "Privacy",      to: "/" }, { label: "Terms",        to: "/" }] },
-];
+type FooterLink = {
+  label: string;
+  to?: string;
+  href?: string;
+  external?: boolean;
+};
 
 const socialIcons: { key: "social_facebook" | "social_twitter" | "social_youtube" | "social_linkedin"; path: string }[] = [
   { key: "social_facebook", path: "M22 12a10 10 0 1 0-11.5 9.9v-7H8v-2.9h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.3c-1.2 0-1.6.8-1.6 1.6v1.9h2.8L15.7 15h-2.2v7A10 10 0 0 0 22 12Z" },
@@ -18,14 +18,86 @@ const socialIcons: { key: "social_facebook" | "social_twitter" | "social_youtube
 
 export default function Footer() {
   const { settings } = useSettings();
-  const siteName = settings.site_name || "Hybrid Learning";
+  const siteName = settings.site_name?.trim() || "Hybrid Learning";
+  const siteDescription = settings.site_description?.trim();
+  const address = settings.contact_address?.trim();
+  const phone = settings.support_phone?.trim();
+  const email = settings.support_email?.trim();
+
   const nameParts = siteName.split(" ");
   const brandFirst = nameParts[0];
   const brandRest = nameParts.slice(1).join(" ");
 
-  const address = settings.contact_address || "8 Charter Street, Natalie Tower";
-  const phone   = settings.support_phone   || "+855 12 345 678";
-  const email   = settings.support_email   || "support@hybridlearning.com";
+  const companyItems: FooterLink[] = [
+    { label: "About", to: "/about" },
+    { label: "Become Instructor", to: "/instructor/register" },
+    { label: "Contact", to: "/contact" },
+  ];
+
+  if (settings.blog_url?.trim()) {
+    companyItems.push({ label: "Blog", href: settings.blog_url.trim(), external: true });
+  }
+
+  const supportItems: FooterLink[] = [
+    { label: "Help Center", to: "/contact" },
+    { label: "Contact", to: "/contact" },
+  ];
+
+  if (settings.privacy_url?.trim()) {
+    supportItems.push({ label: "Privacy", href: settings.privacy_url.trim(), external: true });
+  }
+
+  if (settings.terms_url?.trim()) {
+    supportItems.push({ label: "Terms", href: settings.terms_url.trim(), external: true });
+  }
+
+  const cols = [
+    {
+      title: "Explore",
+      items: [
+        { label: "All Courses", to: "/courses" },
+        { label: "Categories", to: "/home" },
+        { label: "Library", to: "/library" },
+        { label: "Certificates", to: "/courses" },
+      ],
+    },
+    {
+      title: "Programs",
+      items: [
+        { label: "Design", to: "/courses?category=design" },
+        { label: "Programming", to: "/courses?category=programming" },
+        { label: "AI & Data", to: "/courses?category=ai" },
+        { label: "Business", to: "/courses?category=business" },
+      ],
+    },
+    { title: "Company", items: companyItems },
+    { title: "Support", items: supportItems },
+  ];
+
+  const renderLink = (item: FooterLink) => {
+    if (item.href) {
+      return (
+        <a
+          href={item.href}
+          target={item.external ? "_blank" : undefined}
+          rel={item.external ? "noopener noreferrer" : undefined}
+          className="text-slate-400 transition-colors hover:text-white"
+        >
+          {item.label}
+        </a>
+      );
+    }
+
+    if (item.to) {
+      return (
+        <Link to={item.to} className="text-slate-400 transition-colors hover:text-white">
+          {item.label}
+        </Link>
+      );
+    }
+
+    return <span className="text-slate-400">{item.label}</span>;
+  };
 
   return (
     <footer className="bg-navy text-slate-300">
@@ -44,16 +116,31 @@ export default function Footer() {
                 </span>
               )}
               <span className="font-display text-lg font-extrabold text-white">
-                {brandFirst}<span className="brand-blue">{brandRest ? ` ${brandRest}` : ""}</span>
+                {brandFirst}
+                <span className="brand-blue">{brandRest ? ` ${brandRest}` : ""}</span>
               </span>
             </NavLink>
             <p className="mt-3.5 max-w-xs text-[13.5px] leading-relaxed text-slate-400">
-              {settings.site_description || "A modern learning marketplace helping students and instructors grow — without limits."}
+              {siteDescription || "A modern learning marketplace helping students and instructors grow — without limits."}
             </p>
             <div className="mt-4 space-y-2 text-[13px] text-slate-400">
-              <p className="flex items-start gap-2"><MapPin className="mt-0.5 h-4 w-4 shrink-0 brand-blue" /> {address}</p>
-              <p className="flex items-center gap-2"><Phone className="h-4 w-4 shrink-0 brand-blue" /> {phone}</p>
-              <p className="flex items-center gap-2"><Mail className="h-4 w-4 shrink-0 brand-blue" /><span className="break-all">{email}</span></p>
+              {address ? (
+                <p className="flex items-start gap-2">
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 brand-blue" /> {address}
+                </p>
+              ) : null}
+              {phone ? (
+                <p className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 shrink-0 brand-blue" />
+                  <a href={`tel:${phone}`} className="transition-colors hover:text-white">{phone}</a>
+                </p>
+              ) : null}
+              {email ? (
+                <p className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 shrink-0 brand-blue" />
+                  <a href={`mailto:${email}`} className="break-all transition-colors hover:text-white">{email}</a>
+                </p>
+              ) : null}
             </div>
           </div>
 
@@ -64,11 +151,7 @@ export default function Footer() {
                 <h4 className="font-display text-sm font-bold text-white">{c.title}</h4>
                 <ul className="mt-4 space-y-3 text-sm">
                   {c.items.map((item) => (
-                    <li key={item.label}>
-                      <Link to={item.to} className="text-slate-400 transition-colors hover:text-white">
-                        {item.label}
-                      </Link>
-                    </li>
+                    <li key={item.label}>{renderLink(item)}</li>
                   ))}
                 </ul>
               </div>
@@ -79,11 +162,11 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="mt-9 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 sm:flex-row">
           <p className="text-xs text-slate-500">
-            {settings.footer_text || `© ${new Date().getFullYear()} ${siteName}. All rights reserved.`}
+            {settings.footer_text?.trim() || `© ${new Date().getFullYear()} ${siteName}. All rights reserved.`}
           </p>
           <div className="flex gap-2">
             {socialIcons
-              .filter(({ key }) => settings[key])
+              .filter(({ key }) => settings[key]?.trim())
               .map(({ key, path }) => (
                 <a
                   key={key}
@@ -92,7 +175,9 @@ export default function Footer() {
                   rel="noopener noreferrer"
                   className="grid h-9 w-9 place-items-center rounded-full bg-white/10 text-slate-300 transition-colors hover:bg-brand hover:text-white"
                 >
-                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor"><path d={path} /></svg>
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
+                    <path d={path} />
+                  </svg>
                 </a>
               ))}
           </div>

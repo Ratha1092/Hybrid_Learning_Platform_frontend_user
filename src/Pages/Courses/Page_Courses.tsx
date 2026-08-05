@@ -58,7 +58,7 @@ function Courses() {
 
   const [searchParams] = useSearchParams();
   const category = searchParams.get("category");
-  const categoryName = searchParams.get("name") ?? null;
+  const categoryName = categories.find((c) => c.slug === category)?.name ?? null;
   const instructorId = searchParams.get("instructor") ? Number(searchParams.get("instructor")) : null;
   const instructorName = !category ? (searchParams.get("name") ?? null) : null;
   const navigate = useNavigate();
@@ -187,41 +187,44 @@ function Courses() {
       )}
 
       {/* Header */}
-      <div className="courses-header">
+      <div className="courses-header courses-header--center">
         <div>
           <h1 className="courses-header__title">
+            <BookOpen className="courses-header__accent" />
             {instructorName
               ? `Courses by ${instructorName}`
               : category
               ? `${categoryName ?? category} Courses`
               : "All Courses"}
-            <span className="courses-header__accent">✦</span>
           </h1>
         </div>
       </div>
 
       {/* Category chips */}
       {!instructorId && categories.length > 0 && (
-        <div className="cat-chips">
-          <button
-            className={`cat-chip${!category ? " cat-chip--active" : ""}`}
-            onClick={() => navigate("/courses")}
-          >
-            All
-          </button>
-          {categories.map((cat) => (
+        <>
+          <p className="cat-chips__label">Filter by category</p>
+          <div className="cat-chips">
             <button
-              key={cat.id}
-              className={`cat-chip${category === cat.slug ? " cat-chip--active" : ""}`}
-              onClick={() => navigate(`/courses?category=${cat.slug}&name=${encodeURIComponent(cat.name)}`)}
+              className={`cat-chip${!category ? " cat-chip--active" : ""}`}
+              onClick={() => navigate("/courses")}
             >
-              {cat.name}
-              {cat.courses_count > 0 && (
-                <span className="cat-chip__count">{cat.courses_count}</span>
-              )}
+              All
             </button>
-          ))}
-        </div>
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                className={`cat-chip${category === cat.slug ? " cat-chip--active" : ""}`}
+                onClick={() => navigate(`/courses?category=${cat.slug}`)}
+              >
+                {cat.name}
+                {cat.courses_count > 0 && (
+                  <span className="cat-chip__count">{cat.courses_count}</span>
+                )}
+              </button>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Error */}
