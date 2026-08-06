@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import { GraduationCap, MapPin, Phone, Mail } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import { useSettings } from "../context/SettingsContext";
+import { categoryService, type Category } from "../services/categoryService";
 
 type FooterLink = {
   label: string;
@@ -18,6 +20,13 @@ const socialIcons: { key: "social_facebook" | "social_twitter" | "social_youtube
 
 export default function Footer() {
   const { settings } = useSettings();
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    categoryService.getAll()
+      .then((res) => setCategories(res.data.data ?? []))
+      .catch(() => {});
+  }, []);
   const siteName = settings.site_name?.trim() || "Hybrid Learning";
   const siteDescription = settings.site_description?.trim();
   const address = settings.contact_address?.trim();
@@ -63,12 +72,10 @@ export default function Footer() {
     },
     {
       title: "Programs",
-      items: [
-        { label: "Design", to: "/courses?category=design" },
-        { label: "Programming", to: "/courses?category=programming" },
-        { label: "AI & Data", to: "/courses?category=ai" },
-        { label: "Business", to: "/courses?category=business" },
-      ],
+      items: categories.slice(0, 4).map((c): FooterLink => ({
+        label: c.name,
+        to: `/courses?category=${c.slug}`,
+      })),
     },
     { title: "Company", items: companyItems },
     { title: "Support", items: supportItems },
@@ -146,7 +153,7 @@ export default function Footer() {
 
           {/* Link columns */}
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 md:contents">
-            {cols.map((c) => (
+            {cols.filter((c) => c.items.length > 0).map((c) => (
               <div key={c.title}>
                 <h4 className="font-display text-sm font-bold text-white">{c.title}</h4>
                 <ul className="mt-4 space-y-3 text-sm">
