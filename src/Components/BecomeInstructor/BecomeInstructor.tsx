@@ -18,9 +18,9 @@ export default function BecomeInstructor() {
   ];
 
   return (
-    <section className="bg-[#EEF1F6] dark:bg-slate-900 py-16 sm:py-20">
+    <section className="bg-[#EEF1F6] dark:bg-slate-900 py-16 md:py-20">
       <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
-        <div className="flip-navy grad-navy relative overflow-hidden rounded-[32px] px-6 py-12 shadow-soft dark:shadow-soft-dark sm:px-12 sm:py-16">
+        <div className="flip-navy grad-navy relative overflow-hidden rounded-[32px] px-6 py-12 shadow-soft dark:shadow-soft-dark md:px-12 md:py-16">
           <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-blue-600/10 blur-3xl dark:bg-blue-600/20" />
           <div className="grid items-center gap-12 md:grid-cols-2">
 

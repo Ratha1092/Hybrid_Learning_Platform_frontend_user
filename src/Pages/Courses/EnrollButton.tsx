@@ -7,6 +7,7 @@ import { orderService } from "../../services/orderService";
 import { billingService, type BillingAddress } from "../../services/billingService";
 import { useAuthModal } from "../../context/AuthModalContext";
 import { useAuth } from "../../context/AuthContext";
+import { useScrollLock } from "../../hooks/useScrollLock";
 
 type Step = "idle" | "loading" | "review" | "qr" | "done" | "error";
 type CouponStatus = "idle" | "checking" | "valid" | "invalid";
@@ -62,16 +63,14 @@ export default function EnrollButton({ course }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasActiveAccess, course.id]);
 
-  // Lock scroll + Escape key while the checkout modal is open
+  useScrollLock(modalOpen);
+
+  // Escape key while the checkout modal is open
   useEffect(() => {
     if (!modalOpen) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") closeModal(); };
     document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
+    return () => document.removeEventListener("keydown", onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modalOpen, step, payment]);
 
