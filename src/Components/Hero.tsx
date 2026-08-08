@@ -28,7 +28,7 @@ function Hero() {
   const instrs   = stats?.total_instructors ?? 0;
 
   return (
-    <section className="hero-section grad-navy relative overflow-hidden pt-16 pb-24 sm:pt-20 sm:pb-32">
+    <section className="hero-section grad-navy relative overflow-hidden pb-12 pt-16 sm:pt-20 lg:pb-32">
       <div className="pointer-events-none absolute -top-40 right-0 h-[620px] w-[620px] rounded-full bg-blue-500/[0.06] blur-3xl dark:bg-blue-600/20" />
       <div className="pointer-events-none absolute -bottom-20 -left-16 h-80 w-80 rounded-full bg-cyan-400/[0.06] blur-3xl dark:bg-cyan-500/10" />
       <div className="pointer-events-none absolute left-1/3 top-1/2 h-48 w-48 rounded-full bg-indigo-400/[0.06] blur-2xl dark:bg-indigo-600/10" />

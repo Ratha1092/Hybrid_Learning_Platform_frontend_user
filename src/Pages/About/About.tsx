@@ -1,8 +1,18 @@
-import { ArrowRight, Globe2, ShieldCheck, Sparkles, Users2, Target } from "lucide-react";
+import { ArrowRight, Globe2, ShieldCheck, Sparkles, Users2, Target, Quote } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Reveal } from "../../utils/anim";
 import { useSettings } from "../../context/SettingsContext";
 import Stats from "../../Components/Stats/Stats";
+
+const assetImages = import.meta.glob("../../assets/*.{jpg,jpeg,png,webp}", {
+  eager: true,
+  import: "default",
+}) as Record<string, string>;
+
+function assetImg(filename: string): string {
+  const match = Object.entries(assetImages).find(([path]) => path.endsWith(`/${filename}`));
+  return match?.[1] ?? "";
+}
 
 const VALUES = [
   {
@@ -27,16 +37,23 @@ const VALUES = [
   },
 ];
 
+const ADVISOR = {
+  name: "Phrum chansamady",
+  role: "Advisor",
+  image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=300&q=75",
+  about: "Brings years of experience in education and mentorship, helping shape the platform's direction — from curriculum quality to the overall student experience.",
+};
+
 const TEAM = [
   {
-    name: "Sokha Ratha",
-    role: "Founder & CEO",
-    image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=300&q=75",
+    name: "Torn Ratha",
+    role: "Developer",
+    image: assetImg("Torn Ratha.jpg"),
   },
   {
-    name: "Lina Chan",
-    role: "Head of Curriculum",
-    image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=300&q=75",
+    name: "Ros Vutha",
+    role: "Developer",
+    image: assetImg ("Ros Vutha.jpg"),
   },
   {
     name: "Marcus Reyes",
@@ -49,6 +66,30 @@ const TEAM = [
     image: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=300&q=75",
   },
 ];
+
+function PersonCard({ name, role, image, delay = 0 }: { name: string; role: string; image: string; delay?: number }) {
+  return (
+    <Reveal delay={delay}>
+      <div className="group h-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-e1 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-card dark:border-slate-700 dark:bg-slate-800">
+        <div className="relative aspect-[4/5] w-full overflow-hidden">
+          <img
+            src={image}
+            alt={name}
+            className="h-full w-full object-cover object-[center_25%] transition-transform duration-500 group-hover:scale-110"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-blue-600/50 via-blue-600/0 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+        </div>
+        <div className="p-5 text-center">
+          <h3 className="font-display text-[16px] font-bold ink transition-colors duration-300 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+            {name}
+          </h3>
+          <p className="mt-1 text-[13px] muted2">{role}</p>
+          <span className="mx-auto mt-3 block h-0.5 w-8 scale-x-0 rounded-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-transform duration-300 group-hover:scale-x-100" />
+        </div>
+      </div>
+    </Reveal>
+  );
+}
 
 export default function About() {
   const { settings } = useSettings();
@@ -75,7 +116,7 @@ export default function About() {
       </div>
 
       {/* Mission */}
-      <section className="bg-[#EEF1F6] py-16 dark:bg-slate-950 sm:py-20">
+      <section className="bg-[#EEF1F6] py-16 dark:bg-slate-950 lg:py-20">
         <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <Reveal>
@@ -145,29 +186,53 @@ export default function About() {
       {/* Live platform stats */}
       <Stats />
 
-      {/* Team */}
+      {/* Advisor & Team */}
       <section className="bg-[#EEF1F6] py-16 dark:bg-slate-950 sm:py-20">
         <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
           <Reveal className="mx-auto max-w-xl text-center">
-            <p className="mb-2 text-sm font-semibold brand-blue">Who's behind it</p>
-            <h2 className="font-display text-[30px] font-extrabold ink sm:text-[38px]">Meet the team</h2>
-            <p className="mt-3 text-[15px] muted2">
-              A small, focused team obsessed with making online learning actually work.
-            </p>
+            <p className="mb-2 text-sm font-semibold brand-blue">Guiding the mission</p>
+            <h2 className="font-display text-[30px] font-extrabold ink sm:text-[38px]">Our advisor</h2>
           </Reveal>
 
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {TEAM.map((member, i) => (
-              <Reveal key={member.name} delay={i * 90}>
-                <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-e1 dark:border-slate-700 dark:bg-slate-800">
-                  <img src={member.image} alt={member.name} className="h-56 w-full object-cover" />
-                  <div className="p-5 text-center">
-                    <h3 className="font-display text-[15px] font-bold ink">{member.name}</h3>
-                    <p className="mt-1 text-[13px] muted2">{member.role}</p>
-                  </div>
-                </div>
-              </Reveal>
-            ))}
+          <Reveal className="mx-auto mt-10 max-w-2xl">
+            <div className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-e1 transition-all duration-300 hover:-translate-y-1 hover:shadow-card dark:border-slate-700 dark:bg-slate-800 sm:flex-row">
+              <div className="relative h-72 w-full shrink-0 overflow-hidden sm:h-auto sm:w-64">
+                <img
+                  src={ADVISOR.image}
+                  alt={ADVISOR.name}
+                  className="h-full w-full object-cover object-[center_25%] transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-blue-600/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 sm:bg-gradient-to-r" />
+              </div>
+              <div className="relative flex flex-1 flex-col justify-center p-7 text-center sm:text-left">
+                <Quote className="pointer-events-none absolute right-6 top-5 hidden h-14 w-14 text-blue-50 dark:text-blue-500/10 sm:block" strokeWidth={1.5} />
+                <span className="mx-auto mb-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-[11.5px] font-bold uppercase tracking-wide text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 sm:mx-0">
+                  Advisor
+                </span>
+                <h3 className="font-display text-[22px] font-extrabold ink">{ADVISOR.name}</h3>
+                <p className="mt-1.5 text-[14.5px] muted2">{ADVISOR.role}</p>
+                <span className="mx-auto mt-4 block h-0.5 w-10 rounded-full bg-gradient-to-r from-blue-500 to-cyan-400 sm:mx-0" />
+                {ADVISOR.about && (
+                  <p className="relative mt-4 text-[14.5px] leading-relaxed muted2">{ADVISOR.about}</p>
+                )}
+              </div>
+            </div>
+          </Reveal>
+
+          <div className="mt-20 border-t border-slate-200 pt-16 dark:border-slate-800">
+            <Reveal className="mx-auto max-w-xl text-center">
+              <p className="mb-2 text-sm font-semibold brand-blue">Who's behind it</p>
+              <h2 className="font-display text-[30px] font-extrabold ink sm:text-[38px]">Meet the team</h2>
+              <p className="mt-3 text-[15px] muted2">
+                A small, focused team obsessed with making online learning actually work.
+              </p>
+            </Reveal>
+
+            <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {TEAM.map((member, i) => (
+                <PersonCard key={member.name} name={member.name} role={member.role} image={member.image} delay={i * 90} />
+              ))}
+            </div>
           </div>
         </div>
       </section>

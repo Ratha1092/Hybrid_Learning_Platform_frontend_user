@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuthModal } from "../../context/AuthModalContext";
+import { useScrollLock } from "../../hooks/useScrollLock";
 import Login from "../../Pages/Auth/Login/Login";
 import Register from "../../Pages/Auth/Register/Register";
 import "./AuthModal.css";
@@ -14,16 +15,14 @@ export default function AuthModal() {
     close();
   }, [location.pathname]);
 
-  // lock scroll + Escape key
+  useScrollLock(!!modal);
+
+  // Escape key
   useEffect(() => {
     if (!modal) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") close(); };
     document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
+    return () => document.removeEventListener("keydown", onKey);
   }, [modal, close]);
 
   if (!modal) return null;
