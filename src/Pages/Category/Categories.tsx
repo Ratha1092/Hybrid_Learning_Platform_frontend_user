@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
 import { ArrowUpRight, BookOpen, Code2, PenTool, FlaskConical, Camera, DollarSign, Video, Award, TrendingUp, Users, MessageSquare, Bot } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { categoryService, type Category } from "../../services/categoryService";
+import { type Category } from "../../services/categoryService";
 import { Reveal } from "../../utils/anim";
 
 const ICON_MAP: Record<string, { Icon: React.ElementType; tint: string; ic: string }> = {
@@ -33,17 +32,9 @@ function getCategoryStyle(category: Category) {
   return ICON_MAP.default;
 }
 
-export default function Categories() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading]       = useState(true);
+export default function Categories({ categories }: { categories?: Category[] }) {
+  const loading = categories === undefined;
   const navigate = useNavigate();
-
-  useEffect(() => {
-    categoryService.getAll()
-      .then(({ data }) => setCategories(data.data))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
 
   return (
     <section className="bg-[#EEF1F6] dark:bg-slate-950 py-20 sm:py-28">
@@ -68,7 +59,7 @@ export default function Categories() {
           </div>
         ) : (
           <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {categories.slice(0, 12).map((cat, i) => {
+            {(categories ?? []).slice(0, 12).map((cat, i) => {
               const { Icon, tint, ic } = getCategoryStyle(cat);
               return (
                 <Reveal key={cat.id} delay={i * 60}>

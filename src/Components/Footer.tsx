@@ -38,7 +38,7 @@ export default function Footer() {
   const brandRest = nameParts.slice(1).join(" ");
 
   const companyItems: FooterLink[] = [
-    { label: "About", to: "/about" },
+    { label: "About Us", to: "/about" },
     { label: "Become Instructor", to: "/instructor/register" },
     { label: "Contact", to: "/contact" },
   ];

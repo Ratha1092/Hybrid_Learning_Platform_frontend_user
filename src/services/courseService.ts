@@ -12,6 +12,7 @@ export interface Course {
   duration: number;
   students_count?: number;
   views_count?: number;
+  average_rating?: number | null;
   reviews_count?: number;
   sections_count?: number;
   category?: { id: number; name: string; slug: string } | null;
@@ -61,6 +62,8 @@ export interface EnrolledCourse {
   course_title: string;
   course_thumbnail: string | null;
   course_level: string;
+  average_rating: number | null;
+  reviews_count: number;
   progress_percentage: number;
   enrolled_at: string;
   completed_at: string | null;

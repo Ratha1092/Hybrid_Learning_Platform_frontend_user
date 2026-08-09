@@ -1,19 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Users, BookOpen, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Reveal } from "../../utils/anim";
-import api from "../../api/axios";
+import { type HomeInstructor as Instructor } from "../../utils/useHomeData";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
-
-interface Instructor {
-  id: number;
-  name: string;
-  avatar: string | null;
-  bio: string | null;
-  courses: number;
-  students: number;
-}
 
 function resolveAvatar(url: string | null): string | null {
   if (!url) return null;
@@ -75,16 +66,9 @@ function SkeletonCard() {
   );
 }
 
-export default function TopInstructors() {
-  const [instructors, setInstructors] = useState<Instructor[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    api.get("/instructors?limit=8")
-      .then((res) => setInstructors((res.data.data ?? []).slice(0, 8)))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+export default function TopInstructors({ instructors: instructorsProp }: { instructors?: Instructor[] }) {
+  const loading = instructorsProp === undefined;
+  const instructors = instructorsProp ?? [];
 
   if (!loading && instructors.length === 0) return null;
 

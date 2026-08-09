@@ -7,6 +7,8 @@ export interface WishlistedCourse {
   thumbnail_url: string | null;
   price: string;
   level: string;
+  average_rating?: number | null;
+  reviews_count?: number;
   instructor?: { name: string } | null;
 }
 

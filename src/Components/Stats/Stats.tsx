@@ -1,8 +1,5 @@
-import { useEffect, useState } from "react";
 import { useCountUp, Reveal } from "../../utils/anim";
-import api from "../../api/axios";
-
-interface PlatformStats { total_students: number; total_courses: number; total_instructors: number; }
+import { usePlatformStats } from "../../utils/usePlatformStats";
 
 function StatItem({ end, suffix, label, sub }: { end: number; suffix: string; label: string; sub?: string }) {
   const { ref, val } = useCountUp(end);
@@ -18,11 +15,7 @@ function StatItem({ end, suffix, label, sub }: { end: number; suffix: string; la
 }
 
 export default function Stats() {
-  const [stats, setStats] = useState<PlatformStats | null>(null);
-
-  useEffect(() => {
-    api.get("/stats").then((res) => setStats(res.data.data)).catch(() => {});
-  }, []);
+  const stats = usePlatformStats();
 
   const items = [
     { end: stats?.total_students    ?? 0, suffix: "+", label: "Active Students",  sub: "learning every day" },

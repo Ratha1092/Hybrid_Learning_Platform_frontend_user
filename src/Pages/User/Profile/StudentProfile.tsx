@@ -696,7 +696,6 @@ export default function StudentProfile() {
                   const isFree = Number(course.price) === 0;
                   const instructorName = course.instructor?.name ?? "Instructor";
                   const initial = instructorName.charAt(0).toUpperCase();
-                  const rating = course.level === "beginner" ? "4.5" : course.level === "intermediate" ? "4.7" : "4.9";
                   return (
                     <div
                       key={course.id}
@@ -726,10 +725,12 @@ export default function StudentProfile() {
                             {initial}
                           </div>
                           <span className="flex-1 truncate text-[12.5px] muted2 dark:text-slate-400">{instructorName}</span>
-                          <span className="flex items-center gap-1 text-[12.5px] font-bold text-amber-500">
-                            <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                            {rating}
-                          </span>
+                          {course.average_rating != null && (
+                            <span className="flex items-center gap-1 text-[12.5px] font-bold text-amber-500">
+                              <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                              {course.average_rating.toFixed(1)}
+                            </span>
+                          )}
                         </div>
 
                         <h3 className="mt-3 line-clamp-2 font-display text-[15px] font-bold leading-snug ink dark:text-slate-100">{course.title}</h3>

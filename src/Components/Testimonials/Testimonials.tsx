@@ -54,7 +54,10 @@ export default function Testimonials() {
           <StatPill end={stats?.total_courses     ?? 0} suffix="+" label="Expert courses" />
           <StatPill end={stats?.total_instructors ?? 0} suffix="+" label="Pro instructors" />
           <div className="flex flex-col items-center text-center">
-            <span className="font-display text-[30px] font-extrabold text-slate-900 dark:text-white sm:text-[38px]">4.8★</span>
+            <span className="flex items-center gap-1.5 font-display text-[30px] font-extrabold text-slate-900 dark:text-white sm:text-[38px]">
+              4.8
+              <Star className="h-6 w-6 fill-amber-400 text-amber-400 sm:h-7 sm:w-7" />
+            </span>
             <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">Average rating</p>
           </div>
         </Reveal>
