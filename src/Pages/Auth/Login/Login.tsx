@@ -1,5 +1,5 @@
 import { useState, type ChangeEvent } from "react";
-import { usePlatformStats } from "../../../hooks/usePlatformStats";
+import { usePlatformStats } from "../../../utils/usePlatformStats";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { authService } from "../../../services/authService";

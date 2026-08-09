@@ -324,7 +324,7 @@ function Courses() {
                     {isFree ? "Free" : `$${course.price}`}
                   </span>
                   <button
-                    onClick={(e) => { e.stopPropagation(); toggle({ id: course.id, slug: course.slug, title: course.title, thumbnail_url: course.thumbnail_url, price: course.price, level: course.level, instructor: course.instructor ?? null }); }}
+                    onClick={(e) => { e.stopPropagation(); toggle({ id: course.id, slug: course.slug, title: course.title, thumbnail_url: course.thumbnail_url, price: course.price, level: course.level, average_rating: course.average_rating, reviews_count: course.reviews_count, instructor: course.instructor ?? null }); }}
                     className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full glass text-slate-600 transition-colors hover:text-rose-500"
                     aria-label="Add to wishlist"
                   >
@@ -342,10 +342,10 @@ function Courses() {
                       {(course.instructor?.name ?? "?").charAt(0).toUpperCase()}
                     </div>
                     <span className="text-[13px] muted2 truncate">{course.instructor?.name ?? "Instructor"}</span>
-                    {(course.reviews_count ?? 0) > 0 && (
+                    {course.average_rating != null && (
                       <span className="ml-auto flex items-center gap-1 text-[13px] font-bold text-amber-500">
                         <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                        {course.reviews_count}
+                        {course.average_rating.toFixed(1)}
                       </span>
                     )}
                   </div>

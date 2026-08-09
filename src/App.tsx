@@ -20,6 +20,7 @@ import TopInstructors from "./Components/TopInstructors/TopInstructors";
 import Testimonials from "./Components/Testimonials/Testimonials";
 import Faq from "./Components/Faq/Faq";
 import FinalCta from "./Components/FinalCta/FinalCta";
+import { useHomeData } from "./utils/useHomeData";
 
 import PageCourses from "./Pages/Courses/Page_Courses";
 import FeaturedCourses from "./Components/FeaturedCourses";
@@ -131,15 +132,16 @@ function RegisterPage() {
 }
 
 function MainPage() {
+  const home = useHomeData();
   return (
     <>
       <Hero />
-      <Categories />
-      <FeaturedCourses />
+      <Categories categories={home?.categories} />
+      <FeaturedCourses courses={home?.featured_courses} />
       <LearningPath />
       <BecomeInstructor />
       <Stats />
-      <TopInstructors />
+      <TopInstructors instructors={home?.top_instructors} />
       <Testimonials />
       <Faq />
       <FinalCta />

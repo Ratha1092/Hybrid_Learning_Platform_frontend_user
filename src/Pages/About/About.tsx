@@ -1,4 +1,4 @@
-import { ArrowRight, Globe2, ShieldCheck, Sparkles, Users2, Target, Quote } from "lucide-react";
+import { ArrowRight, Globe2, ShieldCheck, Sparkles, Users2, Target, Star, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Reveal } from "../../utils/anim";
 import { useSettings } from "../../context/SettingsContext";
@@ -38,10 +38,13 @@ const VALUES = [
 ];
 
 const ADVISOR = {
-  name: "Phrum chansamady",
-  role: "Advisor",
+  name: "Phrum Chansamady",
+  role: "Education Advisor & Mentor",
   image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=300&q=75",
   about: "Brings years of experience in education and mentorship, helping shape the platform's direction — from curriculum quality to the overall student experience.",
+  years: 8,
+  linkedin: "",
+  email: "",
 };
 
 const TEAM = [
@@ -51,19 +54,19 @@ const TEAM = [
     image: assetImg("Torn Ratha.jpg"),
   },
   {
+    name: "Mao Sakseth",
+    role: "Developer",
+    image: assetImg("Mao Sakseth.jpg"),
+  },
+  {
     name: "Ros Vutha",
     role: "Developer",
     image: assetImg ("Ros Vutha.jpg"),
   },
   {
-    name: "Marcus Reyes",
-    role: "Head of Engineering",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=75",
-  },
-  {
-    name: "Priya Nair",
-    role: "Head of Community",
-    image: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=300&q=75",
+    name: "Chon Davith",
+    role: "Developer",
+    image: assetImg("Chon Davith.jpg"),
   },
 ];
 
@@ -194,27 +197,61 @@ export default function About() {
             <h2 className="font-display text-[30px] font-extrabold ink sm:text-[38px]">Our advisor</h2>
           </Reveal>
 
-          <Reveal className="mx-auto mt-10 max-w-2xl">
-            <div className="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-e1 transition-all duration-300 hover:-translate-y-1 hover:shadow-card dark:border-slate-700 dark:bg-slate-800 sm:flex-row">
-              <div className="relative h-72 w-full shrink-0 overflow-hidden sm:h-auto sm:w-64">
+          <Reveal className="mx-auto mt-10 max-w-md">
+            <div className="flip-navy grad-navy group overflow-hidden rounded-[28px] shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-card dark:shadow-soft-dark">
+              <div className="relative aspect-[4/5] w-full overflow-hidden">
                 <img
                   src={ADVISOR.image}
                   alt={ADVISOR.name}
                   className="h-full w-full object-cover object-[center_25%] transition-transform duration-500 group-hover:scale-105"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-blue-600/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 sm:bg-gradient-to-r" />
-              </div>
-              <div className="relative flex flex-1 flex-col justify-center p-7 text-center sm:text-left">
-                <Quote className="pointer-events-none absolute right-6 top-5 hidden h-14 w-14 text-blue-50 dark:text-blue-500/10 sm:block" strokeWidth={1.5} />
-                <span className="mx-auto mb-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-[11.5px] font-bold uppercase tracking-wide text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 sm:mx-0">
-                  Advisor
+                <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/50 to-transparent" />
+
+                <span className="glass-dark absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11.5px] font-bold uppercase tracking-wide text-blue-100">
+                  <Star className="h-3 w-3 fill-blue-300 text-blue-300" /> Advisor
                 </span>
+              </div>
+
+              <div className="p-7">
                 <h3 className="font-display text-[22px] font-extrabold ink">{ADVISOR.name}</h3>
-                <p className="mt-1.5 text-[14.5px] muted2">{ADVISOR.role}</p>
-                <span className="mx-auto mt-4 block h-0.5 w-10 rounded-full bg-gradient-to-r from-blue-500 to-cyan-400 sm:mx-0" />
+                <p className="mt-1 text-[14.5px] font-semibold brand-blue">{ADVISOR.role}</p>
+                <span className="mt-4 block h-0.5 w-10 rounded-full bg-gradient-to-r from-blue-500 to-cyan-400" />
                 {ADVISOR.about && (
-                  <p className="relative mt-4 text-[14.5px] leading-relaxed muted2">{ADVISOR.about}</p>
+                  <p className="mt-4 text-[14.5px] leading-relaxed muted2">{ADVISOR.about}</p>
                 )}
+
+                <div className="mt-6 flex items-center justify-between border-t border-slate-200/70 pt-5 dark:border-white/10">
+                  <div className="flex items-center gap-2">
+                    {ADVISOR.linkedin && (
+                      <a
+                        href={ADVISOR.linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`${ADVISOR.name} on LinkedIn`}
+                        className="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-slate-600 transition-colors hover:text-blue-600 dark:bg-white/10 dark:text-slate-300 dark:hover:text-blue-400"
+                      >
+                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
+                          <path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9h4v12H3V9Zm7 0h3.8v1.6h.1c.5-1 1.8-2 3.7-2 4 0 4.7 2.6 4.7 6V21h-4v-5.3c0-1.3 0-2.9-1.8-2.9s-2 1.4-2 2.8V21h-4V9Z" />
+                        </svg>
+                      </a>
+                    )}
+                    {ADVISOR.email && (
+                      <a
+                        href={`mailto:${ADVISOR.email}`}
+                        aria-label={`Email ${ADVISOR.name}`}
+                        className="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-slate-600 transition-colors hover:text-blue-600 dark:bg-white/10 dark:text-slate-300 dark:hover:text-blue-400"
+                      >
+                        <Mail className="h-4 w-4" />
+                      </a>
+                    )}
+                  </div>
+                  {ADVISOR.years > 0 && (
+                    <div className="text-right">
+                      <p className="font-display text-xl font-extrabold ink">{ADVISOR.years}+</p>
+                      <p className="text-[10.5px] font-bold uppercase tracking-wide muted2">Years</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </Reveal>

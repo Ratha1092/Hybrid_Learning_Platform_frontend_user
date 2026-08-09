@@ -22,9 +22,23 @@ export interface CategoryDetail extends Category {
   }[];
 }
 
+// Module-level cache so every component that calls getAll() shares one
+// in-flight request and one resolved result instead of each firing its own.
+let cachedCategories: Category[] | null = null;
+let pendingCategories: Promise<Category[]> | null = null;
+
+function fetchCategories(): Promise<Category[]> {
+  if (cachedCategories) return Promise.resolve(cachedCategories);
+  if (pendingCategories) return pendingCategories;
+  pendingCategories = api.get<{ data: Category[] }>("/categories")
+    .then((res) => { cachedCategories = res.data.data; return cachedCategories; })
+    .finally(() => { pendingCategories = null; });
+  return pendingCategories;
+}
+
 export const categoryService = {
   getAll: () =>
-    api.get<{ data: Category[] }>("/categories"),
+    fetchCategories().then((data) => ({ data: { data } })),
 
   getBySlug: (slug: string) =>
     api.get<{ data: CategoryDetail }>(`/categories/${slug}`),
