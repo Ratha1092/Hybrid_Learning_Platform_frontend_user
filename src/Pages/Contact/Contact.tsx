@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { MapPin, Phone, Mail, Clock, Send, CheckCircle, ChevronDown, MessageSquare, Headphones, BookOpen } from "lucide-react";
+import { MapPin, Phone, Mail, Clock, Send, CheckCircle, MessageSquare, Headphones, BookOpen } from "lucide-react";
 import { useSettings } from "../../context/SettingsContext";
 import api from "../../api/axios";
 import "./Contact.css";
@@ -12,29 +12,6 @@ interface FormState {
 }
 
 const INIT: FormState = { name: "", email: "", subject: "", message: "" };
-
-const FAQS = [
-  {
-    q: "How do I enroll in a course?",
-    a: "Browse the Courses page, click on any course you're interested in, and hit the Enroll button. If it's a paid course, you'll be guided through the payment flow.",
-  },
-  {
-    q: "Can I get a refund if I'm not satisfied?",
-    a: "Yes — we offer a 7-day money-back guarantee on all purchases. Reach out to our support team within 7 days of purchase and we'll process your refund.",
-  },
-  {
-    q: "How do I become an instructor?",
-    a: "Log in, then click \"Become an Instructor\" in the navbar. Fill out your application and our team will review it within 3–5 business days.",
-  },
-  {
-    q: "Do courses expire after purchase?",
-    a: "No — once you purchase a course it's yours for life, including any future updates the instructor adds.",
-  },
-  {
-    q: "Is there a mobile app?",
-    a: "We're currently web-first and fully responsive on all screen sizes. A dedicated mobile app is on our roadmap.",
-  },
-];
 
 export default function Contact() {
   const { settings } = useSettings();
@@ -232,33 +209,12 @@ export default function Contact() {
                   </li>
                   <li>
                     <BookOpen size={15} />
-                    <a href="/courses">Browse our help center</a>
+                    <a href="/help">Browse our help center</a>
                   </li>
                 </ul>
               </div>
             </div>
 
-          </div>
-        </div>
-      </section>
-
-      {/* ── FAQ ── */}
-      <section className="ct-faq-section">
-        <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
-          <div className="ct-faq-header">
-            <h2 className="ct-faq-title">Frequently Asked Questions</h2>
-            <p className="ct-faq-sub">Can't find what you're looking for? <a href={`mailto:${email}`}>Email us</a>.</p>
-          </div>
-          <div className="ct-faq-list">
-            {FAQS.map((item, i) => (
-              <details key={i} className="ct-faq-item">
-                <summary className="ct-faq-q">
-                  {item.q}
-                  <ChevronDown size={18} className="ct-faq-chevron" />
-                </summary>
-                <p className="ct-faq-a">{item.a}</p>
-              </details>
-            ))}
           </div>
         </div>
       </section>

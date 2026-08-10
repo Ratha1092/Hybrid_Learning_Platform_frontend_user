@@ -41,6 +41,7 @@ import InstructorProfile from "./Pages/User/Instructor/Sivbar/InstructorProfile"
 import Library from "./Pages/Library/Library";
 import Learn from "./Pages/Learn/Learn";
 import Contact from "./Pages/Contact/Contact";
+import Help from "./Pages/Help/Help";
 import Instructors from "./Pages/Instructors/Instructors";
 import About from "./Pages/About/About";
 import GitHubCallback from "./Pages/Auth/GitHub/GitHubCallback";
@@ -194,6 +195,7 @@ function App() {
           <Route path="/instructors" element={<WithFooter><Instructors /></WithFooter>} />
           <Route path="/about" element={<WithFooter><About /></WithFooter>} />
           <Route path="/contact" element={<WithFooter><Contact /></WithFooter>} />
+          <Route path="/help" element={<WithFooter><Help /></WithFooter>} />
           <Route path="/auth/github/callback" element={<GitHubCallback />} />
           <Route path="/PageLogin" element={<LoginPage />} />
           <Route path="/PageRegister" element={<RegisterPage />} />

@@ -48,8 +48,7 @@ export default function Footer() {
   }
 
   const supportItems: FooterLink[] = [
-    { label: "Help Center", to: "/contact" },
-    { label: "Contact", to: "/contact" },
+    { label: "Help Center", to: "/help" },
   ];
 
   if (settings.privacy_url?.trim()) {
