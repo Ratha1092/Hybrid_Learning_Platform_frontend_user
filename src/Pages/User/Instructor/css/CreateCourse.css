@@ -1,13 +1,13 @@
-/* ── Create Course (cc-* / cur-*) ──────────────────────────────────────── */
+/* Create Course (cc-* / cur-*) */
 
-/* ── Wrapper ── */
+/* Wrapper */
 .cc-wrap {
   padding: 0 0 80px;
   max-width: 1160px;
   font-family: "Inter", system-ui, sans-serif;
 }
 
-/* ── Page header ── */
+/* Page header */
 .cc-header { margin-bottom: 28px; }
 
 .cc-header__back {
@@ -41,7 +41,7 @@
   margin: 0;
 }
 
-/* ── Step tabs ── */
+/* Step tabs */
 .cc-tabs {
   display: flex;
   align-items: center;
@@ -132,7 +132,7 @@
   color: var(--pt-pine, #27695A);
 }
 
-/* ── Body ── */
+/* Body */
 .cc-body {
   display: flex;
   gap: 24px;
@@ -147,7 +147,7 @@
   gap: 16px;
 }
 
-/* ── Error ── */
+/* Error */
 .cc-error {
   background: var(--pt-rose-s, #FBECE9);
   border: 1px solid #F0B8B0;
@@ -161,7 +161,7 @@
   gap: 8px;
 }
 
-/* ── Card ── */
+/* Card */
 .cc-card {
   background: var(--pt-card, #fff);
   border: 1px solid var(--pt-line, #E7E3D9);
@@ -204,7 +204,7 @@
   margin: 14px 0 20px;
 }
 
-/* ── Form fields ── */
+/* Form fields */
 .cc-field {
   display: flex;
   flex-direction: column;
@@ -278,7 +278,7 @@
   gap: 16px;
 }
 
-/* ── Thumbnail upload ── */
+/* Thumbnail upload */
 .cc-thumb-upload {
   display: block;
   cursor: pointer;
@@ -340,7 +340,7 @@
 
 .cc-thumb-remove:hover { text-decoration: underline; }
 
-/* ── Pricing options ── */
+/* Pricing options */
 .cc-price-options {
   display: flex;
   gap: 16px;
@@ -384,7 +384,7 @@
 .cc-price-opt span { font-size: 0.79rem; }
 .cc-price-opt__icon { font-size: 28px; }
 
-/* ── Price input ── */
+/* Price input */
 .cc-price-input {
   display: flex;
   align-items: center;
@@ -421,7 +421,7 @@
   box-shadow: none !important;
 }
 
-/* ── Bottom actions bar ── */
+/* Bottom actions bar */
 .cc-actions {
   display: flex;
   align-items: center;
@@ -470,7 +470,7 @@
 .cc-continue:hover { background: var(--pt-ink-3, #2E313A); }
 .cc-continue:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* ── Right aside ── */
+/* Right aside */
 .cc-aside {
   width: 280px;
   flex-shrink: 0;
@@ -481,7 +481,7 @@
   top: 90px;
 }
 
-/* ── Preview card ── */
+/* Preview card */
 .cc-preview {
   background: var(--pt-card, #fff);
   border: 1px solid var(--pt-line, #E7E3D9);
@@ -606,7 +606,7 @@
   border: 1px solid var(--pt-gold-l, #F0DCBC);
 }
 
-/* ── Checklist ── */
+/* Checklist */
 .cc-checklist {
   background: var(--pt-card, #fff);
   border: 1px solid var(--pt-line, #E7E3D9);
@@ -669,7 +669,7 @@
   color: #fff;
 }
 
-/* ── Commission info panel (Pricing step) ── */
+/* Commission info panel (Pricing step) */
 .cc-commission-info {
   margin-top: 24px;
   background: var(--pt-warm, #FBFAF6);
@@ -712,7 +712,7 @@
   line-height: 1.4;
 }
 
-/* ── Curriculum step — no-courseId notice ── */
+/* Curriculum step — no-courseId notice */
 .cc-notice {
   padding: 28px 0 8px;
   display: flex;
@@ -728,7 +728,7 @@
   margin: 0;
 }
 
-/* ── Submit issues list ── */
+/* Submit issues list */
 .cc-submit-issues {
   background: #fffbeb;
   border: 1px solid #fde68a;
@@ -777,7 +777,7 @@
   text-decoration: none;
 }
 
-/* ── Submit step ── */
+/* Submit step */
 .cc-submit-hero {
   text-align: center;
   padding: 16px 0 24px;
@@ -837,11 +837,11 @@
   margin-top: 14px;
 }
 
-/* ── Full-width body (curriculum step) ── */
+/* Full-width body (curriculum step) */
 .cc-body--full { display: block; }
-.cc-body--full .cc-main { max-width: 860px; }
+.cc-body--full .cc-main { max-width: none; }
 
-/* ── Curriculum sections ── */
+/* Curriculum sections */
 .cur-sections {
   display: flex;
   flex-direction: column;
@@ -893,7 +893,7 @@
   font-weight: 600;
 }
 
-/* ── Lessons list ── */
+/* Lessons list */
 .cur-lessons {
   padding: 8px 16px 14px;
   background: var(--pt-card, #fff);
@@ -945,7 +945,7 @@
   color: var(--pt-pine, #27695A);
 }
 
-/* ── Lesson form ── */
+/* Lesson form */
 .cur-lesson-form {
   margin-top: 12px;
   background: var(--pt-warm, #FBFAF6);
@@ -1007,7 +1007,13 @@
 
 .cur-lesson-form__actions { display: flex; gap: 8px; }
 
-/* ── Add section row ── */
+/* Add section row */
+.cur-hint {
+  font-size: 0.78rem;
+  color: var(--pt-faint, #9C988C);
+  margin-bottom: 6px;
+}
+
 .cur-add-section {
   display: flex;
   gap: 10px;
@@ -1044,7 +1050,7 @@
   font-weight: 600;
 }
 
-/* ── Shared buttons ── */
+/* Shared buttons */
 .cur-btn {
   padding: 8px 16px;
   border-radius: 8px;
@@ -1087,7 +1093,7 @@
 
 .cur-btn--icon:hover { background: var(--pt-rose-s, #FBECE9); }
 
-/* ── Responsive ── */
+/* Responsive */
 @media (max-width: 960px) {
   .cc-aside { width: 240px; }
 }
@@ -1107,7 +1113,7 @@
   .cc-tab__num { width: 20px; height: 20px; font-size: 10px; }
 }
 
-/* ── Section Library picker (inside Curriculum step) ── */
+/* Section Library picker (inside Curriculum step) */
 .cur-library {
   background: var(--pt-warm, #FBFAF6);
   border: 1.5px solid var(--pt-line, #E7E3D9);
@@ -1265,7 +1271,7 @@
   color: var(--pt-rose, #C0503F);
 }
 
-/* ── Divider between library and create-new ── */
+/* Divider between library and create-new */
 .cur-divider {
   display: flex;
   align-items: center;
@@ -1285,14 +1291,14 @@
   background: var(--pt-line, #E7E3D9);
 }
 
-/* ── Dark mode ─────────────────────────────────── */
+/* Dark mode─ */
 html.dark .cc-header__back:hover { color: var(--pt-pine, #27695A); }
 html.dark .cc-tabs {
   background: var(--pt-card);
   border-color: var(--pt-line);
 }
 
-/* ── Lesson Resources ──────────────────────────────── */
+/* Lesson Resources */
 .cur-lesson-wrap {
   display: flex;
   flex-direction: column;

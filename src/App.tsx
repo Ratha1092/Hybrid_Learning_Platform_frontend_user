@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import { useAuthModal } from "./context/AuthModalContext";
@@ -42,7 +42,7 @@ import Library from "./Pages/Library/Library";
 import Learn from "./Pages/Learn/Learn";
 import Contact from "./Pages/Contact/Contact";
 import Help from "./Pages/Help/Help";
-import Instructors from "./Pages/Instructors/Instructors";
+const Instructors = lazy(() => import("./Pages/Instructors/Instructors"));
 import About from "./Pages/About/About";
 import GitHubCallback from "./Pages/Auth/GitHub/GitHubCallback";
 import Login from "./Pages/Auth/Login/Login";
@@ -177,6 +177,14 @@ function WithFooter({ children }: { children: React.ReactNode }) {
   return <>{children}<Footer /></>;
 }
 
+function PageLoader() {
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <span className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-blue-600 dark:border-slate-700" />
+    </div>
+  );
+}
+
 function App() {
   return (
     <ThemeProvider>
@@ -192,7 +200,7 @@ function App() {
           <Route path="/home" element={<MainPage />} />
           <Route path="/courses" element={<WithFooter><PageCourses /></WithFooter>} />
           <Route path="/courses/:slug" element={<WithFooter><DetailCourse /></WithFooter>} />
-          <Route path="/instructors" element={<WithFooter><Instructors /></WithFooter>} />
+          <Route path="/instructors" element={<Suspense fallback={<PageLoader />}><WithFooter><Instructors /></WithFooter></Suspense>} />
           <Route path="/about" element={<WithFooter><About /></WithFooter>} />
           <Route path="/contact" element={<WithFooter><Contact /></WithFooter>} />
           <Route path="/help" element={<WithFooter><Help /></WithFooter>} />

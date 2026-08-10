@@ -457,7 +457,9 @@ function CurriculumStep({ courseId, sections, setSections, onNext, onBack }: Cur
       {err && <div className="cc-error" style={{ marginBottom: 16 }}>⚠ {err}</div>}
 
       {sections.length === 0 && (
-        <div className="cur-empty">No sections created yet.</div>
+        <div className="cur-empty">
+          No sections created yet. Type a title in the box below and click <strong>+ Add Section</strong> to create your first one.
+        </div>
       )}
 
       <div className="cur-sections">
@@ -483,6 +485,7 @@ function CurriculumStep({ courseId, sections, setSections, onNext, onBack }: Cur
       </div>
 
       {/* Add section */}
+      <p className="cur-hint">Enter a title to enable the + Add Section button.</p>
       <div className="cur-add-section">
         <input
           placeholder="Section title e.g. Introduction to HTML"
