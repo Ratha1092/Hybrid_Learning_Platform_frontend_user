@@ -174,6 +174,14 @@ export const instructorService = {
   getStandaloneSections: () =>
     api.get<{ data: StandaloneSection[] }>("/instructor/sections/standalone"),
 
+  // Rename a standalone section.
+  updateStandaloneSection: (id: number | string, title: string) =>
+    api.put<{ data: StandaloneSection }>(`/instructor/sections/${id}`, { title }),
+
+  // Delete a standalone section (backend rejects if it still has lessons).
+  deleteStandaloneSection: (id: number | string) =>
+    api.delete(`/instructor/sections/${id}`),
+
   // Attach one or more standalone sections to a course.
   attachSections: (courseId: number | string, section_ids: number[]) =>
     api.post<{ success: boolean; data: { course_id: number; attached_count: number } }>(

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, CheckCircle, ImagePlus, X, Globe, Lock, Award } from "lucide-react";
 import { instructorService, type InstructorCourse } from "../../../../services/instructorService";
+import { categoryService, type Category } from "../../../../services/categoryService";
 import Curriculum from "./Curriculum";
 
 type Tab = "info" | "curriculum";
@@ -24,10 +25,11 @@ export default function EditCourse() {
   const [course, setCourse]   = useState<InstructorCourse | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab]         = useState<Tab>("info");
+  const [categories, setCategories] = useState<Category[]>([]);
 
   const [form, setForm] = useState({
     title: "", short_description: "", description: "", price: "0", level: "beginner",
-    preview_video_url: "", requirements: "", what_you_will_learn: "",
+    category_id: "", preview_video_url: "", requirements: "", what_you_will_learn: "",
     certificate_enabled: false, visibility: "public",
   });
   const [saving, setSaving]   = useState(false);
@@ -56,6 +58,7 @@ export default function EditCourse() {
           description:         c.description ?? "",
           price:               c.price,
           level:               c.level,
+          category_id:         c.category_id != null ? String(c.category_id) : "",
           preview_video_url:   c.preview_video_url ?? "",
           requirements:        c.requirements ?? "",
           what_you_will_learn: c.what_you_will_learn ?? "",
@@ -66,6 +69,12 @@ export default function EditCourse() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    categoryService.getAll()
+      .then(({ data }) => setCategories(data.data ?? []))
+      .catch(() => {});
+  }, []);
 
   const set = (k: string, v: string | boolean) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -111,14 +120,14 @@ export default function EditCourse() {
   return (
     <div className="flex flex-col gap-6">
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <button
             onClick={() => navigate("/instructor/courses")}
-            className="mb-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-slate-500 transition-colors hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"
+            className="mb-3 inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-[13.5px] font-semibold text-slate-600 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
+            <ArrowLeft className="h-4 w-4" />
             My Courses
           </button>
           <h1 className="font-display text-[26px] font-extrabold text-slate-900 dark:text-white">
@@ -130,11 +139,11 @@ export default function EditCourse() {
         </span>
       </div>
 
-      {/* ── Tabs ── */}
+      {/* Tabs */}
       <div className="flex gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 dark:border-slate-700 dark:bg-slate-800/50">
         {([
           { key: "info",       emoji: "📝", label: "Basic Info" },
-          { key: "curriculum", emoji: "🎬", label: "Curriculum" },
+          { key: "curriculum", emoji: "🎬", label: "Course Info" },
         ] as const).map(({ key, emoji, label }) => (
           <button
             key={key}
@@ -151,7 +160,7 @@ export default function EditCourse() {
         ))}
       </div>
 
-      {/* ── Basic Info tab ── */}
+      {/* Basic Info tab */}
       {tab === "info" && (
         <form onSubmit={handleSave} className="flex flex-col gap-5">
 
@@ -218,8 +227,17 @@ export default function EditCourse() {
                   className={FIELD}
                 />
               </div>
-              {/* Level / Price / Status row */}
-              <div className="grid grid-cols-3 gap-3">
+              {/* Category / Level row */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={LABEL}>Category</label>
+                  <select value={form.category_id} onChange={(e) => set("category_id", e.target.value)} className={FIELD}>
+                    <option value="">Select category</option>
+                    {categories.map((cat) => (
+                      <option key={cat.id} value={String(cat.id)}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
                 <div>
                   <label className={LABEL}>Level</label>
                   <select value={form.level} onChange={(e) => set("level", e.target.value)} className={FIELD}>
@@ -228,6 +246,10 @@ export default function EditCourse() {
                     <option value="advanced">Advanced</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Price / Status row */}
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className={LABEL}>Price ($)</label>
                   <input type="number" min="0" step="0.01" value={form.price} onChange={(e) => set("price", e.target.value)} className={FIELD} />
@@ -353,7 +375,7 @@ export default function EditCourse() {
         </form>
       )}
 
-      {/* ── Curriculum tab ── */}
+      {/* Curriculum tab */}
       {tab === "curriculum" && (
         <Curriculum courseId={course.id} />
       )}

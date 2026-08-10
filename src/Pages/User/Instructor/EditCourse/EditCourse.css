@@ -1,4 +1,4 @@
-/* ── Shared spinner ─────────────────────────────── */
+/*  Shared spinner ─ */
 .curr-loading, .ec-loading {
   display: flex; align-items: center; justify-content: center; min-height: 300px;
 }
@@ -11,7 +11,7 @@
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── EditCourse page ────────────────────────────── */
+/*  EditCourse page  */
 .ec-page { max-width: 820px; font-family: "Nunito", system-ui, sans-serif; }
 .ec-header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
 .ec-back { background: #f3f4f6; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; color: #374151; }
@@ -61,7 +61,7 @@
 .ec-success { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 10px 14px; color: #16a34a; font-size: 13px; font-weight: 600; }
 .ec-error { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 10px 14px; color: #dc2626; font-size: 13px; }
 
-/* ── Curriculum ─────────────────────────────────── */
+/*  Curriculum  */
 .curr-wrap { font-family: "Nunito", system-ui, sans-serif; }
 .curr-header { margin-bottom: 16px; }
 .curr-summary { font-size: 13px; color: #9ca3af; margin: 0; }
@@ -155,7 +155,7 @@
 
 @media (max-width: 600px) { .ec-row { grid-template-columns: 1fr; } }
 
-/* ── Thumbnail upload ─────────────────────────────── */
+/*  Thumbnail upload ─ */
 .ec-thumb-upload {
   display: block; cursor: pointer;
   border: 2px dashed #d1d5db; border-radius: 10px;
@@ -179,7 +179,7 @@
 }
 .ec-thumb-remove:hover { text-decoration: underline; }
 
-/* ── Dark mode ─────────────────────────────────── */
+/*  Dark mode  */
 html.dark .ec-page         { color: #f1f5f9; }
 html.dark .ec-back         { background: #1e293b; color: #94a3b8; border-color: #334155; }
 html.dark .ec-back:hover   { background: #273548; }

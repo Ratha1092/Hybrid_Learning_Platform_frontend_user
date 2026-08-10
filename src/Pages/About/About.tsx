@@ -38,9 +38,9 @@ const VALUES = [
 ];
 
 const ADVISOR = {
-  name: "Phrum Chansamady",
+  name: "Prum Chansamedy",
   role: "Education Advisor & Mentor",
-  image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=300&q=75",
+  image: assetImg(""),
   about: "Brings years of experience in education and mentorship, helping shape the platform's direction — from curriculum quality to the overall student experience.",
   years: 8,
   linkedin: "",

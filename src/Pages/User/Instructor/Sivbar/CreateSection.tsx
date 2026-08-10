@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Layers, PlusCircle, ArrowRight, Lightbulb, Info } from "lucide-react";
+import { BookOpen, Layers, PlusCircle, ArrowRight, Lightbulb, Info, Eye, Pencil, Trash2, X, Check } from "lucide-react";
 import { instructorService, type StandaloneSection } from "../../../../services/instructorService";
 
 export default function SectionLibrary() {
@@ -13,6 +13,20 @@ export default function SectionLibrary() {
   const [newTitle, setNewTitle] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  // View panel
+  const [viewSection, setViewSection] = useState<StandaloneSection | null>(null);
+
+  // Inline rename
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+
+  // Delete confirm
+  const [confirmDelete, setConfirmDelete] = useState<StandaloneSection | null>(null);
+  const [deleteSaving, setDeleteSaving] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const load = () => {
     setLoading(true);
@@ -36,6 +50,44 @@ export default function SectionLibrary() {
       setSaveError("Failed to create section. Please try again.");
     }
     setSaving(false);
+  };
+
+  const startEdit = (s: StandaloneSection) => {
+    setEditingId(s.id);
+    setEditTitle(s.title);
+    setEditError(null);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditTitle("");
+    setEditError(null);
+  };
+
+  const handleSaveEdit = async (id: number) => {
+    if (!editTitle.trim() || editSaving) return;
+    setEditSaving(true); setEditError(null);
+    try {
+      const { data } = await instructorService.updateStandaloneSection(id, editTitle.trim());
+      setSections((prev) => prev.map((s) => (s.id === id ? { ...s, title: data.data.title } : s)));
+      setEditingId(null);
+    } catch {
+      setEditError("Failed to save. Please try again.");
+    }
+    setEditSaving(false);
+  };
+
+  const handleDelete = async () => {
+    if (!confirmDelete || deleteSaving) return;
+    setDeleteSaving(true); setDeleteError(null);
+    try {
+      await instructorService.deleteStandaloneSection(confirmDelete.id);
+      setSections((prev) => prev.filter((s) => s.id !== confirmDelete.id));
+      setConfirmDelete(null);
+    } catch {
+      setDeleteError("Failed to delete. Please try again.");
+    }
+    setDeleteSaving(false);
   };
 
   return (
@@ -171,15 +223,79 @@ export default function SectionLibrary() {
                     <Layers className="h-4 w-4 text-teal-600 dark:text-teal-400" />
                   </div>
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <p className="truncate text-[14px] font-semibold text-slate-800 dark:text-slate-100">{s.title}</p>
-                    <p className="mt-0.5 text-[12px] text-slate-400 dark:text-slate-500">
-                      {s.lessons_count === 0 ? "No lessons yet" : `${s.lessons_count} lesson${s.lessons_count !== 1 ? "s" : ""}`}
-                      <span className="mx-2 text-slate-200 dark:text-slate-600">·</span>
-                      <span className="font-medium text-slate-500 dark:text-slate-400">Standalone</span>
-                    </p>
-                  </div>
+                  {/* Info / inline edit */}
+                  {editingId === s.id ? (
+                    <div className="flex-1 min-w-0">
+                      <div className="flex gap-2">
+                        <input
+                          autoFocus
+                          value={editTitle}
+                          onChange={(e) => setEditTitle(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleSaveEdit(s.id);
+                            if (e.key === "Escape") cancelEdit();
+                          }}
+                          className="flex-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[14px] font-semibold text-slate-800 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                        />
+                        <button
+                          onClick={() => handleSaveEdit(s.id)}
+                          disabled={editSaving || !editTitle.trim()}
+                          className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-teal-600 text-white transition-colors hover:bg-teal-700 disabled:opacity-50"
+                          aria-label="Save"
+                        >
+                          <Check className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={cancelEdit}
+                          className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-slate-200 text-slate-500 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700"
+                          aria-label="Cancel"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                      {editError && <p className="mt-1.5 text-[12px] font-medium text-rose-600 dark:text-rose-400">⚠ {editError}</p>}
+                    </div>
+                  ) : (
+                    <div className="flex-1 min-w-0">
+                      <p className="truncate text-[14px] font-semibold text-slate-800 dark:text-slate-100">{s.title}</p>
+                      <p className="mt-0.5 text-[12px] text-slate-400 dark:text-slate-500">
+                        {s.lessons_count === 0 ? "No lessons yet" : `${s.lessons_count} lesson${s.lessons_count !== 1 ? "s" : ""}`}
+                        <span className="mx-2 text-slate-200 dark:text-slate-600">·</span>
+                        <span className="font-medium text-slate-500 dark:text-slate-400">Standalone</span>
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  {editingId !== s.id && (
+                    <div className="flex shrink-0 items-center gap-1">
+                      <button
+                        onClick={() => setViewSection(s)}
+                        className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+                        aria-label="View section"
+                        title="View"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => startEdit(s)}
+                        className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+                        aria-label="Edit section"
+                        title="Edit"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => { if (s.lessons_count === 0) { setDeleteError(null); setConfirmDelete(s); } }}
+                        disabled={s.lessons_count > 0}
+                        className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
+                        aria-label="Delete section"
+                        title={s.lessons_count > 0 ? "Remove all lessons before deleting" : "Delete"}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
 
@@ -261,6 +377,100 @@ export default function SectionLibrary() {
           </button>
         </div>
       </div>
+
+      {/* View panel */}
+      {viewSection && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px]"
+          onClick={() => setViewSection(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-card dark:bg-slate-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-teal-50 dark:bg-teal-500/10">
+                <Layers className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+              </div>
+              <button
+                onClick={() => setViewSection(null)}
+                className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200"
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <h3 className="mt-4 text-[16px] font-bold text-slate-800 dark:text-slate-100">{viewSection.title}</h3>
+
+            <dl className="mt-4 flex flex-col gap-3 border-t border-slate-100 pt-4 dark:border-slate-700">
+              <div className="flex items-center justify-between text-[13px]">
+                <dt className="text-slate-400 dark:text-slate-500">Lessons</dt>
+                <dd className="font-semibold text-slate-700 dark:text-slate-200">{viewSection.lessons_count}</dd>
+              </div>
+              <div className="flex items-center justify-between text-[13px]">
+                <dt className="text-slate-400 dark:text-slate-500">Type</dt>
+                <dd className="font-semibold text-slate-700 dark:text-slate-200">Standalone (not attached to a course)</dd>
+              </div>
+              {viewSection.created_at && (
+                <div className="flex items-center justify-between text-[13px]">
+                  <dt className="text-slate-400 dark:text-slate-500">Created</dt>
+                  <dd className="font-semibold text-slate-700 dark:text-slate-200">
+                    {new Date(viewSection.created_at).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}
+                  </dd>
+                </div>
+              )}
+            </dl>
+
+            <button
+              onClick={() => setViewSection(null)}
+              className="mt-6 w-full rounded-xl border border-slate-200 py-2.5 text-[13px] font-semibold text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirm */}
+      {confirmDelete && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px]"
+          onClick={() => !deleteSaving && setConfirmDelete(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl bg-white p-7 shadow-card dark:bg-slate-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 text-center text-[2rem]">🗑️</div>
+            <h3 className="mb-2 text-center text-[15px] font-bold text-slate-800 dark:text-slate-100">
+              Delete "{confirmDelete.title}"?
+            </h3>
+            <p className="mb-6 text-center text-[13px] leading-relaxed text-slate-500 dark:text-slate-400">
+              This section has no lessons, so this can be undone only by re-creating it. This cannot be undone.
+            </p>
+            {deleteError && (
+              <p className="mb-4 text-center text-[12.5px] font-medium text-rose-600 dark:text-rose-400">⚠ {deleteError}</p>
+            )}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmDelete(null)}
+                disabled={deleteSaving}
+                className="flex-1 rounded-xl border border-slate-200 py-2.5 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleteSaving}
+                className="flex-1 rounded-xl bg-rose-500 py-2.5 text-[13px] font-bold text-white hover:bg-rose-600 disabled:opacity-50"
+              >
+                {deleteSaving ? "Deleting…" : "Yes, delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

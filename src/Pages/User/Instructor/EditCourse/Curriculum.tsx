@@ -8,7 +8,7 @@ const EXT_ICON: Record<string, string> = {
   pdf: "📄", zip: "🗜️", doc: "📝", docx: "📝", ppt: "📊", pptx: "📊", mp4: "🎬", jpg: "🖼️", png: "🖼️",
 };
 
-// ── Lesson Resources Panel ────────────────────────────────────────────────────
+//  Lesson Resources Panel 
 function ResourcesPanel({ courseId, sectionId, lessonId }: { courseId: number; sectionId: number; lessonId: number }) {
   const [resources, setResources] = useState<LessonResource[]>([]);
   const [loading, setLoading]     = useState(true);
@@ -104,7 +104,7 @@ function ResourcesPanel({ courseId, sectionId, lessonId }: { courseId: number; s
   );
 }
 
-// ── Curriculum ────────────────────────────────────────────────────────────────
+//  Curriculum
 export default function Curriculum({ courseId }: Props) {
   const [sections, setSections]           = useState<InstructorSection[]>([]);
   const [loading, setLoading]             = useState(true);
@@ -220,6 +220,12 @@ export default function Curriculum({ courseId }: Props) {
       {error && (
         <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] font-medium text-rose-600 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-400">
           ⚠ {error}
+        </div>
+      )}
+
+      {sections.length === 0 && (
+        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-5 py-4 text-[13px] text-slate-500 dark:border-slate-600 dark:bg-slate-700/30 dark:text-slate-400">
+          No sections yet. Type a section title in the box below and click <strong>Add Section</strong> to create your first one — you can add lessons to it afterward.
         </div>
       )}
 
@@ -378,6 +384,9 @@ export default function Curriculum({ courseId }: Props) {
       </div>
 
       {/* Add section */}
+      <p className="text-[12px] text-slate-400 dark:text-slate-500">
+        Enter a title to enable the <strong>Add Section</strong> button.
+      </p>
       <div className="flex gap-2.5">
         <input
           placeholder="New section title…"
