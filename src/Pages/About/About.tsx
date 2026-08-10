@@ -1,4 +1,4 @@
-import { ArrowRight, Globe2, ShieldCheck, Sparkles, Users2, Target, Star, Mail } from "lucide-react";
+import { ArrowRight, Globe2, ShieldCheck, Sparkles, Users2, Star, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Reveal } from "../../utils/anim";
 import { useSettings } from "../../context/SettingsContext";
@@ -123,9 +123,6 @@ export default function About() {
         <div className="mx-auto max-w-[1400px] px-4 sm:px-6">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <Reveal>
-              <span className="inline-flex items-center gap-2 rounded-full border border-blue-200/70 bg-blue-50 px-3.5 py-1.5 text-[13px] font-semibold text-blue-600 dark:border-white/10 dark:bg-white/[0.08] dark:text-blue-200">
-                <Target className="h-3.5 w-3.5" /> Why we exist
-              </span>
               <h2 className="mt-5 font-display text-[30px] font-extrabold leading-tight ink sm:text-[38px]">
                 Learning that actually changes what you can do
               </h2>
