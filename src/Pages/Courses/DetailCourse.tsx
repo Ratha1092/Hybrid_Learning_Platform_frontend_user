@@ -10,6 +10,10 @@ function fmtDuration(seconds: number) {
   return s === 0 ? `${m}m` : `${m}:${String(s).padStart(2, "0")}`;
 }
 
+function toLines(text?: string | null): string[] {
+  return (text ?? "").split("\n").map((l) => l.trim()).filter(Boolean);
+}
+
 function sectionTotalDuration(section: Section) {
   return section.lessons.reduce((sum, l) => sum + l.duration, 0);
 }
@@ -152,10 +156,24 @@ function DetailCourse() {
           Back
         </button>
         <div className="detail-hero__content">
-          <span className="detail-badge">{course.level}</span>
+          <div className="detail-badges">
+            <span className="detail-badge">{course.level}</span>
+            {course.category?.name && (
+              <span className="detail-badge detail-badge--category">{course.category.name}</span>
+            )}
+          </div>
           <h1 className="detail-title">{course.title}</h1>
           <p className="detail-short-desc">{course.short_description}</p>
           <div className="detail-meta">
+            {course.average_rating != null && (
+              <span className="detail-meta__item detail-meta__item--rating">
+                <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                {course.average_rating.toFixed(1)}
+                {course.reviews_count != null && course.reviews_count > 0 && (
+                  <span style={{ opacity: 0.75, fontWeight: 500 }}>({course.reviews_count})</span>
+                )}
+              </span>
+            )}
             {course.instructor?.name && (
               <span className="detail-meta__item detail-meta__item--instructor">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -197,6 +215,17 @@ function DetailCourse() {
                 </>
               )}
             </button>
+            {course.preview_video_url && (
+              <a
+                href={course.preview_video_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="detail-meta__item detail-copy-btn"
+              >
+                <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Watch preview
+              </a>
+            )}
           </div>
         </div>
       </div>
@@ -210,6 +239,36 @@ function DetailCourse() {
             <h2>About This Course</h2>
             <p>{course.description || course.short_description}</p>
           </section>
+
+          {/* What you'll learn */}
+          {toLines(course.what_you_will_learn).length > 0 && (
+            <section className="detail-section">
+              <h2>What You'll Learn</h2>
+              <ul className="detail-check-list">
+                {toLines(course.what_you_will_learn).map((line, i) => (
+                  <li key={i}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    <span>{line}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {/* Requirements */}
+          {toLines(course.requirements).length > 0 && (
+            <section className="detail-section">
+              <h2>Requirements</h2>
+              <ul className="detail-check-list detail-check-list--dot">
+                {toLines(course.requirements).map((line, i) => (
+                  <li key={i}>
+                    <span className="detail-check-list__dot" />
+                    <span>{line}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           {/* Sections accordion */}
           {course.sections && course.sections.length > 0 && (
@@ -253,11 +312,17 @@ function DetailCourse() {
             {course.instructor?.name && (
               <li><span>Instructor</span><strong>{course.instructor.name}</strong></li>
             )}
+            {course.category?.name && (
+              <li><span>Category</span><strong>{course.category.name}</strong></li>
+            )}
             <li><span>Level</span><strong>{course.level}</strong></li>
             {course.language && <li><span>Language</span><strong>{course.language}</strong></li>}
             <li><span>Sections</span><strong>{course.sections?.length ?? 0}</strong></li>
             <li><span>Lessons</span><strong>{totalLessons}</strong></li>
             <li><span>Duration</span><strong>{fmtDuration(totalDuration)}</strong></li>
+            {course.certificate_enabled && (
+              <li><span>Certificate</span><strong>Included</strong></li>
+            )}
           </ul>
         </aside>
       </div>

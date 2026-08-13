@@ -166,14 +166,15 @@ interface SectionBlockProps {
   section: LocalSection;
   index: number;
   courseId: number;
+  autoOpenForm?: boolean;
   onDelete: () => void;
   onLessonAdded: (lesson: LocalLesson) => void;
   onLessonDeleted: (id: number) => void;
 }
 
-function SectionBlock({ section, index, courseId, onDelete, onLessonAdded, onLessonDeleted }: SectionBlockProps) {
+function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLessonAdded, onLessonDeleted }: SectionBlockProps) {
   const [open, setOpen] = useState(true);
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(!!autoOpenForm);
   const [lesson, setLesson] = useState<LessonForm>({ title: "", type: "video", video_url: "", content: "", is_preview: false, videoFile: null });
   const [saving, setSaving] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
@@ -324,6 +325,7 @@ function CurriculumStep({ courseId, sections, setSections, onNext, onBack }: Cur
   const [newTitle, setNewTitle] = useState("");
   const [addingSection, setAddingSection] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [justAddedId, setJustAddedId] = useState<number | null>(null);
 
   // Section Library state
   const [library, setLibrary] = useState<StandaloneSection[]>([]);
@@ -352,6 +354,7 @@ function CurriculumStep({ courseId, sections, setSections, onNext, onBack }: Cur
     try {
       const { data } = await instructorService.createSection(courseId, newTitle.trim());
       setSections((prev) => [...prev, { ...data.data, lessons: data.data.lessons ?? [] }]);
+      setJustAddedId(data.data.id);
       setNewTitle("");
     } catch (e) { setErr(getApiError(e)); }
     setAddingSection(false);
@@ -469,6 +472,7 @@ function CurriculumStep({ courseId, sections, setSections, onNext, onBack }: Cur
             section={section}
             index={idx}
             courseId={courseId}
+            autoOpenForm={section.id === justAddedId}
             onDelete={() => handleDeleteSection(section.id)}
             onLessonAdded={(lesson) =>
               setSections((prev) => prev.map((s) =>

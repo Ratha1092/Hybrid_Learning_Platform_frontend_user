@@ -1,6 +1,6 @@
 import api from "../api/axios";
 
-// ── Interfaces ────────────────────────────────────────────────────────────────
+// Interfaces
 // Defines the shape of data returned from backend APIs.
 export interface InstructorProfile {
   id: number;
@@ -107,6 +107,7 @@ export interface StandaloneSection {
   sort_order: number;
   course_id: null;
   lessons_count: number;
+  lessons?: InstructorLesson[];
   created_at?: string;
 }
 
@@ -160,11 +161,11 @@ export interface InstructorSection {
   lessons: InstructorLesson[];
 }
 
-// ── Service ────────────────────────────────────────────────────────────────────
+// Service
 // Centralized API methods for instructor-related actions.
 
 export const instructorService = {
-  // ── Standalone sections ──────────────────────────────────────────────────
+  // Standalone sections
 
   // Create a standalone section with no course attached.
   createStandaloneSection: (title: string, sort_order?: number) =>
@@ -188,6 +189,85 @@ export const instructorService = {
       `/instructor/courses/${courseId}/attach-sections`,
       { section_ids }
     ),
+
+  // Fetch a single section (standalone or course-attached) with its full lessons array.
+  getSectionDetail: (sectionId: number | string) =>
+    api.get<{ data: StandaloneSection }>(`/instructor/sections/${sectionId}`),
+
+  // Section-scoped lessons (works for standalone or course-attached sections)
+
+  getSectionLessons: (sectionId: number | string) =>
+    api.get<{ data: InstructorLesson[] }>(`/instructor/sections/${sectionId}/lessons`),
+
+  createSectionLesson: (
+    sectionId: number | string,
+    data: {
+      title: string;
+      type: string;
+      duration?: number;
+      is_preview?: boolean;
+      video_url?: string;
+      content?: string;
+    }
+  ) =>
+    api.post<{ data: InstructorLesson }>(`/instructor/sections/${sectionId}/lessons`, data),
+
+  updateSectionLesson: (
+    sectionId: number | string,
+    lessonId: number | string,
+    data: Partial<InstructorLesson>
+  ) =>
+    api.put(`/instructor/sections/${sectionId}/lessons/${lessonId}`, data),
+
+  deleteSectionLesson: (sectionId: number | string, lessonId: number | string) =>
+    api.delete(`/instructor/sections/${sectionId}/lessons/${lessonId}`),
+
+  uploadSectionLessonVideo: (
+    sectionId: number | string,
+    lessonId: number | string,
+    file: File,
+    onProgress?: (percent: number) => void
+  ) => {
+    const form = new FormData();
+    form.append("video", file);
+    return api.post<{ data: { video_path: string; video_url: string } }>(
+      `/instructor/sections/${sectionId}/lessons/${lessonId}/upload-video`,
+      form,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (e) => {
+          if (onProgress && e.total) onProgress(Math.round((e.loaded / e.total) * 100));
+        },
+      }
+    );
+  },
+
+  getSectionLessonResources: (sectionId: number | string, lessonId: number | string) =>
+    api.get<{ data: LessonResource[] }>(`/instructor/sections/${sectionId}/lessons/${lessonId}/resources`),
+
+  uploadSectionLessonResource: (
+    sectionId: number | string,
+    lessonId: number | string,
+    formData: FormData,
+    onProgress?: (pct: number) => void
+  ) =>
+    api.post<{ data: LessonResource }>(
+      `/instructor/sections/${sectionId}/lessons/${lessonId}/resources`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (e) => {
+          if (onProgress && e.total) onProgress(Math.round((e.loaded / e.total) * 100));
+        },
+      }
+    ),
+
+  deleteSectionLessonResource: (
+    sectionId: number | string,
+    lessonId: number | string,
+    resourceId: number | string
+  ) =>
+    api.delete(`/instructor/sections/${sectionId}/lessons/${lessonId}/resources/${resourceId}`),
 
   // Submit application to become an instructor.
   apply: (formData: FormData) =>
@@ -250,7 +330,7 @@ export const instructorService = {
   submitForReview: (id: number | string) =>
     api.post(`/instructor/courses/${id}/submit-review`),
 
-  // ── Sections ─────────────────────────────────────────
+  // Sections─
 
   // Fetch all sections of a course.
   getSections: (courseId: number | string) =>
@@ -285,7 +365,7 @@ export const instructorService = {
       `/instructor/courses/${courseId}/sections/${sectionId}`
     ),
 
-  // ── Lessons ─────────────────────────────────────────
+  // Lessons─
 
   // Create a lesson inside a section.
   createLesson: (
@@ -349,7 +429,7 @@ export const instructorService = {
       `/instructor/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}`
     ),
 
-  // ── Lesson Resources ─────────────────────────────────
+  // Lesson Resources─
 
   getLessonResources: (courseId: number | string, sectionId: number | string, lessonId: number | string) =>
     api.get<{ data: LessonResource[] }>(
@@ -384,13 +464,13 @@ export const instructorService = {
       `/instructor/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}/resources/${resourceId}`
     ),
 
-  // ── Students ─────────────────────────────────────────
+  // Students─
 
   // Fetch all students enrolled in instructor courses.
   getStudents: () =>
     api.get<{ data: { total: number; students: StudentEnrollment[] } }>("/instructor/students"),
 
-  // ── Finance ─────────────────────────────────────────
+  // Finance─
 
   // Fetch instructor wallet balance.
   getWallet: () =>

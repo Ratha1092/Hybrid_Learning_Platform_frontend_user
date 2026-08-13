@@ -6,7 +6,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import api from "../api/axios";
+import api, { SESSION_EXPIRED_EVENT } from "../api/axios";
 
 export interface AuthUser {
   id: number;
@@ -98,6 +98,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
     window.addEventListener("storage", sync);
     return () => window.removeEventListener("storage", sync);
+  }, []);
+
+  // axios already cleared localStorage on a 401 — drop the stale user from
+  // state too so the UI (navbar, guarded routes) reflects the logout.
+  useEffect(() => {
+    const onSessionExpired = () => setUser(null);
+    window.addEventListener(SESSION_EXPIRED_EVENT, onSessionExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, onSessionExpired);
   }, []);
 
   return (

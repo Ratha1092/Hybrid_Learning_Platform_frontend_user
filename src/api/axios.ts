@@ -11,6 +11,7 @@ const api = axios.create({
 
 export const MAINTENANCE_EVENT = "app:maintenance";
 export const SUSPENDED_EVENT = "app:suspended";
+export const SESSION_EXPIRED_EVENT = "app:session-expired";
 
 api.interceptors.response.use(
   (response) => response,
@@ -35,8 +36,11 @@ api.interceptors.response.use(
     }
 
     if (status === 401) {
+      const hadUser = !!localStorage.getItem("user");
       localStorage.removeItem("user");
-      window.location.href = "/";
+      if (hadUser) {
+        window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT));
+      }
     }
 
     return Promise.reject(error);
