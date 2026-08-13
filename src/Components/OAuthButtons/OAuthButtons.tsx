@@ -63,7 +63,7 @@ export default function OAuthButtons({ onError, onSuccess, from }: Props) {
                 avatar: payload.picture ?? null,
               });
               if (!data.success) { onError?.(data.message || "Google sign-in failed."); return; }
-              login(data.data.user);
+              login(data.data.user, data.data.token);
               onSuccess?.();
               navigate(from ?? "/", { replace: true });
             } catch (err: unknown) {

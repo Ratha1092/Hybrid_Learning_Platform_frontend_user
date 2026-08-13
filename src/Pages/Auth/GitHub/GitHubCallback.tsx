@@ -39,7 +39,7 @@ export default function GitHubCallback() {
           setErrorMsg(data.message || "GitHub login failed.");
           return;
         }
-        login(data.data.user);
+        login(data.data.user, data.data.token);
         const from = localStorage.getItem("github_oauth_from");
         localStorage.removeItem("github_oauth_from");
         navigate(from || "/", { replace: true });

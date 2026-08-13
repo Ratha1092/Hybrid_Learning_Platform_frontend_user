@@ -116,7 +116,7 @@ export default function Login() {
     try {
       await authService.csrf();
       const { data } = await authService.login(form);
-      login(data.data.user);
+      login(data.data.user, data.data.token);
       setStatus("success");
       setServerMessage(data.message || "Login successful!");
       const redirectTo = sessionStorage.getItem("authRedirectTo") ?? from ?? "/";

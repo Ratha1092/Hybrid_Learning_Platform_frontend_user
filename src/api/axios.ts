@@ -2,11 +2,24 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_URL}/api/v1`,
-  withCredentials: true,
+  // This app authenticates API calls with a Sanctum personal-access token.
+  // Never include cookies: a shared Railway cookie could authenticate the
+  // request as an administrator from another application.
+  withCredentials: false,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
   },
+});
+
+export const AUTH_TOKEN_KEY = "auth_token";
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 export const MAINTENANCE_EVENT = "app:maintenance";
@@ -38,6 +51,7 @@ api.interceptors.response.use(
     if (status === 401) {
       const hadUser = !!localStorage.getItem("user");
       localStorage.removeItem("user");
+      localStorage.removeItem(AUTH_TOKEN_KEY);
       if (hadUser) {
         window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT));
       }
