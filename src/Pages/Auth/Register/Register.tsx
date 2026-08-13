@@ -223,7 +223,7 @@ export default function Register() {
     try {
       await authService.csrf();
       const { data: regData } = await authService.register({ ...form, otp_code: code });
-      login(regData.data.user);
+      login(regData.data.user, regData.data.token);
       setOtpStatus("success");
       const redirectTo = sessionStorage.getItem("authRedirectTo") ?? from ?? "/";
       sessionStorage.removeItem("authRedirectTo");

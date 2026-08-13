@@ -1,6 +1,7 @@
 import Echo from "laravel-echo";
 import Pusher from "pusher-js";
 import axios from "axios";
+import { AUTH_TOKEN_KEY } from "../api/axios";
 
 declare global {
   interface Window {
@@ -22,8 +23,7 @@ export function getEcho(): Echo<"pusher"> {
       key: import.meta.env.VITE_PUSHER_KEY,
       cluster: import.meta.env.VITE_PUSHER_CLUSTER,
       forceTLS: true,
-      // Custom authorizer so Sanctum session cookies are sent — Bearer token
-      // auth doesn't apply here since this project uses cookie-based SPA auth.
+      // Authenticate private channels with the same Bearer token as API calls.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       authorizer: ((channel: { name: string }) => ({
         authorize: (socketId: string, callback: (error: Error | null, data: unknown) => void) => {
@@ -31,7 +31,13 @@ export function getEcho(): Echo<"pusher"> {
             .post(
               `${API_BASE}/api/broadcasting/auth`,
               { socket_id: socketId, channel_name: channel.name },
-              { withCredentials: true, headers: { Accept: "application/json" } }
+              {
+                withCredentials: false,
+                headers: {
+                  Accept: "application/json",
+                  Authorization: `Bearer ${localStorage.getItem(AUTH_TOKEN_KEY) ?? ""}`,
+                },
+              }
             )
             .then((res) => callback(null, res.data))
             .catch((err) => callback(err, null));
