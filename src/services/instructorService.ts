@@ -78,6 +78,7 @@ export interface PayoutReceipt {
 export interface StudentEnrollment {
   id?: number;
   student_id?: number;
+  course_id?: number;
   student_name: string;
   student_email: string;
   course_title: string;
