@@ -7,7 +7,7 @@ import { useProtectedWishlist } from "../hooks/useProtectedWishlist";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
-function resolveUrl(url: string | null): string | null {
+function resolveUrl(url: string | null | undefined): string | null {
   if (!url) return null;
   return url.startsWith("http") ? url : `${API_BASE}${url}`;
 }
@@ -85,6 +85,7 @@ export default function FeaturedCourses({ courses: coursesProp }: { courses?: Co
             ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
             : displayList.map((course, i) => {
               const src = resolveUrl(course.thumbnail_url);
+              const instructorAvatar = resolveUrl(course.instructor?.avatar);
               const lvl = course.level?.toLowerCase() ?? "beginner";
               const tint = LEVEL_COLORS[lvl] ?? LEVEL_COLORS.beginner;
               const isFree = Number(course.price) === 0;
@@ -124,7 +125,15 @@ export default function FeaturedCourses({ courses: coursesProp }: { courses?: Co
                     <div className="flex flex-1 flex-col p-5">
                       <div className="flex items-center gap-2">
                         <div className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-600">
-                          {(course.instructor?.name ?? "?").charAt(0).toUpperCase()}
+                          {instructorAvatar ? (
+                            <img
+                              src={instructorAvatar}
+                              alt={course.instructor?.name ?? "Instructor"}
+                              className="h-full w-full rounded-full object-cover"
+                            />
+                          ) : (
+                            (course.instructor?.name ?? "?").charAt(0).toUpperCase()
+                          )}
                         </div>
                         <span className="text-[13px] muted2 truncate">{course.instructor?.name ?? "Instructor"}</span>
                         {course.average_rating != null && (
