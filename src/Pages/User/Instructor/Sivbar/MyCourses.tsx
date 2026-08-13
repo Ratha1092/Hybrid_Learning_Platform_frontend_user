@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { instructorService, type InstructorCourse } from "../../../../services/instructorService";
+import {
+  instructorService,
+  type DashboardStats,
+  type InstructorCourse,
+  type StudentEnrollment,
+} from "../../../../services/instructorService";
 import "../css/MyCourses.css";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
@@ -19,6 +24,8 @@ const STATUS_COLORS: Record<string, string> = {
 export default function MyCourses() {
   const navigate = useNavigate();
   const [courses, setCourses] = useState<InstructorCourse[]>([]);
+  const [dashboard, setDashboard] = useState<DashboardStats | null>(null);
+  const [enrollments, setEnrollments] = useState<StudentEnrollment[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmId, setConfirmId] = useState<number | null>(null);
 
@@ -26,11 +33,40 @@ export default function MyCourses() {
     setLoading(true);
     instructorService.getMyCourses()
       .then(({ data }) => setCourses(data.data))
-      .catch(() => {})
       .finally(() => setLoading(false));
+
+    instructorService.getDashboard()
+      .then(({ data }) => setDashboard(data.data))
+      .catch(() => setDashboard(null));
+
+    instructorService.getStudents()
+      .then(({ data }) => setEnrollments(data.data?.students ?? []))
+      .catch(() => setEnrollments([]));
   };
 
   useEffect(() => { load(); }, []);
+
+  // The dashboard endpoint owns enrollment aggregation. Do not use the legacy
+  // `students_count` field returned by the course-list endpoint.
+  const studentCountByCourseId = new Map(
+    (dashboard?.per_course ?? []).map(({ course_id, student_count }) => [
+      Number(course_id),
+      student_count,
+    ])
+  );
+  const enrollmentCountForCourse = (course: InstructorCourse) => {
+    const countById = enrollments.filter(
+      (enrollment) => Number(enrollment.course_id) === Number(course.id)
+    ).length;
+    const countByTitle = enrollments.filter(
+      (enrollment) => enrollment.course_title === course.title
+    ).length;
+    return Math.max(
+      Number(studentCountByCourseId.get(Number(course.id))) || 0,
+      countById,
+      countByTitle
+    );
+  };
 
   const handleDelete = async (id: number) => {
     setConfirmId(id);
@@ -98,7 +134,7 @@ export default function MyCourses() {
                   <span className="mc-row__price">
                     {Number(course.price) === 0 ? "Free" : `$${course.price}`}
                   </span>
-                  <span className="mc-row__students">👥 {course.students_count ?? 0}</span>
+                  <span className="mc-row__students">👥 {enrollmentCountForCourse(course)}</span>
                 </div>
               </div>
 

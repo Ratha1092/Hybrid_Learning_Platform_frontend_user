@@ -66,7 +66,7 @@ export default function InstructorDashboard() {
   // The course-list endpoint uses a differently named count field and can be stale.
   const studentCountByCourseId = new Map(
     (data?.per_course ?? []).map(({ course_id, student_count }) => [
-      course_id,
+      Number(course_id),
       student_count,
     ])
   );
