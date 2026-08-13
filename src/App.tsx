@@ -13,6 +13,7 @@ import Categories from "./Pages/Category/Categories";
 import Footer from "./Components/Footer";
 import MaintenanceOverlay from "./Components/MaintenanceOverlay/MaintenanceOverlay";
 import SuspendedOverlay from "./Components/SuspendedOverlay/SuspendedOverlay";
+import SessionExpiredOverlay from "./Components/SessionExpiredOverlay/SessionExpiredOverlay";
 import LearningPath from "./Components/LearningPath/LearningPath";
 import BecomeInstructor from "./Components/BecomeInstructor/BecomeInstructor";
 import Stats from "./Components/Stats/Stats";
@@ -192,6 +193,7 @@ function App() {
     <AuthModalProvider>
       <MaintenanceOverlay />
       <SuspendedOverlay />
+      <SessionExpiredOverlay />
       <Navbar />
       <AuthModal />
       <PageTransition>

@@ -140,7 +140,11 @@ export default function Curriculum({ courseId }: Props) {
     setAddingSection(true); setError(null);
     try {
       const { data } = await instructorService.createSection(courseId, newSectionTitle.trim());
-      setSections((prev) => [...prev, { ...data.data, lessons: data.data.lessons ?? [] }]);
+      const newSection = { ...data.data, lessons: data.data.lessons ?? [] };
+      setSections((prev) => [...prev, newSection]);
+      setOpenSections((open) => new Set(open).add(sections.length));
+      setNewLesson((p) => ({ ...p, [newSection.id]: { title: "", type: "video", video_url: "", is_preview: false } }));
+      setAddingLesson(newSection.id);
       setNewSectionTitle("");
     } catch (e: unknown) {
       const err = e as { response?: { data?: { message?: string; errors?: Record<string, string[]> } }; message?: string };
