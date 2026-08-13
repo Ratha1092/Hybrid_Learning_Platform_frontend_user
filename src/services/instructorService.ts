@@ -92,6 +92,10 @@ export interface DashboardStats {
   courses: { total: number; published: number; draft: number };
   students: { total_unique: number };
   revenue: { total_earned: number };
+  per_course: {
+    course_id: number;
+    student_count: number;
+  }[];
   recent_enrollments: {
     student_name: string;
     student_email: string;

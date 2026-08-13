@@ -5,7 +5,6 @@ import {
   instructorService,
   type DashboardStats,
   type EarningsData,
-  type MonthlyTrend,
   type InstructorCourse,
 } from "../../../../services/instructorService";
 import "../css/InstructorDashboard.css";
@@ -29,15 +28,6 @@ function timeAgo(dateStr: string) {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
-const FALLBACK_BARS: MonthlyTrend[] = [
-  { month: "Feb", total: 2400 },
-  { month: "Mar", total: 3100 },
-  { month: "Apr", total: 2800 },
-  { month: "May", total: 4200 },
-  { month: "Jun", total: 3900 },
-  { month: "Jul", total: 5200 },
-];
-
 export default function InstructorDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -50,6 +40,8 @@ export default function InstructorDashboard() {
   const [loadingEarnings, setLoadingEarnings] = useState(true);
   const [loadingCourses, setLoadingCourses]   = useState(true);
   const [error, setError] = useState(false);
+  const [earningsError, setEarningsError] = useState(false);
+  const [coursesError, setCoursesError] = useState(false);
 
   useEffect(() => {
     // Fire all three requests in parallel — each updates its own slice of state
@@ -60,16 +52,24 @@ export default function InstructorDashboard() {
 
     instructorService.getEarnings()
       .then((r) => setEarnings(r.data.data))
-      .catch(() => {/* show chart with no data */})
+      .catch(() => setEarningsError(true))
       .finally(() => setLoadingEarnings(false));
 
     instructorService.getMyCourses()
       .then((r) => setCourses(r.data.data.slice(0, 4)))
-      .catch(() => {/* show empty courses */})
+      .catch(() => setCoursesError(true))
       .finally(() => setLoadingCourses(false));
   }, []);
 
   const firstName = (user?.name ?? "Instructor").split(" ").pop() ?? "Instructor";
+  // The dashboard endpoint is the source of truth for enrollment totals.
+  // The course-list endpoint uses a differently named count field and can be stale.
+  const studentCountByCourseId = new Map(
+    (data?.per_course ?? []).map(({ course_id, student_count }) => [
+      course_id,
+      student_count,
+    ])
+  );
 
   // Only hard-fail if the core dashboard request errored AND finished loading
   if (error && !loadingDash) {
@@ -81,10 +81,7 @@ export default function InstructorDashboard() {
     );
   }
 
-  const bars =
-    earnings?.monthly_trend && earnings.monthly_trend.length > 0
-      ? earnings.monthly_trend.slice(-6)
-      : FALLBACK_BARS;
+  const bars = earnings?.monthly_trend?.slice(-6) ?? [];
   const maxBar = Math.max(...bars.map((b) => safeNum(b.total)), 1);
 
   const TINT_MAP = {
@@ -96,7 +93,7 @@ export default function InstructorDashboard() {
 
   const TILE_DEFS = [
     { label: "Total Revenue",     tint: "emerald" as const, icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 1 0 0 7h5a3.5 3.5 0 1 1 0 7H6" /></svg>, value: data ? `$${safeNum(data.revenue.total_earned).toLocaleString("en-US", { minimumFractionDigits: 0 })}` : null, delta: data ? (earnings ? `$${safeNum(earnings.this_month).toLocaleString()} this month` : "total earned") : null },
-    { label: "Total Students",    tint: "blue"    as const, icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>, value: data ? data.students.total_unique.toLocaleString() : null, delta: "unique learners" },
+    { label: "Total Students",    tint: "blue"    as const, icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>, value: data ? safeNum(data.students.total_unique).toLocaleString() : null, delta: "unique learners" },
     { label: "Published Courses", tint: "violet"  as const, icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5.5C7 5 9.5 5.4 12 7c2.5-1.6 5-2 8-1.5V18c-3-.5-5.5-.1-8 1.5-2.5-1.6-5-2-8-1.5Z"/></svg>, value: data ? String(data.courses.published) : null, delta: data ? `${data.courses.draft} draft${data.courses.draft !== 1 ? "s" : ""}` : null },
     { label: "Total Courses",     tint: "amber"   as const, icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m12 4 2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5L7.2 17l.9-5.4L4.2 9.7l5.4-.8L12 4Z"/></svg>, value: data ? String(data.courses.total) : null, delta: data ? `${data.courses.published} published` : null },
   ];
@@ -157,7 +154,9 @@ export default function InstructorDashboard() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="font-display text-[15px] font-bold ink dark:text-slate-100">Revenue overview</p>
-              <p className="text-[12.5px] muted2 dark:text-slate-400">Last {bars.length} months</p>
+              <p className="text-[12.5px] muted2 dark:text-slate-400">
+                {bars.length > 0 ? `Last ${bars.length} months` : "No revenue data yet"}
+              </p>
             </div>
             {!loadingEarnings && (
               <span className="rounded-full bg-emerald-50 px-3 py-1 text-[11.5px] font-bold text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400">
@@ -175,10 +174,14 @@ export default function InstructorDashboard() {
                 <div key={i} className="flex flex-1 flex-col items-end gap-2 justify-end" style={{ height: "100%" }}>
                   <div
                     className="w-full animate-pulse rounded-t-lg bg-slate-100 dark:bg-slate-700"
-                    style={{ height: `${30 + Math.random() * 50}%` }}
+                    style={{ height: "55%" }}
                   />
                 </div>
               ))
+            ) : earningsError ? (
+              <p className="m-auto text-sm muted2 dark:text-slate-500">Revenue data is unavailable.</p>
+            ) : bars.length === 0 ? (
+              <p className="m-auto text-sm muted2 dark:text-slate-500">No revenue recorded yet.</p>
             ) : bars.map((b, i) => (
               <div key={b.month || i} className="flex flex-1 flex-col items-center gap-2">
                 <div className="flex w-full flex-1 items-end">
@@ -270,6 +273,8 @@ export default function InstructorDashboard() {
                 <div className="h-5 w-12 shrink-0 animate-pulse rounded bg-slate-100 dark:bg-slate-700" />
               </div>
             ))
+          ) : coursesError ? (
+            <p className="py-6 text-center text-[13px] muted2 dark:text-slate-500">Course data is unavailable.</p>
           ) : courses.length === 0 ? (
             <p className="py-6 text-center text-[13px] muted2 dark:text-slate-500">No courses yet. <button onClick={() => navigate("/instructor/courses/create")} className="font-semibold text-blue-600 hover:underline dark:text-blue-400">Create one →</button></p>
           ) : courses.map((c) => (
@@ -289,7 +294,7 @@ export default function InstructorDashboard() {
               <div className="min-w-0 flex-1">
                 <p className="truncate font-display text-[14.5px] font-bold ink dark:text-slate-100">{c.title}</p>
                 <p className="text-[12.5px] muted2 dark:text-slate-400">
-                  {c.students_count ?? 0} students · <span className="capitalize">{c.status}</span>
+                  {safeNum(studentCountByCourseId.get(c.id))} students · <span className="capitalize">{c.status}</span>
                 </p>
               </div>
               <div className="shrink-0 text-right">
