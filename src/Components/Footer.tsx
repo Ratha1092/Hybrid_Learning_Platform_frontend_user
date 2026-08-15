@@ -110,7 +110,7 @@ export default function Footer() {
       <div className="mx-auto max-w-[1400px] px-4 py-11 sm:px-6">
 
         {/* Main grid */}
-        <div className="grid gap-8 md:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
           {/* Brand column */}
           <div>
             <NavLink to="/" className="flex items-center gap-2.5">

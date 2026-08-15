@@ -83,7 +83,7 @@ function Navbar() {
                 <GraduationCap className="h-5 w-5" strokeWidth={2.4} />
               </span>
             )}
-            <span className="hidden font-display text-lg font-extrabold ink min-[390px]:inline">
+            <span className="hidden font-display text-lg font-extrabold ink sm:inline">
               {brandFirst}<span className="brand-blue">{brandRest ? ` ${brandRest}` : ""}</span>
             </span>
           </NavLink>

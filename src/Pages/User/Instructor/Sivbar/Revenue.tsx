@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import { DollarSign, Wallet, Clock, TrendingUp, TrendingDown, Download, X, CheckCircle, AlertCircle } from "lucide-react";
 import {
@@ -258,10 +259,7 @@ export default function Revenue() {
           <div className="flex items-center gap-3">
             <CheckCircle className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
             <p className="text-[13.5px] font-semibold text-emerald-700 dark:text-emerald-300">
-              <span className="capitalize">{payoutAccount.method.replace("_", " ")}</span>
-              {payoutAccount.account_name && ` · ${payoutAccount.account_name}`}
-              {payoutAccount.phone_number && ` · ${payoutAccount.phone_number}`}
-              {payoutAccount.account_number && ` · ${payoutAccount.account_number}`}
+              {payoutAccount.account_name}
             </p>
           </div>
           <span className="shrink-0 text-[12.5px] font-semibold text-emerald-600 dark:text-emerald-400">
@@ -589,7 +587,7 @@ export default function Revenue() {
       )}
 
       {/* ── Payout request modal ── */}
-      {showPayout && (
+      {showPayout && createPortal(
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm"
           onClick={() => setShowPayout(false)}
@@ -671,11 +669,8 @@ export default function Revenue() {
             {payoutAccount && (
               <div className="mb-6 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-700/40">
                 <p className="mb-1 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Paid via</p>
-                <p className="text-[13px] font-semibold capitalize text-slate-700 dark:text-slate-200">
-                  {payoutAccount.method.replace("_", " ")}
-                  {payoutAccount.account_name && ` · ${payoutAccount.account_name}`}
-                  {payoutAccount.phone_number && ` · ${payoutAccount.phone_number}`}
-                  {payoutAccount.account_number && ` · ${payoutAccount.account_number}`}
+                <p className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">
+                  KHQR · {payoutAccount.account_name}
                 </p>
               </div>
             )}
@@ -697,7 +692,8 @@ export default function Revenue() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

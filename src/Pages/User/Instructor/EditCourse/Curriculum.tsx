@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, ChevronRight, Trash2, Plus } from "lucide-react";
 import { instructorService, type InstructorSection, type LessonResource } from "../../../../services/instructorService";
 
@@ -410,7 +411,7 @@ export default function Curriculum({ courseId }: Props) {
       </div>
 
       {/* Delete section confirm modal */}
-      {confirmSection !== null && (
+      {confirmSection !== null && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px]" onClick={() => setConfirmSection(null)}>
           <div className="w-full max-w-sm rounded-2xl bg-white p-7 shadow-card dark:bg-slate-800" onClick={(e) => e.stopPropagation()}>
             <div className="mb-3 text-center text-[2rem]">🗑️</div>
@@ -429,7 +430,8 @@ export default function Curriculum({ courseId }: Props) {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

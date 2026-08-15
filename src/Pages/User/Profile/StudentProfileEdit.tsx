@@ -246,7 +246,7 @@ export function EditProfilePanel({ profile, initialAddresses }: EditProfilePanel
         </div>
 
         {/* Two-column grid */}
-        <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
 
           {/* Left: Avatar card */}
           <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-e1 lg:sticky lg:top-20 lg:self-start dark:border-slate-700 dark:bg-slate-800">
