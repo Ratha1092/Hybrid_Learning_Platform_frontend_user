@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
   instructorService,
@@ -159,7 +160,7 @@ export default function MyCourses() {
       )}
 
       {/* Delete */}
-      {confirmId !== null && (
+      {confirmId !== null && createPortal(
         <div className="mc-modal-backdrop" onClick={() => setConfirmId(null)}>
           <div className="mc-modal" onClick={(e) => e.stopPropagation()}>
             <div className="mc-modal__icon">🗑️</div>
@@ -170,7 +171,8 @@ export default function MyCourses() {
               <button className="mc-modal__confirm" onClick={confirmDelete}>Yes, delete</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

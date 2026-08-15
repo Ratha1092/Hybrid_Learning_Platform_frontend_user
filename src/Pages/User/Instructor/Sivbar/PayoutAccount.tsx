@@ -82,7 +82,7 @@ export default function PayoutAccount() {
             <h3 className="mb-4 text-[15px] font-bold text-slate-800 dark:text-slate-100">How it works</h3>
             <ol className="space-y-0">
               {[
-                { Icon: Banknote,    color: "bg-blue-100 dark:bg-blue-500/15",    icon: "text-blue-600 dark:text-blue-400",    title: "Register",  desc: "Fill in your payment method, account name, and any required details." },
+                { Icon: Banknote,    color: "bg-blue-100 dark:bg-blue-500/15",    icon: "text-blue-600 dark:text-blue-400",    title: "Register",  desc: "Add your bank account name and a screenshot of your payment QR code." },
                 { Icon: ShieldCheck, color: "bg-amber-100 dark:bg-amber-500/15",  icon: "text-amber-600 dark:text-amber-400",  title: "Verify",    desc: "An admin reviews your account within 1–2 business days." },
                 { Icon: QrCode,      color: "bg-emerald-100 dark:bg-emerald-500/15", icon: "text-emerald-600 dark:text-emerald-400", title: "Get paid", desc: "Once verified, request payouts from the Revenue page anytime." },
               ].map(({ Icon, color, icon, title, desc }, i, arr) => (
@@ -104,16 +104,16 @@ export default function PayoutAccount() {
             </ol>
           </div>
 
-          {/* Supported methods */}
+          {/* What you'll need */}
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-e1 dark:border-slate-700 dark:bg-slate-800">
-            <h3 className="mb-3 text-[15px] font-bold text-slate-800 dark:text-slate-100">Supported methods</h3>
-            <div className="space-y-2.5">
+            <h3 className="mb-3 text-[15px] font-bold text-slate-800 dark:text-slate-100">Payouts via KHQR</h3>
+            <p className="text-[14.5px] leading-relaxed text-slate-500 dark:text-slate-400">
+              We pay instructors by scanning a payment QR code, so all we need is:
+            </p>
+            <div className="mt-3 space-y-2.5">
               {[
-                { name: "Bank Transfer", note: "Name + account no." },
-                { name: "MOMO",          note: "Name + phone" },
-                { name: "ACLEDA",        note: "Name + account no." },
-                { name: "Wing",          note: "Name + phone" },
-                { name: "KHQR",          note: "Name + QR code" },
+                { name: "Bank account name", note: "As registered with your bank" },
+                { name: "Payment QR code",   note: "JPG or PNG screenshot" },
               ].map(({ name, note }) => (
                 <div key={name} className="flex items-center justify-between gap-2">
                   <span className="text-[14.5px] font-semibold text-slate-700 dark:text-slate-200">{name}</span>

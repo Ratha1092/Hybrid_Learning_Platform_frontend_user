@@ -97,7 +97,8 @@
   /* Page transition wrapper */
   .page-transition { min-height: 100vh; }
   .page-fade {
-    animation: page-fade-in .45s cubic-bezier(.22,.61,.36,1) both;
+    /* No fill-mode: a held `transform` animation breaks position:fixed descendants after it ends. */
+    animation: page-fade-in .45s cubic-bezier(.22,.61,.36,1);
   }
   @keyframes page-fade-in {
     from { opacity: 0; transform: translateY(14px); }

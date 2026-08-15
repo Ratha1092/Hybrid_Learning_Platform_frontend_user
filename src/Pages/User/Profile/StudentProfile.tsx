@@ -297,7 +297,7 @@ export default function StudentProfile() {
             </div>
 
             {/* Profile card + panels */}
-            <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
               {/* Profile card */}
               <div className="lg:sticky lg:top-20 lg:self-start">
                 {profileCard}

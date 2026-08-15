@@ -183,7 +183,7 @@ export default function InstructorProfile() {
         )}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[300px_1fr]">
 
         {/* Left: profile card */}
         <div className="flex flex-col gap-4 lg:sticky lg:top-20 lg:self-start">

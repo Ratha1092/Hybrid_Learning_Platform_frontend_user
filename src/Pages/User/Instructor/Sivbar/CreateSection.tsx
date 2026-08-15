@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { BookOpen, Layers, PlusCircle, ArrowRight, Lightbulb, Info, Eye, Pencil, Trash2, X, Check, Plus } from "lucide-react";
 import {
@@ -267,7 +268,7 @@ export default function SectionLibrary() {
   return (
     <div className="flex flex-col gap-6">
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-[28px] font-extrabold text-slate-900 dark:text-white">
@@ -288,10 +289,10 @@ export default function SectionLibrary() {
         )}
       </div>
 
-      {/* ── Two-column body ── */}
+      {/* Two-column body */}
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
 
-        {/* ── Left — main content ── */}
+        {/* Left — main content */}
         <div className="min-w-0 flex-1 flex flex-col gap-4">
 
           {/* Info banner */}
@@ -490,7 +491,7 @@ export default function SectionLibrary() {
           )}
         </div>
 
-        {/* ── Right — guide panel ── */}
+        {/* Right — guide panel */}
         <div className="flex shrink-0 flex-col gap-4 lg:w-72">
 
           {/* How to use */}
@@ -553,7 +554,7 @@ export default function SectionLibrary() {
       </div>
 
       {/* Manage panel — section details + full lesson editor */}
-      {viewSection && (
+      {viewSection && createPortal(
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-[2px]"
           onClick={closeManage}
@@ -722,11 +723,12 @@ export default function SectionLibrary() {
               Close
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Delete confirm */}
-      {confirmDelete && (
+      {confirmDelete && createPortal(
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px]"
           onClick={() => !deleteSaving && setConfirmDelete(null)}
@@ -762,7 +764,8 @@ export default function SectionLibrary() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

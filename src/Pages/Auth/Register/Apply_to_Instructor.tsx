@@ -16,6 +16,8 @@ interface FormData {
   identity_id: string;
   certificate_file: File | null;
   identity_file: File | null;
+  account_name: string;
+  qr_code_file: File | null;
 }
 
 interface FormErrors {
@@ -28,6 +30,8 @@ interface FormErrors {
   identity_id?: string;
   certificate_file?: string;
   identity_file?: string;
+  account_name?: string;
+  qr_code_file?: string;
   general?: string;
 }
 
@@ -51,6 +55,8 @@ export default function InstructorRegister() {
     identity_id: "",
     certificate_file: null,
     identity_file: null,
+    account_name: "",
+    qr_code_file: null,
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -90,6 +96,8 @@ export default function InstructorRegister() {
     if (!form.identity_file) newErrors.identity_file = "Please upload your identity document.";
     if (form.portfolio_url && !/^https?:\/\/.+/.test(form.portfolio_url))
       newErrors.portfolio_url = "Portfolio URL must start with http:// or https://";
+    if (!form.account_name.trim()) newErrors.account_name = "Bank account name is required.";
+    if (!form.qr_code_file) newErrors.qr_code_file = "Please upload your payment QR code.";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -111,6 +119,8 @@ export default function InstructorRegister() {
       formData.append("identity_id", form.identity_id);
       if (form.certificate_file) formData.append("certificate_file", form.certificate_file);
       if (form.identity_file) formData.append("identity_file", form.identity_file);
+      formData.append("account_name", form.account_name);
+      if (form.qr_code_file) formData.append("qr_code", form.qr_code_file);
       await instructorService.apply(formData);
       setSuccess(true);
     } catch (err: unknown) {
@@ -404,6 +414,72 @@ export default function InstructorRegister() {
                         </div>
                       </label>
                       {errors.identity_file && <span className="ai-err">{errors.identity_file}</span>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payout Details */}
+                <div className="ai-card">
+                  <div className="ai-card-head">
+                    <div className="ai-card-icon ai-card-icon--gold">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><path d="M13 13h3v3h-3zM20 13v3M13 20h3M17 17h3v3h-3z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h2 className="ai-card-title">Payout Details</h2>
+                      <p className="ai-card-sub">How you'll receive your earnings</p>
+                    </div>
+                  </div>
+
+                  <div className="ai-field">
+                    <label className="ai-label">Bank Account Name <span className="ai-req">*</span></label>
+                    <input
+                      type="text"
+                      name="account_name"
+                      value={form.account_name}
+                      onChange={handleChange}
+                      placeholder="Full name as registered with your bank"
+                      className={`ai-input${errors.account_name ? " ai-field--err" : ""}`}
+                    />
+                    {errors.account_name && <span className="ai-err">{errors.account_name}</span>}
+                  </div>
+
+                  <div className="ai-field">
+                    <label className="ai-label">Payment QR Code <span className="ai-req">*</span></label>
+                    <label className={`ai-upload${errors.qr_code_file ? " ai-upload--err" : ""}${form.qr_code_file ? " ai-upload--filled" : ""}`}>
+                      <input type="file" name="qr_code_file" accept="image/jpeg,image/png" onChange={handleFileChange} className="ai-upload-input" />
+                      <div className="ai-upload-body">
+                        {form.qr_code_file ? (
+                          <>
+                            <span className="ai-upload-done">✓</span>
+                            <span className="ai-upload-name">{form.qr_code_file.name}</span>
+                            <button
+                              type="button"
+                              className="ai-upload-preview-btn"
+                              onClick={(e) => { e.preventDefault(); setPreviewFile(form.qr_code_file); }}
+                              title="Preview file"
+                            >
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="15" height="15">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                              </svg>
+                              Preview
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                              <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                            </svg>
+                            <span>Upload Payment QR Code</span>
+                            <span className="ai-upload-hint">JPG, PNG</span>
+                          </>
+                        )}
+                      </div>
+                    </label>
+                    {errors.qr_code_file && <span className="ai-err">{errors.qr_code_file}</span>}
+                    <div className="ai-field-foot">
+                      <span className="ai-hint">A screenshot of your payment QR — used to send your course earnings directly.</span>
                     </div>
                   </div>
                 </div>

@@ -115,7 +115,7 @@ export default function InstructorDashboard() {
       </div>
 
       {/* ── 4 stat tiles — skeleton while loadingDash ── */}
-      <div className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-2 shadow-e1 dark:border-slate-700 dark:bg-slate-800 sm:grid-cols-2 sm:p-3 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-white p-2 shadow-e1 dark:border-slate-700 dark:bg-slate-800 sm:grid-cols-2 sm:p-3 lg:grid-cols-4">
         {TILE_DEFS.map((t, i) => (
           <div
             key={t.label}
@@ -147,7 +147,7 @@ export default function InstructorDashboard() {
       </div>
 
       {/* ── Revenue chart + Recent enrollments ── */}
-      <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_300px]">
 
         {/* Revenue overview */}
         <div className="flex flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-e1 dark:border-slate-700 dark:bg-slate-800">
