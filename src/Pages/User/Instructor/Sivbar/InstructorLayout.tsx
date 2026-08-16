@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { BookOpen } from "lucide-react";
+import { useDashboardSwitch } from "../../../../hooks/useDashboardSwitch";
 import "../css/InstructorLayout.css";
 
 const MENU_LINKS = [
@@ -97,6 +99,7 @@ const BOTTOM_LINKS = [
 export default function InstructorLayout() {
   const location = useLocation();
   const navRef = useRef<HTMLElement>(null);
+  const { canSwitch, switchTo } = useDashboardSwitch();
 
   // On mobile the nav is a horizontally-scrolling pill bar — make sure the
   // current page's pill is actually visible on load/navigation instead of
@@ -112,6 +115,13 @@ export default function InstructorLayout() {
         {/* ── Sidebar (persists across sub-navigation, no re-animation) ── */}
         <aside className="il-sidebar">
           <p className="il-section-label">Instructor</p>
+          {canSwitch && (
+            <button type="button" className="il-switch-banner" onClick={() => switchTo("learning")}>
+              <BookOpen className="il-switch-banner__icon" />
+              <span>Teaching mode</span>
+              <span className="il-switch-banner__cta">Switch to Learning →</span>
+            </button>
+          )}
           <nav className="il-nav" ref={navRef}>
             {MENU_LINKS.map((l) => (
               <NavLink

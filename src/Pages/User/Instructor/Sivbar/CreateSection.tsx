@@ -5,9 +5,11 @@ import { BookOpen, Layers, PlusCircle, ArrowRight, Lightbulb, Info, Eye, Pencil,
 import {
   instructorService,
   type StandaloneSection,
+  type InstructorLesson,
   type LessonResource,
 } from "../../../../services/instructorService";
 import { getVideoDuration } from "../../../../utils/videoUrl";
+import { useScrollLock } from "../../../../hooks/useScrollLock";
 
 const EXT_ICON: Record<string, string> = {
   pdf: "📄", zip: "🗜️", doc: "📝", docx: "📝", ppt: "📊", pptx: "📊", mp4: "🎬", jpg: "🖼️", png: "🖼️",
@@ -136,10 +138,20 @@ export default function SectionLibrary() {
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
-  // Delete confirm
+  // Delete confirm (section)
   const [confirmDelete, setConfirmDelete] = useState<StandaloneSection | null>(null);
   const [deleteSaving, setDeleteSaving] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // Delete confirm (lesson)
+  const [confirmDeleteLesson, setConfirmDeleteLesson] = useState<InstructorLesson | null>(null);
+  const [deletingLesson, setDeletingLesson] = useState(false);
+  const [lessonDeleteError, setLessonDeleteError] = useState<string | null>(null);
+
+  // Any full-screen overlay open (manage panel, either delete confirm) locks
+  // page scroll behind it — matches EnrollButton/AuthModal's pattern. Missing
+  // this was the "background still moves behind the modal" bug.
+  useScrollLock(!!viewSectionId || !!confirmDelete || !!confirmDeleteLesson);
 
   const load = () => {
     setLoading(true);
@@ -259,9 +271,11 @@ export default function SectionLibrary() {
     setSavingLesson(false);
   };
 
-  const handleDeleteLesson = async (lessonId: number) => {
-    if (!viewSection) return;
+  const handleDeleteLesson = async () => {
+    if (!viewSection || !confirmDeleteLesson || deletingLesson) return;
     const sectionId = viewSection.id;
+    const lessonId = confirmDeleteLesson.id;
+    setDeletingLesson(true); setLessonDeleteError(null);
     try {
       await instructorService.deleteSectionLesson(sectionId, lessonId);
       setSections((prev) => prev.map((s) =>
@@ -269,7 +283,11 @@ export default function SectionLibrary() {
           ? { ...s, lessons: (s.lessons ?? []).filter((l) => l.id !== lessonId), lessons_count: Math.max(0, s.lessons_count - 1) }
           : s
       ));
-    } catch { /* silent */ }
+      setConfirmDeleteLesson(null);
+    } catch {
+      setLessonDeleteError("Failed to delete lesson. Please try again.");
+    }
+    setDeletingLesson(false);
   };
 
   const toggleResources = (lessonId: number) =>
@@ -621,7 +639,7 @@ export default function SectionLibrary() {
                       📎
                     </button>
                     <button
-                      onClick={() => handleDeleteLesson(l.id)}
+                      onClick={() => { setLessonDeleteError(null); setConfirmDeleteLesson(l); }}
                       className="rounded-lg p-1 text-slate-300 transition-colors hover:bg-rose-50 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400"
                       aria-label="Delete lesson"
                     >
@@ -792,6 +810,47 @@ export default function SectionLibrary() {
                 className="flex-1 rounded-xl bg-rose-500 py-2.5 text-[13px] font-bold text-white hover:bg-rose-600 disabled:opacity-50"
               >
                 {deleteSaving ? "Deleting…" : "Yes, delete"}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Delete confirm (lesson) — z-[60] so it sits above the manage panel it opens from */}
+      {confirmDeleteLesson && createPortal(
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-[2px]"
+          onClick={() => !deletingLesson && setConfirmDeleteLesson(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl bg-white p-7 shadow-card dark:bg-slate-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 text-center text-[2rem]">🗑️</div>
+            <h3 className="mb-2 text-center text-[15px] font-bold text-slate-800 dark:text-slate-100">
+              Delete "{confirmDeleteLesson.title}"?
+            </h3>
+            <p className="mb-6 text-center text-[13px] leading-relaxed text-slate-500 dark:text-slate-400">
+              This will permanently remove the lesson and any attached resources. This cannot be undone.
+            </p>
+            {lessonDeleteError && (
+              <p className="mb-4 text-center text-[12.5px] font-medium text-rose-600 dark:text-rose-400">⚠ {lessonDeleteError}</p>
+            )}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmDeleteLesson(null)}
+                disabled={deletingLesson}
+                className="flex-1 rounded-xl border border-slate-200 py-2.5 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteLesson}
+                disabled={deletingLesson}
+                className="flex-1 rounded-xl bg-rose-500 py-2.5 text-[13px] font-bold text-white hover:bg-rose-600 disabled:opacity-50"
+              >
+                {deletingLesson ? "Deleting…" : "Yes, delete"}
               </button>
             </div>
           </div>

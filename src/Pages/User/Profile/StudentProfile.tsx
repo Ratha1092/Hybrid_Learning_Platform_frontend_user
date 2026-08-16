@@ -72,7 +72,10 @@ export default function StudentProfile() {
   const [courses, setCourses] = useState<EnrolledCourse[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
   const [coursesError, setCoursesError] = useState(false);
-  const [courseFilter, setCourseFilter] = useState<"inprogress" | "completed" | "all">("inprogress");
+  // Default to "all" — defaulting to "inprogress" hid enrolled courses
+  // whenever every one of them happened to already be completed, making the
+  // page look empty even though Library (which applies no filter) showed them fine.
+  const [courseFilter, setCourseFilter] = useState<"inprogress" | "completed" | "all">("all");
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(true);
@@ -190,9 +193,10 @@ export default function StudentProfile() {
 
   const avatarSrc = resolveUrl(studentProfile?.avatar_url ?? user?.avatar_url ?? studentProfile?.avatar ?? user?.avatar);
   const displayName = studentProfile?.name || user?.name || "Learner";
-  const firstName = displayName.split(" ")[0];
+  const firstName = displayName.split(" ").pop() || displayName;
   const enrolledCount = courses.length;
   const completedCount = courses.filter(c => c.progress_percentage >= 100).length;
+  const inProgressCount = courses.filter(c => c.progress_percentage < 100).length;
   const today = todayKey();
 
   const filteredCourses = courseFilter === "inprogress"
@@ -366,6 +370,19 @@ export default function StudentProfile() {
                         Browse Courses <ArrowRight className="h-4 w-4" />
                       </button>
                     </div>
+                  ) : courses.filter(c => c.progress_percentage < 100).length === 0 ? (
+                    <div className="mt-8 flex flex-1 flex-col items-center justify-center rounded-xl bg-slate-50/70 py-10 text-center dark:bg-slate-700/30">
+                      <div className="grid h-12 w-12 place-items-center rounded-xl bg-emerald-50 dark:bg-emerald-500/10">
+                        <Award className="h-6 w-6 text-emerald-500" />
+                      </div>
+                      <p className="mt-3 text-[14px] muted2 dark:text-slate-400">You've completed all your enrolled courses. Nice work!</p>
+                      <button
+                        onClick={() => navigate("/courses")}
+                        className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+                      >
+                        Browse more courses <ArrowRight className="h-4 w-4" />
+                      </button>
+                    </div>
                   ) : (
                     <div className="mt-5 flex flex-col gap-3">
                       {courses.filter(c => c.progress_percentage < 100).slice(0, 3).map(c => {
@@ -490,7 +507,7 @@ export default function StudentProfile() {
             {/* Filter tabs */}
             <div className="flex gap-2">
               {(["all","inprogress", "completed"] as const).map(f => {
-                const labels = { all: "All", inprogress: "In progress", completed: "Completed" };
+                const labels = { all: `All (${enrolledCount})`, inprogress: `In progress (${inProgressCount})`, completed: `Completed (${completedCount})` };
                 const active = courseFilter === f;
                 return (
                   <button
