@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-import { BookOpen } from "lucide-react";
-import { useDashboardSwitch } from "../../../../hooks/useDashboardSwitch";
+import DashboardModeToggle from "../../../../Components/DashboardModeToggle/DashboardModeToggle";
 import "../css/InstructorLayout.css";
 
 const MENU_LINKS = [
@@ -25,26 +24,28 @@ const MENU_LINKS = [
         <path d="M4 5.5C7 5 9.5 5.4 12 7c2.5-1.6 5-2 8-1.5V18c-3-.5-5.5-.1-8 1.5-2.5-1.6-5-2-8-1.5Z"/>
       </svg>
     ),
-  },
-  {
-    to: "/instructor/courses/create",
-    label: "Create Course",
-    end: true,
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>
-      </svg>
-    ),
-  },
-  {
-    to: "/instructor/courses/sections",
-    label: "Create Sections",
-    end: true,
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
-      </svg>
-    ),
+    children: [
+      {
+        to: "/instructor/courses/create",
+        label: "Create Course",
+        end: true,
+        icon: (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>
+          </svg>
+        ),
+      },
+      {
+        to: "/instructor/courses/sections",
+        label: "Create Sections",
+        end: true,
+        icon: (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+          </svg>
+        ),
+      },
+    ],
   },
   {
     to: "/instructor/students",
@@ -99,7 +100,6 @@ const BOTTOM_LINKS = [
 export default function InstructorLayout() {
   const location = useLocation();
   const navRef = useRef<HTMLElement>(null);
-  const { canSwitch, switchTo } = useDashboardSwitch();
 
   // On mobile the nav is a horizontally-scrolling pill bar — make sure the
   // current page's pill is actually visible on load/navigation instead of
@@ -115,26 +115,34 @@ export default function InstructorLayout() {
         {/* ── Sidebar (persists across sub-navigation, no re-animation) ── */}
         <aside className="il-sidebar">
           <p className="il-section-label">Instructor</p>
-          {canSwitch && (
-            <button type="button" className="il-switch-banner" onClick={() => switchTo("learning")}>
-              <BookOpen className="il-switch-banner__icon" />
-              <span>Teaching mode</span>
-              <span className="il-switch-banner__cta">Switch to Learning →</span>
-            </button>
-          )}
+          <DashboardModeToggle className="mb-3.5" />
           <nav className="il-nav" ref={navRef}>
             {MENU_LINKS.map((l) => (
-              <NavLink
-                key={l.to}
-                to={l.to}
-                end={l.end}
-                className={({ isActive }) =>
-                  `il-link${isActive ? " il-link--active" : ""}`
-                }
-              >
-                <span className="il-link__icon">{l.icon}</span>
-                {l.label}
-              </NavLink>
+              <div key={l.to} className="il-link-group">
+                <NavLink
+                  to={l.to}
+                  end={l.end}
+                  className={({ isActive }) =>
+                    `il-link${isActive ? " il-link--active" : ""}`
+                  }
+                >
+                  <span className="il-link__icon">{l.icon}</span>
+                  {l.label}
+                </NavLink>
+                {l.children?.map((c) => (
+                  <NavLink
+                    key={c.to}
+                    to={c.to}
+                    end={c.end}
+                    className={({ isActive }) =>
+                      `il-link il-link--sub${isActive ? " il-link--active" : ""}`
+                    }
+                  >
+                    <span className="il-link__icon">{c.icon}</span>
+                    {c.label}
+                  </NavLink>
+                ))}
+              </div>
             ))}
             <div className="il-sidebar-div" />
             {BOTTOM_LINKS.map((l) => (
