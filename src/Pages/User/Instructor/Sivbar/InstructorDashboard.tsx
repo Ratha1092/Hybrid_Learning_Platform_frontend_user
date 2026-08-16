@@ -61,7 +61,9 @@ export default function InstructorDashboard() {
       .finally(() => setLoadingCourses(false));
   }, []);
 
-  const firstName = (user?.name ?? "Instructor").split(" ").pop() ?? "Instructor";
+  // Khmer names are "Family Given" — the given name (what people go by
+  // casually) is the last word, not the first.
+  const firstName = (user?.name ?? "Instructor").split(" ").pop() || "Instructor";
   // The dashboard endpoint is the source of truth for enrollment totals.
   // The course-list endpoint uses a differently named count field and can be stale.
   const studentCountByCourseId = new Map(

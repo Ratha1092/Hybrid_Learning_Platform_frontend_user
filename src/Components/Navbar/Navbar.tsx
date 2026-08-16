@@ -203,7 +203,7 @@ function Navbar() {
                       )}
                     </div>
                     <span className="hidden max-w-[80px] truncate text-sm font-semibold ink sm:block">
-                      {user?.name?.split(" ")[0] ?? ""}
+                      {user?.name?.split(" ").pop() ?? ""}
                     </span>
                     <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
                   </button>

@@ -78,7 +78,7 @@ export default function Library() {
     else setLoading(false);
   }, [isAuthenticated]);
 
-  const firstName = user?.name?.split(" ")[0] ?? "there";
+  const firstName = user?.name?.split(" ").pop() ?? "there";
 
   const stats = useMemo(() => ({
     total:      courses.length,

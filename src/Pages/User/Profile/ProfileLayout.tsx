@@ -2,8 +2,9 @@ import { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, BookOpen, Award, Heart, Star,
-  ShoppingBag, User, Settings,
+  ShoppingBag, User, Settings, GraduationCap,
 } from "lucide-react";
+import { useDashboardSwitch } from "../../../hooks/useDashboardSwitch";
 
 interface NavItem {
   label: string;
@@ -32,6 +33,7 @@ export default function ProfileLayout({ children, activeLabel }: Props) {
   const location = useLocation();
   const navigate = useNavigate();
   const navRef = useRef<HTMLElement>(null);
+  const { canSwitch, switchTo } = useDashboardSwitch();
 
   useEffect(() => {
     const active = navRef.current?.querySelector("[data-active='true']") as HTMLElement | null;
@@ -53,6 +55,17 @@ export default function ProfileLayout({ children, activeLabel }: Props) {
           {/* Sidebar */}
           <aside className="lg:w-64 lg:shrink-0 lg:sticky lg:top-20 lg:self-start">
             <p className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">Student</p>
+            {canSwitch && (
+              <button
+                type="button"
+                onClick={() => switchTo("teaching")}
+                className="mb-3.5 flex w-fit max-w-full items-center gap-2 whitespace-nowrap rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-[12px] font-semibold text-blue-900 transition-colors hover:bg-blue-100 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-blue-200 dark:hover:bg-blue-500/20"
+              >
+                <GraduationCap className="h-3.5 w-3.5 shrink-0 text-blue-600 dark:text-blue-400" />
+                <span>Learning mode</span>
+                <span className="shrink-0 border-l border-blue-200 pl-2 font-bold text-blue-600 dark:border-blue-500/30 dark:text-blue-400">Switch to Teaching →</span>
+              </button>
+            )}
             <nav
               ref={navRef}
               className="no-scrollbar flex gap-1.5 overflow-x-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-e1 lg:flex-col lg:overflow-visible dark:border-slate-700 dark:bg-slate-800"
