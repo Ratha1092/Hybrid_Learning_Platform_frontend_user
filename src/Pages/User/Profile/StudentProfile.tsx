@@ -209,7 +209,6 @@ export default function StudentProfile() {
     view === "courses"      ? "My courses"   :
     view === "orders"       ? "Orders"       :
     view === "wishlist"     ? "Wishlist"     :
-    view === "certificates" ? "Certificates" :
     view === "reviews"      ? "Reviews"      :
     view === "settings"     ? "Settings"     :
     view === "edit"         ? "Profile"      :
@@ -803,79 +802,6 @@ export default function StudentProfile() {
           </>
         )}
 
-        {/* CERTIFICATES */}
-        {view === "certificates" && (
-          <>
-            <div>
-              <p className="text-[12px] font-bold uppercase tracking-wider text-slate-400">Achievements</p>
-              <h1 className="mt-0.5 font-display text-[28px] font-extrabold ink dark:text-slate-50 sm:text-[34px]">Certificates</h1>
-              <p className="mt-1 text-[15px] muted2 dark:text-slate-400">
-                {loadingCourses ? "Loading…" : completedCount > 0
-                  ? `${completedCount} certificate${completedCount !== 1 ? "s" : ""} earned`
-                  : "Complete a course to earn your first certificate."}
-              </p>
-            </div>
-
-            {loadingCourses ? (
-              <div className="flex items-center gap-2 py-8 text-[13px] muted2"><div className="pd-spinner" /> Loading…</div>
-            ) : completedCount === 0 ? (
-              <div className="grid place-items-center rounded-2xl border border-dashed border-slate-300 bg-white/60 py-16 text-center dark:border-slate-600 dark:bg-slate-800/60">
-                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-amber-50 dark:bg-amber-500/10">
-                  <Award className="h-7 w-7 text-amber-500" />
-                </div>
-                <p className="mt-4 font-display text-[17px] font-bold ink dark:text-slate-100">No certificates yet</p>
-                <p className="mt-1 text-[14px] muted2 dark:text-slate-400">Finish a course to unlock your certificate.</p>
-                <button onClick={() => navigate("/profile?view=courses")} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-glow hover:bg-blue-700">
-                  My courses <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            ) : (
-              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {courses.filter(c => c.progress_percentage >= 100).map(c => {
-                  const thumb = resolveUrl(c.course_thumbnail);
-                  const completedDate = c.completed_at
-                    ? new Date(c.completed_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
-                    : "Completed";
-                  return (
-                    <div key={c.enrollment_id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-e1 dark:border-slate-700 dark:bg-slate-800">
-                      {/* Thumbnail strip */}
-                      <div className="relative h-32 overflow-hidden">
-                        {thumb
-                          ? <img src={thumb} alt={c.course_title} className="h-full w-full object-cover brightness-75" />
-                          : <div className="flex h-full w-full items-center justify-center grad-blue" />}
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="grid h-12 w-12 place-items-center rounded-full bg-white/90 shadow-lg">
-                            <Award className="h-6 w-6 text-amber-500" />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="p-5">
-                        <p className="text-[11px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400">Certificate of completion</p>
-                        <h3 className="mt-1 line-clamp-2 font-display text-[15px] font-bold leading-snug ink dark:text-slate-100">{c.course_title}</h3>
-                        <p className="mt-1 text-[12.5px] muted2 dark:text-slate-400">{completedDate}</p>
-                        <div className="mt-4 flex gap-2">
-                          <button
-                            onClick={() => {
-                              navigate(`/courses/${c.course_slug ?? c.course_id}?review=1`);
-                              setTimeout(() => document.getElementById("reviews")?.scrollIntoView({ behavior: "smooth" }), 300);
-                            }}
-                            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 py-2 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
-                          >
-                            Review
-                          </button>
-                          <button className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-brand py-2 text-[13px] font-semibold text-white shadow-glow hover:bg-blue-700">
-                            Download
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </>
-        )}
-
         {/* REVIEWS */}
         {view === "reviews" && (
           <>
@@ -1000,7 +926,6 @@ export default function StudentProfile() {
                 <div className="mt-5 flex flex-col gap-4">
                   {[
                     { label: "Public profile", desc: "Allow others to view your learning activity", on: true },
-                    { label: "Show certificates", desc: "Display earned certificates on your profile", on: true },
                   ].map(item => (
                     <div key={item.label} className="flex items-center justify-between gap-4">
                       <div>

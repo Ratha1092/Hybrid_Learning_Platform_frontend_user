@@ -54,41 +54,6 @@
   color: #94a3b8;
 }
 
-/* ── Teaching/Learning switch banner ─────────────────────── */
-.il-switch-banner {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: fit-content;
-  max-width: 100%;
-  margin-bottom: 14px;
-  padding: 7px 12px;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  border-radius: 999px;
-  font-family: "DM Sans", sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  color: #1e3a8a;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s, border-color 0.15s;
-}
-.il-switch-banner:hover { background: #dbeafe; border-color: #93c5fd; }
-.il-switch-banner__icon { width: 14px; height: 14px; flex-shrink: 0; color: #2563eb; }
-.il-switch-banner__cta {
-  flex-shrink: 0;
-  font-weight: 700;
-  color: #2563eb;
-  padding-left: 8px;
-  border-left: 1px solid #bfdbfe;
-}
-html.dark .il-switch-banner { background: rgba(37,99,235,0.1); border-color: rgba(59,130,246,0.3); color: #bfdbfe; }
-html.dark .il-switch-banner:hover { background: rgba(37,99,235,0.18); }
-html.dark .il-switch-banner__icon,
-html.dark .il-switch-banner__cta { color: #60a5fa; }
-html.dark .il-switch-banner__cta { border-left-color: rgba(59,130,246,0.3); }
-
 .il-nav {
   display: flex;
   gap: 6px;
@@ -117,6 +82,19 @@ html.dark .il-switch-banner__cta { border-left-color: rgba(59,130,246,0.3); }
   }
 }
 
+
+.il-link-group {
+  display: contents;
+}
+
+@media (min-width: 1024px) {
+  .il-link-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+}
+
 .il-link {
   display: flex;
   align-items: center;
@@ -142,6 +120,16 @@ html.dark .il-switch-banner__cta { border-left-color: rgba(59,130,246,0.3); }
     flex-shrink: unset;
     width: 100%;
   }
+
+  .il-link--sub {
+    width: calc(100% - 24px);
+    margin-left: 24px;
+    padding: 7px 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+  .il-link--sub .il-link__icon { width: 14px; height: 14px; }
+  .il-link--sub .il-link__icon svg { width: 14px; height: 14px; }
 }
 
 .il-link:hover {

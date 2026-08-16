@@ -12,12 +12,12 @@ export function useDashboardSwitch() {
 
   const isInstructor = isAuthenticated && (user?.role === "instructor" || user?.instructor_status === "verified");
   const canSwitch = isInstructor && !!user?.has_enrollments;
-  const [, setDashboardView] = useDashboardView(isInstructor ? "teaching" : "learning");
+  const [view, setDashboardView] = useDashboardView(isInstructor ? "teaching" : "learning");
 
-  const switchTo = (view: DashboardView) => {
-    setDashboardView(view);
-    navigate(view === "teaching" ? "/instructor/dashboard" : "/profile");
+  const switchTo = (next: DashboardView) => {
+    setDashboardView(next);
+    navigate(next === "teaching" ? "/instructor/dashboard" : "/profile");
   };
 
-  return { canSwitch, switchTo };
+  return { canSwitch, view, switchTo };
 }

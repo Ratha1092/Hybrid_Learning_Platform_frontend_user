@@ -1,4 +1,4 @@
-import { GraduationCap, Menu, X, ChevronDown, LogOut, User, Settings, Users, Sun, Moon, BookOpen } from "lucide-react";
+import { Menu, X, ChevronDown, LogOut, User, Settings, Users, Sun, Moon, GraduationCap } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import SearchBar from "../Search/SearchBar";
@@ -8,7 +8,8 @@ import { useSettings } from "../../context/SettingsContext";
 import Notification from "../Notification/Notification";
 import { useLanguage } from "../../context/LanguageContext";
 import { useTheme } from "../../context/ThemeContext";
-import { useDashboardView } from "../../hooks/useDashboardView";
+import { useDashboardSwitch } from "../../hooks/useDashboardSwitch";
+import DashboardModeToggle from "../DashboardModeToggle/DashboardModeToggle";
 
 function Navbar() {
   const navigate = useNavigate();
@@ -37,8 +38,7 @@ function Navbar() {
 
   // Only instructors who have also enrolled in a course (as a student) get the
   // teaching/learning switcher — everyone else keeps today's single-destination Dashboard link.
-  const canSwitchDashboard = isInstructor && !!user?.has_enrollments;
-  const [dashboardView, setDashboardView] = useDashboardView(isInstructor ? "teaching" : "learning");
+  const { canSwitch: canSwitchDashboard, view: dashboardView } = useDashboardSwitch();
   const dashboardHref = canSwitchDashboard
     ? (dashboardView === "teaching" ? "/instructor/dashboard" : "/profile")
     : (isInstructor ? "/instructor/dashboard" : "/profile");
@@ -226,27 +226,8 @@ function Navbar() {
                       </div>
 
                       {canSwitchDashboard && (
-                        <div className="flex gap-1 border-b border-slate-100 p-2 dark:border-slate-800">
-                          <button
-                            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-[12.5px] font-semibold transition-colors ${
-                              dashboardView === "teaching"
-                                ? "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400"
-                                : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
-                            }`}
-                            onClick={() => { setDashboardView("teaching"); setDropdownOpen(false); navigate("/instructor/dashboard"); }}
-                          >
-                            <GraduationCap className="h-3.5 w-3.5" /> Teaching
-                          </button>
-                          <button
-                            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-[12.5px] font-semibold transition-colors ${
-                              dashboardView === "learning"
-                                ? "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400"
-                                : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
-                            }`}
-                            onClick={() => { setDashboardView("learning"); setDropdownOpen(false); navigate("/profile"); }}
-                          >
-                            <BookOpen className="h-3.5 w-3.5" /> Learning
-                          </button>
+                        <div className="border-b border-slate-100 p-2 dark:border-slate-800" onClick={() => setDropdownOpen(false)}>
+                          <DashboardModeToggle />
                         </div>
                       )}
 
