@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { ArrowRight, Star, Clock, BookOpen, BarChart3, Heart, Award } from "lucide-react";
+import { ArrowRight, Star, Clock, BookOpen, BarChart3, Globe, Heart, Award } from "lucide-react";
 import { courseService, type Course } from "../../services/courseService";
 import { categoryService } from "../../services/categoryService";
 import { useProtectedWishlist } from "../../hooks/useProtectedWishlist";
@@ -12,6 +12,12 @@ const API_BASE = import.meta.env.VITE_API_URL ?? "";
 function resolveUrl(url: string | null | undefined): string | null {
   if (!url) return null;
   return url.startsWith("http") ? url : `${API_BASE}${url}`;
+}
+function formatDuration(seconds: number | null | undefined): string | null {
+  if (!seconds) return null;
+  const totalMinutes = Math.round(seconds / 60);
+  if (totalMinutes < 60) return `${totalMinutes}m`;
+  return `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`;
 }
 
 const LEVEL_COLORS: Record<string, string> = {
@@ -40,8 +46,9 @@ const PER_PAGE = 12;
 let _cachedDefault: { courses: Course[]; lastPage: number } | null = null;
 let _cachedCategories: import("../../services/categoryService").Category[] | null = null;
 // When backend returns a flat array (no server-side pagination), store all courses here
-// so we can slice client-side for page changes without re-fetching
-let _flatStore: { key: string; search: string; courses: Course[] } | null = null;
+// so we can slice client-side for page changes without re-fetching.
+// Keyed by cacheKey so switching between already-visited categories doesn't re-hit the server.
+const _flatStore = new Map<string, { search: string; courses: Course[] }>();
 
 function Courses() {
   const { toggle, isWishlisted } = useProtectedWishlist();
@@ -68,8 +75,9 @@ function Courses() {
     const cacheKey = category ? `cat:${category}` : instructorId ? `ins:${instructorId}` : "all";
 
     // Client-side pagination: reuse stored flat array without re-fetching
-    if (_flatStore?.key === cacheKey && _flatStore.search === (currentSearch || "")) {
-      const all = _flatStore.courses;
+    const cached = _flatStore.get(cacheKey);
+    if (cached && cached.search === (currentSearch || "")) {
+      const all = cached.courses;
       const lp = Math.max(1, Math.ceil(all.length / PER_PAGE));
       setCourses(all.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE));
       setLastPage(lp);
@@ -84,7 +92,7 @@ function Courses() {
     setError(null);
 
     const applyFlat = (raw: Course[]) => {
-      _flatStore = { key: cacheKey, search: currentSearch || "", courses: raw };
+      _flatStore.set(cacheKey, { search: currentSearch || "", courses: raw });
       const lp = Math.max(1, Math.ceil(raw.length / PER_PAGE));
       return { list: raw.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE), lp, tot: raw.length };
     };
@@ -141,9 +149,12 @@ function Courses() {
       .catch(() => {});
   }, []);
 
-  // Debounce search — reset to page 1
+  // Debounce search — reset to page 1.
+  // Category browsing is fully client-side (getByCategory ignores search server-side),
+  // so skip the network round trip entirely and just re-page the already-cached list.
   useEffect(() => {
     if (!isMounted.current) { isMounted.current = true; return; }
+    if (category) { setPage(1); return; }
     const timer = setTimeout(() => load(search, 1), 400);
     return () => clearTimeout(timer);
   }, [search]);
@@ -168,7 +179,10 @@ function Courses() {
   const filtered = courses.filter((c) => {
     const matchLevel = level === "All" || c.level.toLowerCase() === level.toLowerCase();
     const matchFree = !freeOnly || Number(c.price) === 0;
-    return matchLevel && matchFree;
+    // Category mode never sends `search` server-side, so match it client-side here.
+    // Other modes already have search applied server-side before `courses` is set.
+    const matchSearch = !category || !search || c.title.toLowerCase().includes(search.toLowerCase());
+    return matchLevel && matchFree && matchSearch;
   });
 
   const clearFilters = () => { setSearch(""); setLevel("All"); setFreeOnly(false); };
@@ -300,11 +314,12 @@ function Courses() {
         ) : (
           filtered.map((course, i) => {
             const src = resolveUrl(course.thumbnail_url);
-            const instructorAvatar = resolveUrl(course.instructor?.avatar);
+            const instructorAvatar = course.instructor?.avatar_url ?? resolveUrl(course.instructor?.avatar);
             const lvl = course.level?.toLowerCase() ?? "beginner";
             const tint = LEVEL_COLORS[lvl] ?? LEVEL_COLORS.beginner;
             const isFree = Number(course.price) === 0;
             const slug = course.slug ?? String(course.id);
+            const duration = formatDuration(course.total_duration_seconds);
             return (
               <div
                 key={course.id}
@@ -366,7 +381,8 @@ function Courses() {
                   <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12.5px] muted2">
                     <span className="flex items-center gap-1.5"><BookOpen className="h-3.5 w-3.5 brand-blue" /> {course.sections_count ?? 0} sections</span>
                     <span className="flex items-center gap-1.5"><BarChart3 className="h-3.5 w-3.5 brand-blue" /> {course.students_count ?? 0} students</span>
-                    {course.language && <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 brand-blue" /> {course.language}</span>}
+                    {duration && <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 brand-blue" /> {duration}</span>}
+                    {course.language && <span className="flex items-center gap-1.5"><Globe className="h-3.5 w-3.5 brand-blue" /> {course.language}</span>}
                   </div>
 
                   <div className="mt-5 flex items-center justify-between border-t border-slate-200 pt-4 dark:border-slate-700">

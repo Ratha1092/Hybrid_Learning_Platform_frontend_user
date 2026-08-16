@@ -1,8 +1,10 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Upload, Trash2, ShieldCheck, CircleCheck, Plus,
 } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
+import { useSettings } from "../../../context/SettingsContext";
+import { authService } from "../../../services/authService";
 import { profileService, type DashboardData } from "../../../services/profileService";
 import { billingService, type BillingAddress, type BillingAddressInput } from "../../../services/billingService";
 
@@ -84,6 +86,7 @@ function computeFormState(profile: DashboardData["profile"], fallbackName: strin
 
 export function EditProfilePanel({ profile, initialAddresses }: EditProfilePanelProps) {
   const { user, updateUser } = useAuth();
+  const { settings } = useSettings();
 
   const [form, setForm] = useState<FormState>(() => computeFormState(profile, user?.name, user?.id));
   const initialForm = useRef<FormState>(form);
@@ -95,7 +98,67 @@ export function EditProfilePanel({ profile, initialAddresses }: EditProfilePanel
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarError, setAvatarError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [twoFA, setTwoFA] = useState(false);
+
+  // 2FA — real state, backed by the account's actual two_factor_enabled flag
+  const [twoFAEnabled, setTwoFAEnabled] = useState(false);
+  const [twoFAStep, setTwoFAStep] = useState<"idle" | "confirm-enable" | "confirm-disable">("idle");
+  const [twoFACode, setTwoFACode] = useState("");
+  const [twoFAPassword, setTwoFAPassword] = useState("");
+  const [twoFABusy, setTwoFABusy] = useState(false);
+  const [twoFAError, setTwoFAError] = useState("");
+
+  useEffect(() => {
+    if (settings.enable_2fa !== "true") return;
+    authService.get2faStatus()
+      .then(({ data }) => setTwoFAEnabled(data.data.two_factor_enabled))
+      .catch(() => {});
+  }, [settings.enable_2fa]);
+
+  const startEnable2FA = async () => {
+    setTwoFABusy(true); setTwoFAError("");
+    try {
+      await authService.enable2fa();
+      setTwoFAStep("confirm-enable");
+    } catch (err: unknown) {
+      const res = (err as { response?: { data?: { message?: string } } }).response;
+      setTwoFAError(res?.data?.message ?? "Could not send a verification code.");
+    }
+    setTwoFABusy(false);
+  };
+
+  const confirmEnable2FA = async () => {
+    if (twoFACode.trim().length !== 6) { setTwoFAError("Enter the 6-digit code."); return; }
+    setTwoFABusy(true); setTwoFAError("");
+    try {
+      await authService.verifyEnable2fa(twoFACode.trim());
+      setTwoFAEnabled(true);
+      setTwoFAStep("idle");
+      setTwoFACode("");
+    } catch (err: unknown) {
+      const res = (err as { response?: { data?: { message?: string } } }).response;
+      setTwoFAError(res?.data?.message ?? "Invalid or expired code.");
+    }
+    setTwoFABusy(false);
+  };
+
+  const confirmDisable2FA = async () => {
+    if (!twoFAPassword) { setTwoFAError("Enter your password to confirm."); return; }
+    setTwoFABusy(true); setTwoFAError("");
+    try {
+      await authService.disable2fa(twoFAPassword);
+      setTwoFAEnabled(false);
+      setTwoFAStep("idle");
+      setTwoFAPassword("");
+    } catch (err: unknown) {
+      const res = (err as { response?: { data?: { message?: string } } }).response;
+      setTwoFAError(res?.data?.message ?? "Could not verify your password.");
+    }
+    setTwoFABusy(false);
+  };
+
+  const cancelTwoFAStep = () => {
+    setTwoFAStep("idle"); setTwoFACode(""); setTwoFAPassword(""); setTwoFAError("");
+  };
 
   // Billing address state
   const [addresses, setAddresses] = useState<BillingAddress[]>(initialAddresses);
@@ -436,19 +499,83 @@ export function EditProfilePanel({ profile, initialAddresses }: EditProfilePanel
                 </button>
               </div>
 
-              <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
-                <div>
-                  <p className="text-[14px] font-semibold ink dark:text-slate-100">Two-factor authentication</p>
-                  <p className="text-[12.5px] muted2 dark:text-slate-400">Add a second step at sign-in with an authenticator app.</p>
+              {settings.enable_2fa === "true" && (
+                <div className="flex flex-col gap-3 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="text-[14px] font-semibold ink dark:text-slate-100">Two-factor authentication</p>
+                      <p className="text-[12.5px] muted2 dark:text-slate-400">Add a second step at sign-in with a code emailed to you.</p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={twoFABusy || twoFAStep !== "idle"}
+                      onClick={() => {
+                        if (twoFAEnabled) setTwoFAStep("confirm-disable");
+                        else startEnable2FA();
+                      }}
+                      className={`relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-60 ${twoFAEnabled ? "bg-brand" : "bg-slate-300 dark:bg-slate-600"}`}
+                    >
+                      <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${twoFAEnabled ? "left-[22px]" : "left-0.5"}`} />
+                    </button>
+                  </div>
+
+                  {twoFAStep === "confirm-enable" && (
+                    <div className="flex flex-col gap-2 border-t border-slate-100 pt-3 dark:border-slate-700">
+                      <p className="text-[12.5px] muted2 dark:text-slate-400">We emailed you a 6-digit code. Enter it below to turn on 2FA.</p>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={6}
+                          placeholder="123456"
+                          value={twoFACode}
+                          onChange={(e) => { setTwoFACode(e.target.value.replace(/\D/g, "")); setTwoFAError(""); }}
+                          className="w-32 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none focus:border-blue-400 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                        />
+                        <button
+                          type="button"
+                          onClick={confirmEnable2FA}
+                          disabled={twoFABusy}
+                          className="rounded-lg bg-brand px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-60"
+                        >
+                          {twoFABusy ? "Verifying…" : "Confirm"}
+                        </button>
+                        <button type="button" onClick={cancelTwoFAStep} className="rounded-lg border border-slate-200 px-4 py-2 text-[13px] font-semibold ink dark:border-slate-600 dark:text-slate-200">
+                          Cancel
+                        </button>
+                      </div>
+                      {twoFAError && <p className="text-[12px] font-medium text-rose-500">⚠ {twoFAError}</p>}
+                    </div>
+                  )}
+
+                  {twoFAStep === "confirm-disable" && (
+                    <div className="flex flex-col gap-2 border-t border-slate-100 pt-3 dark:border-slate-700">
+                      <p className="text-[12.5px] muted2 dark:text-slate-400">Enter your password to turn off 2FA.</p>
+                      <div className="flex gap-2">
+                        <input
+                          type="password"
+                          placeholder="••••••••"
+                          value={twoFAPassword}
+                          onChange={(e) => { setTwoFAPassword(e.target.value); setTwoFAError(""); }}
+                          className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none focus:border-blue-400 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                        />
+                        <button
+                          type="button"
+                          onClick={confirmDisable2FA}
+                          disabled={twoFABusy}
+                          className="rounded-lg bg-rose-500 px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-60"
+                        >
+                          {twoFABusy ? "Verifying…" : "Turn off"}
+                        </button>
+                        <button type="button" onClick={cancelTwoFAStep} className="rounded-lg border border-slate-200 px-4 py-2 text-[13px] font-semibold ink dark:border-slate-600 dark:text-slate-200">
+                          Cancel
+                        </button>
+                      </div>
+                      {twoFAError && <p className="text-[12px] font-medium text-rose-500">⚠ {twoFAError}</p>}
+                    </div>
+                  )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setTwoFA(v => !v)}
-                  className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${twoFA ? "bg-brand" : "bg-slate-300 dark:bg-slate-600"}`}
-                >
-                  <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${twoFA ? "left-[22px]" : "left-0.5"}`} />
-                </button>
-              </div>
+              )}
             </CardSection>
 
             {/* Billing addresses */}

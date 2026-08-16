@@ -88,6 +88,13 @@ export default function Login() {
   const [needsVerification, setNeedsVerification] = useState(false);
   const [resendStatus, setResendStatus] = useState<ResendStatus>("idle");
 
+  // 2FA login-challenge step (shown after password is correct if the account has 2FA on)
+  const [twoFactor, setTwoFactor] = useState<{ challengeToken: string; email: string } | null>(null);
+  const [code, setCode] = useState("");
+  const [codeError, setCodeError] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [resend2faStatus, setResend2faStatus] = useState<ResendStatus>("idle");
+
   const validate = (): LoginErrors => {
     const e: LoginErrors = {};
     if (!form.email.trim()) e.email = "Email is required.";
@@ -116,6 +123,11 @@ export default function Login() {
     try {
       await authService.csrf();
       const { data } = await authService.login(form);
+      if ("requires_2fa" in data.data) {
+        setTwoFactor({ challengeToken: data.data.challenge_token, email: data.data.email });
+        setStatus("idle");
+        return;
+      }
       login(data.data.user, data.data.token);
       setStatus("success");
       setServerMessage(data.message || "Login successful!");
@@ -151,6 +163,37 @@ export default function Login() {
       setResendStatus("sent");
     } catch {
       setResendStatus("error");
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!twoFactor) return;
+    if (code.trim().length !== 6) { setCodeError("Enter the 6-digit code."); return; }
+    setVerifying(true);
+    setCodeError("");
+    try {
+      const { data } = await authService.verify2faLogin(twoFactor.challengeToken, code.trim());
+      login(data.data.user, data.data.token);
+      setStatus("success");
+      setServerMessage(data.message || "Login successful!");
+      const redirectTo = sessionStorage.getItem("authRedirectTo") ?? from ?? "/";
+      sessionStorage.removeItem("authRedirectTo");
+      setTimeout(() => { close(); navigate(redirectTo, { replace: true }); }, 1000);
+    } catch (err: unknown) {
+      const res = (err as { response?: { data?: { message?: string } } }).response;
+      setCodeError(res?.data?.message ?? "Invalid or expired code.");
+    }
+    setVerifying(false);
+  };
+
+  const handleResend2faCode = async () => {
+    if (!twoFactor) return;
+    setResend2faStatus("sending");
+    try {
+      await authService.send2faLoginCode(twoFactor.challengeToken);
+      setResend2faStatus("sent");
+    } catch {
+      setResend2faStatus("error");
     }
   };
 
@@ -201,95 +244,147 @@ export default function Login() {
       {/* ── Right form panel ── */}
       <div className="login-right">
         <div className="login-form-panel">
-          <h1 className="login-title">Welcome Back</h1>
-          <p className="login-subtitle">Sign in to continue your learning journey</p>
+          {twoFactor ? (
+            <>
+              <h1 className="login-title">Verify it's you</h1>
+              <p className="login-subtitle">Enter the 6-digit code we emailed to {twoFactor.email}</p>
 
-          {status === "success" && (
-            <div className="login-alert login-alert--success">
-              <IconCheck />{serverMessage}
-            </div>
-          )}
-          {status === "error" && serverMessage && (
-            <div className="login-alert login-alert--error">
-              <IconAlert />{serverMessage}
-            </div>
-          )}
-
-          {needsVerification && (
-            <div className="login-alert login-alert--error" style={{ marginTop: -8 }}>
-              {resendStatus === "sent" ? (
-                <span>✓ Verification email sent. Please check your inbox.</span>
-              ) : (
-                <button
-                  type="button"
-                  style={{
-                    background: "none",
-                    border: "none",
-                    padding: 0,
-                    font: "inherit",
-                    color: "inherit",
-                    textDecoration: "underline",
-                    cursor: "pointer",
-                  }}
-                  onClick={handleResendVerification}
-                  disabled={resendStatus === "sending"}
-                >
-                  {resendStatus === "sending" ? "Sending..." : "Resend verification email"}
-                </button>
+              {status === "success" && (
+                <div className="login-alert login-alert--success">
+                  <IconCheck />{serverMessage}
+                </div>
               )}
-            </div>
-          )}
 
-          <div className="login-fields">
-            <div>
-              <label className="login-field-label">Email address *</label>
-              <div className="login-input-wrap">
-                <span className="login-input-icon"><IconMail /></span>
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="you@example.com"
-                  value={form.email}
-                  onChange={handleChange}
-                  className={`login-input${errors.email ? " login-input--error" : ""}`}
-                />
+              <div className="login-fields">
+                <div>
+                  <label className="login-field-label">Verification code *</label>
+                  <div className="login-input-wrap">
+                    <span className="login-input-icon"><IconLock /></span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      placeholder="123456"
+                      value={code}
+                      onChange={(e) => { setCode(e.target.value.replace(/\D/g, "")); setCodeError(""); }}
+                      className={`login-input${codeError ? " login-input--error" : ""}`}
+                    />
+                  </div>
+                  {codeError && <p className="login-error-msg">{codeError}</p>}
+                </div>
               </div>
-              {errors.email && <p className="login-error-msg">{errors.email}</p>}
-            </div>
 
-            <div>
-              <label className="login-field-label">Password *</label>
-              <div className="login-input-wrap">
-                <span className="login-input-icon"><IconLock /></span>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  placeholder="••••••••"
-                  value={form.password}
-                  onChange={handleChange}
-                  className={`login-input login-input--with-toggle${errors.password ? " login-input--error" : ""}`}
-                />
-                <button type="button" className="login-eye-btn" onClick={() => setShowPassword((v) => !v)}>
-                  {showPassword ? <IconEyeOff /> : <IconEye />}
+              <button className="login-submit" onClick={handleVerifyCode} disabled={verifying}>
+                {verifying ? <><IconSpinner />Verifying...</> : "Verify"}
+              </button>
+
+              <p className="login-footer">
+                {resend2faStatus === "sent" ? (
+                  "✓ A new code was sent."
+                ) : (
+                  <button className="login-link-btn" onClick={handleResend2faCode} disabled={resend2faStatus === "sending"}>
+                    {resend2faStatus === "sending" ? "Sending..." : "Resend code"}
+                  </button>
+                )}
+                {" · "}
+                <button className="login-link-btn" onClick={() => { setTwoFactor(null); setCode(""); setCodeError(""); }}>
+                  Back to sign in
                 </button>
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className="login-title">Welcome Back</h1>
+              <p className="login-subtitle">Sign in to continue your learning journey</p>
+
+              {status === "success" && (
+                <div className="login-alert login-alert--success">
+                  <IconCheck />{serverMessage}
+                </div>
+              )}
+              {status === "error" && serverMessage && (
+                <div className="login-alert login-alert--error">
+                  <IconAlert />{serverMessage}
+                </div>
+              )}
+
+              {needsVerification && (
+                <div className="login-alert login-alert--error" style={{ marginTop: -8 }}>
+                  {resendStatus === "sent" ? (
+                    <span>✓ Verification email sent. Please check your inbox.</span>
+                  ) : (
+                    <button
+                      type="button"
+                      style={{
+                        background: "none",
+                        border: "none",
+                        padding: 0,
+                        font: "inherit",
+                        color: "inherit",
+                        textDecoration: "underline",
+                        cursor: "pointer",
+                      }}
+                      onClick={handleResendVerification}
+                      disabled={resendStatus === "sending"}
+                    >
+                      {resendStatus === "sending" ? "Sending..." : "Resend verification email"}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              <div className="login-fields">
+                <div>
+                  <label className="login-field-label">Email address *</label>
+                  <div className="login-input-wrap">
+                    <span className="login-input-icon"><IconMail /></span>
+                    <input
+                      type="email"
+                      name="email"
+                      placeholder="you@example.com"
+                      value={form.email}
+                      onChange={handleChange}
+                      className={`login-input${errors.email ? " login-input--error" : ""}`}
+                    />
+                  </div>
+                  {errors.email && <p className="login-error-msg">{errors.email}</p>}
+                </div>
+
+                <div>
+                  <label className="login-field-label">Password *</label>
+                  <div className="login-input-wrap">
+                    <span className="login-input-icon"><IconLock /></span>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      placeholder="••••••••"
+                      value={form.password}
+                      onChange={handleChange}
+                      className={`login-input login-input--with-toggle${errors.password ? " login-input--error" : ""}`}
+                    />
+                    <button type="button" className="login-eye-btn" onClick={() => setShowPassword((v) => !v)}>
+                      {showPassword ? <IconEyeOff /> : <IconEye />}
+                    </button>
+                  </div>
+                  {errors.password && <p className="login-error-msg">{errors.password}</p>}
+                </div>
               </div>
-              {errors.password && <p className="login-error-msg">{errors.password}</p>}
-            </div>
-          </div>
 
-          <button className="login-submit" onClick={handleSubmit} disabled={status === "loading"}>
-            {status === "loading" ? <><IconSpinner />Signing in...</> : "Sign In"}
-          </button>
+              <button className="login-submit" onClick={handleSubmit} disabled={status === "loading"}>
+                {status === "loading" ? <><IconSpinner />Signing in...</> : "Sign In"}
+              </button>
 
-          <OAuthButtons
-            from={from}
-            onSuccess={close}
-            onError={(msg) => { setStatus("error"); setServerMessage(msg); }}
-          />
+              <OAuthButtons
+                from={from}
+                onSuccess={close}
+                onError={(msg) => { setStatus("error"); setServerMessage(msg); }}
+              />
 
-          <p className="login-footer">
-            Don't have an account? <button className="login-link-btn" onClick={openRegister}>Register</button>
-          </p>
+              <p className="login-footer">
+                Don't have an account? <button className="login-link-btn" onClick={openRegister}>Register</button>
+              </p>
+            </>
+          )}
 
           <div className="login-secure">
             🛡 256-bit SSL &nbsp;·&nbsp; Authorized Students Only

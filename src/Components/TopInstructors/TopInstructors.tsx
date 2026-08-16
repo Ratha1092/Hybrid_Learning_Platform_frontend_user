@@ -13,7 +13,7 @@ function resolveAvatar(url: string | null): string | null {
 
 function InstructorCard({ m }: { m: Instructor }) {
   const [imgErr, setImgErr] = useState(false);
-  const src = resolveAvatar(m.avatar);
+  const src = m.avatar_url ?? resolveAvatar(m.avatar);
   const hasImg = !!src && !imgErr;
   const initial = m.name.charAt(0).toUpperCase();
 

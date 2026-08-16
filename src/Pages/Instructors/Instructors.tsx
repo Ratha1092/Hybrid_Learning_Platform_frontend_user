@@ -13,6 +13,7 @@ interface Instructor {
   id: number;
   name: string;
   avatar: string | null;
+  avatar_url?: string | null;
   headline: string | null;
   bio: string | null;
   courses: number;
@@ -113,24 +114,34 @@ const _categoriesPromise: Promise<Category[]> =
     .catch(() => []);
 
 function resolveImg(instructor: Instructor) {
-  return resolveAvatar(instructor.avatar);
+  return instructor.avatar_url ?? resolveAvatar(instructor.avatar);
 }
 
-function InstructorAvatar({ instructor, height }: { instructor: Instructor; height: string }) {
+// A profile photo is a small, roughly-square image — stretching it full-bleed
+// across a wide card banner (the old approach) upscales it well past its
+// native resolution and crops out whatever wasn't centered in the original
+// shot. Showing it as a modest circular avatar over a plain backdrop instead
+// keeps it sharp regardless of the source photo's size, and looks right for
+// what it actually is: a profile picture, not a hero image.
+function InstructorAvatar({ instructor, containerHeight, avatarSize }: { instructor: Instructor; containerHeight: string; avatarSize: string }) {
   const [imgErr, setImgErr] = useState(false);
   const src = resolveImg(instructor);
   const hasImg = !!src && !imgErr;
   const initial = instructor.name.charAt(0).toUpperCase();
-  return hasImg ? (
-    <img
-      src={src!}
-      alt={instructor.name}
-      className={`${height} w-full object-cover transition-transform duration-500 group-hover:scale-105`}
-      onError={() => setImgErr(true)}
-    />
-  ) : (
-    <div className={`${height} flex w-full items-center justify-center grad-blue transition-transform duration-500 group-hover:scale-105`}>
-      <span className="font-display text-6xl font-extrabold text-white/80">{initial}</span>
+  return (
+    <div className={`flex ${containerHeight} w-full items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 dark:from-slate-700 dark:to-slate-900`}>
+      {hasImg ? (
+        <img
+          src={src!}
+          alt={instructor.name}
+          className={`${avatarSize} rounded-full object-cover shadow-md ring-4 ring-white transition-transform duration-500 group-hover:scale-105 dark:ring-slate-800`}
+          onError={() => setImgErr(true)}
+        />
+      ) : (
+        <div className={`grid ${avatarSize} place-items-center rounded-full grad-blue shadow-md ring-4 ring-white transition-transform duration-500 group-hover:scale-105 dark:ring-slate-800`}>
+          <span className="font-display text-3xl font-extrabold text-white/90">{initial}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -142,7 +153,7 @@ function FeaturedCard({ instructor, rank }: { instructor: Instructor; rank: numb
       className="group relative block overflow-hidden rounded-2xl border-2 border-blue-200 bg-white shadow-soft transition-all duration-300 hover:-translate-y-2 hover:shadow-card dark:border-blue-900/50 dark:bg-slate-800"
     >
       <div className="relative overflow-hidden">
-        <InstructorAvatar instructor={instructor} height="h-52" />
+        <InstructorAvatar instructor={instructor} containerHeight="h-52" avatarSize="h-28 w-28" />
         <span className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-brand px-2.5 py-0.5 text-[11px] font-bold text-white shadow-glow">
           #{rank} Top
         </span>
@@ -171,7 +182,7 @@ function InstructorCard({ instructor }: { instructor: Instructor }) {
       className="group block overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-e1 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-card dark:border-slate-700 dark:bg-slate-800"
     >
       <div className="relative overflow-hidden">
-        <InstructorAvatar instructor={instructor} height="h-44" />
+        <InstructorAvatar instructor={instructor} containerHeight="h-44" avatarSize="h-24 w-24" />
         <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full glass px-2.5 py-1 text-[12px] font-bold text-blue-600">
           <BookOpen className="h-3.5 w-3.5" /> {instructor.courses}
         </span>
@@ -285,9 +296,9 @@ export default function Instructors() {
         const seen = new Map<number, Instructor>();
         for (const c of courses) {
           if (!c.instructor?.id) continue;
-          const { id, name, avatar } = c.instructor;
+          const { id, name, avatar, avatar_url } = c.instructor;
           if (!seen.has(id)) {
-            seen.set(id, { id, name, avatar: avatar ?? null, headline: null, bio: null, courses: 0, students: 0 });
+            seen.set(id, { id, name, avatar: avatar ?? null, avatar_url: avatar_url ?? null, headline: null, bio: null, courses: 0, students: 0 });
           }
           const inst = seen.get(id)!;
           inst.courses++;

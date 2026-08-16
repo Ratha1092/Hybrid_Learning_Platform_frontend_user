@@ -7,6 +7,7 @@ import {
   type StandaloneSection,
   type LessonResource,
 } from "../../../../services/instructorService";
+import { getVideoDuration } from "../../../../utils/videoUrl";
 
 const EXT_ICON: Record<string, string> = {
   pdf: "📄", zip: "🗜️", doc: "📝", docx: "📝", ppt: "📊", pptx: "📊", mp4: "🎬", jpg: "🖼️", png: "🖼️",
@@ -123,7 +124,7 @@ export default function SectionLibrary() {
   const viewSection = sections.find((s) => s.id === viewSectionId) ?? null;
 
   const [showLessonForm, setShowLessonForm] = useState(false);
-  const [lessonForm, setLessonForm] = useState({ title: "", type: "video", video_url: "", content: "", is_preview: false, videoFile: null as File | null });
+  const [lessonForm, setLessonForm] = useState({ title: "", type: "video", video_url: "", content: "", is_preview: false, videoFile: null as File | null, duration: null as number | null, articleFile: null as File | null });
   const [savingLesson, setSavingLesson] = useState(false);
   const [lessonUploadProgress, setLessonUploadProgress] = useState<number | null>(null);
   const [lessonErr, setLessonErr] = useState<string | null>(null);
@@ -206,7 +207,7 @@ export default function SectionLibrary() {
     setViewSectionId(s.id);
     setShowLessonForm(false);
     setLessonErr(null);
-    setLessonForm({ title: "", type: "video", video_url: "", content: "", is_preview: false, videoFile: null });
+    setLessonForm({ title: "", type: "video", video_url: "", content: "", is_preview: false, videoFile: null, duration: null, articleFile: null });
   };
 
   const closeManage = () => {
@@ -214,7 +215,7 @@ export default function SectionLibrary() {
     setShowLessonForm(false);
   };
 
-  const setLF = (k: keyof typeof lessonForm, v: string | boolean | File | null) =>
+  const setLF = (k: keyof typeof lessonForm, v: string | boolean | File | number | null) =>
     setLessonForm((f) => ({ ...f, [k]: v }));
 
   const handleAddLesson = async () => {
@@ -224,6 +225,7 @@ export default function SectionLibrary() {
       const { data } = await instructorService.createSectionLesson(viewSection.id, {
         title: lessonForm.title.trim(),
         type: lessonForm.type,
+        duration: lessonForm.videoFile && lessonForm.duration != null ? lessonForm.duration : undefined,
         is_preview: lessonForm.is_preview,
         video_url: lessonForm.type === "video" && !lessonForm.videoFile ? (lessonForm.video_url || undefined) : undefined,
         content: lessonForm.content || undefined,
@@ -234,13 +236,21 @@ export default function SectionLibrary() {
         await instructorService.uploadSectionLessonVideo(viewSection.id, lessonId, lessonForm.videoFile, setLessonUploadProgress);
         setLessonUploadProgress(null);
       }
+      if (lessonForm.type === "article" && lessonForm.articleFile) {
+        setLessonUploadProgress(0);
+        const fd = new FormData();
+        fd.append("title", lessonForm.articleFile.name);
+        fd.append("file", lessonForm.articleFile);
+        await instructorService.uploadSectionLessonResource(viewSection.id, lessonId, fd, setLessonUploadProgress);
+        setLessonUploadProgress(null);
+      }
       const sectionId = viewSection.id;
       setSections((prev) => prev.map((s) =>
         s.id === sectionId
           ? { ...s, lessons: [...(s.lessons ?? []), data.data], lessons_count: s.lessons_count + 1 }
           : s
       ));
-      setLessonForm({ title: "", type: "video", video_url: "", content: "", is_preview: false, videoFile: null });
+      setLessonForm({ title: "", type: "video", video_url: "", content: "", is_preview: false, videoFile: null, duration: null, articleFile: null });
       setShowLessonForm(false);
     } catch (e: unknown) {
       const err = e as { response?: { data?: { message?: string; errors?: Record<string, string[]> } }; message?: string };
@@ -500,7 +510,7 @@ export default function SectionLibrary() {
             <ol className="space-y-0">
               {[
                 { step: "1", title: "Create sections here", desc: "Give each section a clear title like \"Introduction\" or \"Advanced Topics\"." },
-                { step: "2", title: "Add lessons", desc: "Click Manage lessons to add video, article, or quiz lessons — no course needed yet." },
+                { step: "2", title: "Add lessons", desc: "Click Manage lessons to add video or article lessons — no course needed yet." },
                 { step: "3", title: "Create a course", desc: "Go to Create Course. In the Curriculum step, attach sections from this library." },
                 { step: "4", title: "Submit for review", desc: "Once the course is complete, submit it. An admin will review and publish it." },
               ].map(({ step, title, desc }, i, arr) => (
@@ -649,7 +659,6 @@ export default function SectionLibrary() {
                     >
                       <option value="video">🎬 Video</option>
                       <option value="article">📄 Article</option>
-                      <option value="quiz">📝 Quiz</option>
                     </select>
                     <label className="flex cursor-pointer items-center gap-2 text-[12.5px] text-slate-600 dark:text-slate-400">
                       <input type="checkbox" checked={lessonForm.is_preview} onChange={(e) => setLF("is_preview", e.target.checked)} />
@@ -664,7 +673,12 @@ export default function SectionLibrary() {
                         type="file"
                         accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm"
                         className="text-[12px] text-slate-600 dark:text-slate-400"
-                        onChange={(e) => setLF("videoFile", e.target.files?.[0] ?? null)}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0] ?? null;
+                          setLF("videoFile", f);
+                          setLF("duration", null);
+                          if (f) getVideoDuration(f).then((d) => setLF("duration", d)).catch(() => {});
+                        }}
                       />
                       {!lessonForm.videoFile && (
                         <input
@@ -686,13 +700,30 @@ export default function SectionLibrary() {
                   )}
 
                   {lessonForm.type === "article" && (
-                    <textarea
-                      rows={3}
-                      placeholder="Article content..."
-                      value={lessonForm.content}
-                      onChange={(e) => setLF("content", e.target.value)}
-                      className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none focus:border-blue-400 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
-                    />
+                    <div className="flex flex-col gap-2">
+                      <textarea
+                        rows={3}
+                        placeholder="Write the article content here..."
+                        value={lessonForm.content}
+                        onChange={(e) => setLF("content", e.target.value)}
+                        className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none focus:border-blue-400 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                      />
+                      <label className="text-[11.5px] text-slate-400">Or upload a document (PDF, DOC, PPT — optional, shown as a download for students)</label>
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx,.ppt,.pptx"
+                        className="text-[12px] text-slate-600 dark:text-slate-400"
+                        onChange={(e) => setLF("articleFile", e.target.files?.[0] ?? null)}
+                      />
+                      {lessonUploadProgress !== null && (
+                        <div>
+                          <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
+                            <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${lessonUploadProgress}%` }} />
+                          </div>
+                          <span className="text-[11px] text-slate-400">Uploading {lessonUploadProgress}%</span>
+                        </div>
+                      )}
+                    </div>
                   )}
 
                   {lessonErr && <p className="text-[11.5px] font-medium text-rose-500">⚠ {lessonErr}</p>}

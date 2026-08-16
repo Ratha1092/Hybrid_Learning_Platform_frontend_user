@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Star, Clock, BookOpen, BarChart3, Heart, Award } from "lucide-react";
+import { ArrowRight, Star, Clock, BookOpen, BarChart3, Globe, Heart, Award } from "lucide-react";
 import { type Course } from "../services/courseService";
 import { Reveal } from "../utils/anim";
 import { useProtectedWishlist } from "../hooks/useProtectedWishlist";
@@ -10,6 +10,12 @@ const API_BASE = import.meta.env.VITE_API_URL ?? "";
 function resolveUrl(url: string | null | undefined): string | null {
   if (!url) return null;
   return url.startsWith("http") ? url : `${API_BASE}${url}`;
+}
+function formatDuration(seconds: number | null | undefined): string | null {
+  if (!seconds) return null;
+  const totalMinutes = Math.round(seconds / 60);
+  if (totalMinutes < 60) return `${totalMinutes}m`;
+  return `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`;
 }
 
 const LEVEL_COLORS: Record<string, string> = {
@@ -85,11 +91,12 @@ export default function FeaturedCourses({ courses: coursesProp }: { courses?: Co
             ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
             : displayList.map((course, i) => {
               const src = resolveUrl(course.thumbnail_url);
-              const instructorAvatar = resolveUrl(course.instructor?.avatar);
+              const instructorAvatar = course.instructor?.avatar_url ?? resolveUrl(course.instructor?.avatar);
               const lvl = course.level?.toLowerCase() ?? "beginner";
               const tint = LEVEL_COLORS[lvl] ?? LEVEL_COLORS.beginner;
               const isFree = Number(course.price) === 0;
               const slug = course.slug ?? String(course.id);
+              const duration = formatDuration(course.total_duration_seconds);
 
               return (
                 <Reveal as="article" key={course.id} delay={(i % 3) * 90}>
@@ -151,7 +158,8 @@ export default function FeaturedCourses({ courses: coursesProp }: { courses?: Co
                       <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12.5px] muted2">
                         <span className="flex items-center gap-1.5"><BookOpen className="h-3.5 w-3.5 brand-blue" /> {course.sections_count ?? 0} sections</span>
                         <span className="flex items-center gap-1.5"><BarChart3 className="h-3.5 w-3.5 brand-blue" /> {course.students_count ?? 0} students</span>
-                        {course.language && <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 brand-blue" /> {course.language}</span>}
+                        {duration && <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 brand-blue" /> {duration}</span>}
+                        {course.language && <span className="flex items-center gap-1.5"><Globe className="h-3.5 w-3.5 brand-blue" /> {course.language}</span>}
                       </div>
 
                       <div className="mt-5 flex items-center justify-between border-t border-slate-200 pt-4 dark:border-slate-700">

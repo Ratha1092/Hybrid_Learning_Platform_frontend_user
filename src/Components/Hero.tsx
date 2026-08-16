@@ -122,7 +122,7 @@ function Hero() {
                     </span>
                   ))}
                 </div>
-                <p className="font-display text-[13px] font-bold text-slate-900 dark:text-white">Starting soon</p>
+                <p className="font-display text-[13px] font-bold text-slate-900 dark:text-white">In develop</p>
               </div>
             </div>
           </div>

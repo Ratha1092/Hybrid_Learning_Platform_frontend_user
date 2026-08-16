@@ -18,7 +18,6 @@ import LearningPath from "./Components/LearningPath/LearningPath";
 import BecomeInstructor from "./Components/BecomeInstructor/BecomeInstructor";
 import Stats from "./Components/Stats/Stats";
 import TopInstructors from "./Components/TopInstructors/TopInstructors";
-import Testimonials from "./Components/Testimonials/Testimonials";
 import Faq from "./Components/Faq/Faq";
 import FinalCta from "./Components/FinalCta/FinalCta";
 import { useHomeData } from "./utils/useHomeData";
@@ -85,28 +84,6 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function RequireStudent({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, user } = useAuth();
-  const { openLogin } = useAuthModal();
-  const location = useLocation();
-  const opened = useRef(false);
-
-  useEffect(() => {
-    if (!isAuthenticated && !opened.current) {
-      opened.current = true;
-      sessionStorage.setItem(AUTH_REDIRECT_KEY, location.pathname);
-      openLogin();
-    }
-  }, []);
-
-  if (!isAuthenticated) return <AuthRequiredNotice />;
-
-  const isInstructor = user?.role === "instructor" || user?.instructor_status === "approved" || user?.instructor_status === "verified";
-  if (isInstructor) return <Navigate to="/instructor/dashboard" replace />;
-
-  return <>{children}</>;
-}
-
 function RequireInstructor({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, user } = useAuth();
   const { openLogin } = useAuthModal();
@@ -144,7 +121,6 @@ function MainPage() {
       <BecomeInstructor />
       <Stats />
       <TopInstructors instructors={home?.top_instructors} />
-      <Testimonials />
       <Faq />
       <FinalCta />
       <Footer />
@@ -211,7 +187,7 @@ function App() {
           <Route path="/PageRegister" element={<RegisterPage />} />
 
           {/* Auth-required routes */}
-          <Route path="/profile" element={<RequireStudent><Profile /></RequireStudent>} />
+          <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
           <Route path="/profile/edit" element={<Navigate to="/profile?view=edit" replace />} />
           <Route path="/library" element={<RequireAuth><WithFooter><Library /></WithFooter></RequireAuth>} />
           <Route path="/learn/:slug" element={<RequireAuth><Learn /></RequireAuth>} />

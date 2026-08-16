@@ -1,4 +1,4 @@
-import { GraduationCap, Menu, X, ChevronDown, LogOut, User, Settings, Users, Sun, Moon } from "lucide-react";
+import { GraduationCap, Menu, X, ChevronDown, LogOut, User, Settings, Users, Sun, Moon, BookOpen } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import SearchBar from "../Search/SearchBar";
@@ -8,6 +8,7 @@ import { useSettings } from "../../context/SettingsContext";
 import Notification from "../Notification/Notification";
 import { useLanguage } from "../../context/LanguageContext";
 import { useTheme } from "../../context/ThemeContext";
+import { useDashboardView } from "../../hooks/useDashboardView";
 
 function Navbar() {
   const navigate = useNavigate();
@@ -33,6 +34,14 @@ function Navbar() {
 
   const isStudent = isAuthenticated && user?.role !== "instructor" && user?.instructor_status !== "verified";
   const isInstructor = isAuthenticated && (user?.role === "instructor" || user?.instructor_status === "verified");
+
+  // Only instructors who have also enrolled in a course (as a student) get the
+  // teaching/learning switcher — everyone else keeps today's single-destination Dashboard link.
+  const canSwitchDashboard = isInstructor && !!user?.has_enrollments;
+  const [dashboardView, setDashboardView] = useDashboardView(isInstructor ? "teaching" : "learning");
+  const dashboardHref = canSwitchDashboard
+    ? (dashboardView === "teaching" ? "/instructor/dashboard" : "/profile")
+    : (isInstructor ? "/instructor/dashboard" : "/profile");
 
   const navLinks = [
     { to: "/home",       label: t("nav.home") },
@@ -172,7 +181,7 @@ function Navbar() {
                 {/* Dashboard link — all authenticated users */}
                 {isAuthenticated && (
                   <NavLink
-                    to={isInstructor ? "/instructor/dashboard" : "/profile"}
+                    to={dashboardHref}
                     className="hidden h-9 items-center rounded-xl border border-slate-300 bg-slate-100 px-4 text-sm font-semibold ink shadow-e1 transition-colors hover:border-blue-300 hover:bg-white hover:text-blue-600 md:inline-flex dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-500 dark:hover:bg-slate-800 dark:hover:text-blue-400"
                   >
                     Dashboard
@@ -215,6 +224,31 @@ function Navbar() {
                           <p className="truncate text-[11.5px] text-slate-400">{user?.email ?? "—"}</p>
                         </div>
                       </div>
+
+                      {canSwitchDashboard && (
+                        <div className="flex gap-1 border-b border-slate-100 p-2 dark:border-slate-800">
+                          <button
+                            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-[12.5px] font-semibold transition-colors ${
+                              dashboardView === "teaching"
+                                ? "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400"
+                                : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                            }`}
+                            onClick={() => { setDashboardView("teaching"); setDropdownOpen(false); navigate("/instructor/dashboard"); }}
+                          >
+                            <GraduationCap className="h-3.5 w-3.5" /> Teaching
+                          </button>
+                          <button
+                            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-[12.5px] font-semibold transition-colors ${
+                              dashboardView === "learning"
+                                ? "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400"
+                                : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                            }`}
+                            onClick={() => { setDashboardView("learning"); setDropdownOpen(false); navigate("/profile"); }}
+                          >
+                            <BookOpen className="h-3.5 w-3.5" /> Learning
+                          </button>
+                        </div>
+                      )}
 
                       <div className="p-1.5">
                         {isStudent && (

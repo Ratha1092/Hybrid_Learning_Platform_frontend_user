@@ -10,6 +10,7 @@ import type { EnrolledCourse } from "../../../services/courseService";
 import { orderService, type Order } from "../../../services/orderService";
 import { billingService, type Invoice, type BillingAddress } from "../../../services/billingService";
 import { profileService, type DashboardData } from "../../../services/profileService";
+import { reviewService, type Review } from "../../../services/reviewService";
 import ProfileLayout from "./ProfileLayout";
 import { EditProfilePanel } from "./StudentProfileEdit";
 import "./StudentProfile.css";
@@ -89,6 +90,12 @@ export default function StudentProfile() {
   const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
   const [orderDetails, setOrderDetails] = useState<Record<number, OrderDetail>>({});
 
+  const [myReviews, setMyReviews] = useState<Review[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(true);
+  const [reviewsLoaded, setReviewsLoaded] = useState(false);
+  const [reviewsPage, setReviewsPage] = useState(1);
+  const [reviewsLastPage, setReviewsLastPage] = useState(1);
+
   useEffect(() => { if (!isAuthenticated) navigate("/"); }, [isAuthenticated, navigate]);
 
   useEffect(() => {
@@ -114,6 +121,29 @@ export default function StudentProfile() {
 
   // Mount EditProfilePanel once on first visit, then keep alive (hidden) to avoid re-fetching
   useEffect(() => { if (view === "edit") setEditMounted(true); }, [view]);
+
+  useEffect(() => {
+    if (view !== "reviews" || reviewsLoaded) return;
+    setLoadingReviews(true);
+    reviewService.getMine(1)
+      .then(({ data }) => {
+        setMyReviews(data.data.data);
+        setReviewsPage(data.data.current_page);
+        setReviewsLastPage(data.data.last_page);
+        setReviewsLoaded(true);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingReviews(false));
+  }, [view, reviewsLoaded]);
+
+  const loadMoreReviews = () => {
+    if (reviewsPage >= reviewsLastPage) return;
+    reviewService.getMine(reviewsPage + 1).then(({ data }) => {
+      setMyReviews(prev => [...prev, ...data.data.data]);
+      setReviewsPage(data.data.current_page);
+      setReviewsLastPage(data.data.last_page);
+    });
+  };
 
   const toggleOrderDetail = async (order: Order) => {
     if (expandedOrderId === order.id) { setExpandedOrderId(null); return; }
@@ -158,7 +188,7 @@ export default function StudentProfile() {
     setDownloadingCnId(null);
   };
 
-  const avatarSrc = resolveUrl(studentProfile?.avatar ?? studentProfile?.avatar_url ?? user?.avatar_url ?? user?.avatar);
+  const avatarSrc = resolveUrl(studentProfile?.avatar_url ?? user?.avatar_url ?? studentProfile?.avatar ?? user?.avatar);
   const displayName = studentProfile?.name || user?.name || "Learner";
   const firstName = displayName.split(" ")[0];
   const enrolledCount = courses.length;
@@ -808,7 +838,10 @@ export default function StudentProfile() {
                         <p className="mt-1 text-[12.5px] muted2 dark:text-slate-400">{completedDate}</p>
                         <div className="mt-4 flex gap-2">
                           <button
-                            onClick={() => navigate(`/learn/${c.course_slug ?? c.course_id}`)}
+                            onClick={() => {
+                              navigate(`/courses/${c.course_slug ?? c.course_id}?review=1`);
+                              setTimeout(() => document.getElementById("reviews")?.scrollIntoView({ behavior: "smooth" }), 300);
+                            }}
                             className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-slate-200 py-2 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-700"
                           >
                             Review
@@ -835,20 +868,78 @@ export default function StudentProfile() {
               <p className="mt-1 text-[15px] muted2 dark:text-slate-400">Reviews you've left on courses you've taken.</p>
             </div>
 
-            <div className="grid place-items-center rounded-2xl border border-dashed border-slate-300 bg-white/60 py-16 text-center dark:border-slate-600 dark:bg-slate-800/60">
-              <div className="grid h-14 w-14 place-items-center rounded-2xl bg-blue-50 dark:bg-blue-500/10">
-                <Star className="h-7 w-7 text-blue-500" />
+            {loadingReviews ? (
+              <div className="grid gap-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="h-24 animate-pulse rounded-2xl bg-slate-200 dark:bg-slate-700" />
+                ))}
               </div>
-              <p className="mt-4 font-display text-[17px] font-bold ink dark:text-slate-100">No reviews yet</p>
-              <p className="mt-1 max-w-xs text-[14px] muted2 dark:text-slate-400">
-                After completing a course, share your experience to help other learners.
-              </p>
-              {completedCount > 0 && (
-                <button onClick={() => navigate("/profile?view=courses")} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-glow hover:bg-blue-700">
-                  Go to completed courses <ArrowRight className="h-4 w-4" />
-                </button>
-              )}
-            </div>
+            ) : myReviews.length === 0 ? (
+              <div className="grid place-items-center rounded-2xl border border-dashed border-slate-300 bg-white/60 py-16 text-center dark:border-slate-600 dark:bg-slate-800/60">
+                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-blue-50 dark:bg-blue-500/10">
+                  <Star className="h-7 w-7 text-blue-500" />
+                </div>
+                <p className="mt-4 font-display text-[17px] font-bold ink dark:text-slate-100">No reviews yet</p>
+                <p className="mt-1 max-w-xs text-[14px] muted2 dark:text-slate-400">
+                  After completing a course, share your experience to help other learners.
+                </p>
+                {completedCount > 0 && (
+                  <button onClick={() => navigate("/profile?view=courses")} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-glow hover:bg-blue-700">
+                    Go to completed courses <ArrowRight className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            ) : (
+              <>
+                <div className="grid gap-4">
+                  {myReviews.map((r) => {
+                    const thumb = resolveUrl(r.course?.thumbnail_url ?? null);
+                    return (
+                      <div key={r.id} className="flex gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-e1 dark:border-slate-700 dark:bg-slate-800">
+                        <div className="h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-700">
+                          {thumb && <img src={thumb} alt={r.course?.title ?? ""} className="h-full w-full object-cover" />}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <button
+                              onClick={() => navigate(`/courses/${r.course?.slug ?? r.course_id}`)}
+                              className="truncate text-left font-display text-[14.5px] font-bold ink hover:text-blue-600 dark:text-slate-100 dark:hover:text-blue-400"
+                            >
+                              {r.course?.title ?? "Course"}
+                            </button>
+                            <div className="flex items-center gap-0.5">
+                              {[1, 2, 3, 4, 5].map((i) => (
+                                <Star key={i} className={`h-3.5 w-3.5 ${i <= r.rating ? "fill-amber-400 text-amber-400" : "text-slate-300 dark:text-slate-600"}`} />
+                              ))}
+                            </div>
+                          </div>
+                          {r.title && <p className="mt-1 text-[13.5px] font-semibold ink dark:text-slate-100">{r.title}</p>}
+                          {r.comment && <p className="mt-1 line-clamp-2 text-[13px] muted2 dark:text-slate-400">{r.comment}</p>}
+                          <div className="mt-2 flex items-center gap-2">
+                            <p className="text-[11.5px] text-slate-400 dark:text-slate-500">
+                              {new Date(r.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                            </p>
+                            {!r.is_approved && (
+                              <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10.5px] font-semibold text-amber-600 dark:bg-amber-500/10 dark:text-amber-400">
+                                Pending moderation
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {reviewsPage < reviewsLastPage && (
+                  <button
+                    onClick={loadMoreReviews}
+                    className="mx-auto mt-2 rounded-full border border-slate-200 px-6 py-2 text-[13px] font-semibold text-blue-600 hover:bg-blue-50 dark:border-slate-700 dark:text-blue-400 dark:hover:bg-slate-700"
+                  >
+                    Load more
+                  </button>
+                )}
+              </>
+            )}
           </>
         )}
 
