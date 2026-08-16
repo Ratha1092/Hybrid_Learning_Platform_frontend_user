@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, ChevronRight, Trash2, Plus } from "lucide-react";
 import { instructorService, type InstructorSection, type LessonResource } from "../../../../services/instructorService";
+import { getVideoDuration } from "../../../../utils/videoUrl";
 
 interface Props { courseId: number; }
 
@@ -115,7 +116,7 @@ export default function Curriculum({ courseId }: Props) {
   const [addingSection, setAddingSection] = useState(false);
   const [addingLesson, setAddingLesson]   = useState<number | null>(null);
   const [confirmSection, setConfirmSection] = useState<number | null>(null);
-  const [newLesson, setNewLesson]         = useState<Record<number, { title: string; type: string; video_url: string; is_preview: boolean; videoFile?: File | null }>>({});
+  const [newLesson, setNewLesson]         = useState<Record<number, { title: string; type: string; video_url: string; content?: string; is_preview: boolean; videoFile?: File | null; duration?: number | null; articleFile?: File | null }>>({});
   const [uploadProgress, setUploadProgress] = useState<Record<number, number>>({});
   const [error, setError]                 = useState<string | null>(null);
 
@@ -170,11 +171,15 @@ export default function Curriculum({ courseId }: Props) {
     if (!lesson?.title?.trim()) return;
     setError(null);
     try {
-      const payload: { title: string; type: string; is_preview: boolean; video_url?: string } = {
+      const payload: { title: string; type: string; is_preview: boolean; video_url?: string; content?: string; duration?: number } = {
         title: lesson.title.trim(), type: lesson.type || "video", is_preview: lesson.is_preview ?? false,
       };
       if (lesson.type === "video" && !lesson.videoFile && lesson.video_url?.trim())
         payload.video_url = lesson.video_url.trim();
+      if (lesson.type === "video" && lesson.videoFile && lesson.duration != null)
+        payload.duration = lesson.duration;
+      if (lesson.type === "article" && lesson.content?.trim())
+        payload.content = lesson.content.trim();
 
       const { data } = await instructorService.createLesson(courseId, sectionId, payload);
       const lessonId = data.data.id;
@@ -186,8 +191,18 @@ export default function Curriculum({ courseId }: Props) {
         setUploadProgress((p) => { const n = { ...p }; delete n[sectionId]; return n; });
       }
 
+      if (lesson.type === "article" && lesson.articleFile) {
+        setUploadProgress((p) => ({ ...p, [sectionId]: 0 }));
+        const fd = new FormData();
+        fd.append("title", lesson.articleFile.name);
+        fd.append("file", lesson.articleFile);
+        await instructorService.uploadLessonResource(courseId, sectionId, lessonId, fd,
+          (pct) => setUploadProgress((p) => ({ ...p, [sectionId]: pct })));
+        setUploadProgress((p) => { const n = { ...p }; delete n[sectionId]; return n; });
+      }
+
       setSections((prev) => prev.map((s) => s.id === sectionId ? { ...s, lessons: [...(s.lessons ?? []), data.data] } : s));
-      setNewLesson((prev) => ({ ...prev, [sectionId]: { title: "", type: "video", video_url: "", is_preview: false, videoFile: null } }));
+      setNewLesson((prev) => ({ ...prev, [sectionId]: { title: "", type: "video", video_url: "", content: "", is_preview: false, videoFile: null, duration: null, articleFile: null } }));
       setAddingLesson(null);
     } catch (e: unknown) {
       const err = e as { response?: { data?: { message?: string; errors?: Record<string, string[]> } }; message?: string };
@@ -316,7 +331,6 @@ export default function Curriculum({ courseId }: Props) {
                       >
                         <option value="video">🎬 Video</option>
                         <option value="article">📄 Article</option>
-                        <option value="quiz">📝 Quiz</option>
                       </select>
                       <label className="flex cursor-pointer items-center gap-2 text-[13px] text-slate-600 dark:text-slate-400">
                         <input
@@ -333,7 +347,13 @@ export default function Curriculum({ courseId }: Props) {
                         <label className="text-[12px] text-slate-400">Upload video (mp4, mov, webm — max 500MB)</label>
                         <input type="file" accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm"
                           className="text-[12.5px] text-slate-600 dark:text-slate-400"
-                          onChange={(e) => setNewLesson((p) => ({ ...p, [section.id]: { ...p[section.id], videoFile: e.target.files?.[0] ?? null } }))} />
+                          onChange={(e) => {
+                            const f = e.target.files?.[0] ?? null;
+                            setNewLesson((p) => ({ ...p, [section.id]: { ...p[section.id], videoFile: f, duration: null } }));
+                            if (f) getVideoDuration(f)
+                              .then((d) => setNewLesson((p) => ({ ...p, [section.id]: { ...p[section.id], duration: d } })))
+                              .catch(() => {});
+                          }} />
                         {!newLesson[section.id]?.videoFile && (
                           <input
                             placeholder="Or paste YouTube / Vimeo URL"
@@ -342,6 +362,33 @@ export default function Curriculum({ courseId }: Props) {
                             className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-[13.5px] outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
                           />
                         )}
+                        {uploadProgress[section.id] !== undefined && (
+                          <div>
+                            <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
+                              <div className="h-full rounded-full bg-teal-500 transition-all" style={{ width: `${uploadProgress[section.id]}%` }} />
+                            </div>
+                            <span className="text-[11px] text-slate-400">Uploading {uploadProgress[section.id]}%</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {newLesson[section.id]?.type === "article" && (
+                      <div className="flex flex-col gap-2">
+                        <textarea
+                          rows={3}
+                          placeholder="Write the article content here..."
+                          value={newLesson[section.id]?.content ?? ""}
+                          onChange={(e) => setNewLesson((p) => ({ ...p, [section.id]: { ...p[section.id], content: e.target.value } }))}
+                          className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-[13.5px] outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                        />
+                        <label className="text-[12px] text-slate-400">Or upload a document (PDF, DOC, PPT — optional, shown as a download for students)</label>
+                        <input
+                          type="file"
+                          accept=".pdf,.doc,.docx,.ppt,.pptx"
+                          className="text-[12.5px] text-slate-600 dark:text-slate-400"
+                          onChange={(e) => setNewLesson((p) => ({ ...p, [section.id]: { ...p[section.id], articleFile: e.target.files?.[0] ?? null } }))}
+                        />
                         {uploadProgress[section.id] !== undefined && (
                           <div>
                             <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">

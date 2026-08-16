@@ -17,11 +17,6 @@ interface Props {
   onSaved: (a: InstructorPayoutAccount) => void;
 }
 
-const API_BASE = import.meta.env.VITE_API_URL ?? "";
-function resolveQrUrl(path: string) {
-  return path.startsWith("http") ? path : `${API_BASE}/storage/${path}`;
-}
-
 export default function PayoutAccountSection({ account, onSaved }: Props) {
   const [editing, setEditing] = useState(!account || account.status === "rejected");
   const [form, setForm] = useState({
@@ -106,17 +101,17 @@ export default function PayoutAccountSection({ account, onSaved }: Props) {
             )}
             <div className="flex flex-wrap items-center gap-2.5 text-[14.5px] text-slate-600 dark:text-slate-400">
               <span className="font-semibold">{account.account_name}</span>
-              {account.qr_code_path && (
+              {account.qr_code_url && (
                 <>
                   <span className="text-slate-300 dark:text-slate-600">·</span>
                   <button
                     type="button"
-                    onClick={() => setViewQrUrl(resolveQrUrl(account.qr_code_path!))}
+                    onClick={() => setViewQrUrl(account.qr_code_url!)}
                     className="group relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-slate-200 dark:border-slate-600"
                     title="View QR code"
                   >
                     <img
-                      src={resolveQrUrl(account.qr_code_path)}
+                      src={account.qr_code_url}
                       alt="Payout QR code"
                       className="h-full w-full object-contain p-0.5"
                     />
@@ -219,16 +214,16 @@ export default function PayoutAccountSection({ account, onSaved }: Props) {
                 onDragOver={(e) => e.preventDefault()}
                 className="flex cursor-pointer flex-col items-center justify-center gap-2.5 rounded-xl border-2 border-dashed border-slate-200 py-8 transition-colors hover:border-blue-400 hover:bg-blue-50/40 dark:border-slate-600 dark:hover:border-blue-500 dark:hover:bg-blue-500/5"
               >
-                {account?.qr_code_path ? (
+                {account?.qr_code_url ? (
                   <>
                     <button
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); setViewQrUrl(resolveQrUrl(account.qr_code_path!)); }}
+                      onClick={(e) => { e.stopPropagation(); setViewQrUrl(account.qr_code_url!); }}
                       className="group relative h-36 w-36 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-600"
                       title="View full size"
                     >
                       <img
-                        src={resolveQrUrl(account.qr_code_path)}
+                        src={account.qr_code_url}
                         alt="Payout QR code on file"
                         className="h-full w-full object-contain p-1.5"
                       />

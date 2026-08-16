@@ -6,7 +6,7 @@ export interface SearchCourse {
   slug: string;
   thumbnail: string | null;
   price: number;
-  instructor: { id: number; name: string; avatar: string | null };
+  instructor: { id: number; name: string; avatar: string | null; avatar_url?: string | null };
   category: { id: number; name: string };
   enrollments: number;
   type: "course";
@@ -16,6 +16,7 @@ export interface SearchInstructor {
   id: number;
   name: string;
   avatar: string | null;
+  avatar_url?: string | null;
   courses: number;
   type: "instructor";
 }

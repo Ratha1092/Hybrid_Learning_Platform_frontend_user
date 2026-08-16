@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { Star } from "lucide-react";
 import { courseService, type CourseDetail, type Section } from "../../services/courseService";
+import { reviewService, type Review } from "../../services/reviewService";
+import { useAuth } from "../../context/AuthContext";
+import { useAuthModal } from "../../context/AuthModalContext";
 import EnrollButton from "./EnrollButton";
 import "./DetailCourse.css";
 
@@ -72,6 +76,235 @@ const API_BASE = import.meta.env.VITE_API_URL ?? "";
 function resolveUrl(url: string | null): string | null {
   if (!url) return null;
   return url.startsWith("http") ? url : `${API_BASE}${url}`;
+}
+
+function timeAgo(iso: string): string {
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (days <= 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 30) return `${days} days ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months} month${months > 1 ? "s" : ""} ago`;
+  const years = Math.floor(months / 12);
+  return `${years} year${years > 1 ? "s" : ""} ago`;
+}
+
+function StarRow({ rating, size = 15 }: { rating: number; size?: number }) {
+  return (
+    <div className="review-stars" aria-label={`${rating} out of 5 stars`}>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star
+          key={i}
+          width={size}
+          height={size}
+          className={i <= Math.round(rating) ? "review-star--filled" : "review-star--empty"}
+        />
+      ))}
+    </div>
+  );
+}
+
+function StarInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const [hover, setHover] = useState(0);
+  return (
+    <div className="review-star-input">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <button
+          key={i}
+          type="button"
+          className="review-star-input__btn"
+          onMouseEnter={() => setHover(i)}
+          onMouseLeave={() => setHover(0)}
+          onClick={() => onChange(i)}
+          aria-label={`Rate ${i} star${i > 1 ? "s" : ""}`}
+        >
+          <Star width={26} height={26} className={i <= (hover || value) ? "review-star--filled" : "review-star--empty"} />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ReviewsSection({ courseId, isEnrolled }: { courseId: number; isEnrolled: boolean }) {
+  const { user, isAuthenticated } = useAuth();
+  const { openLogin } = useAuthModal();
+  const [searchParams] = useSearchParams();
+
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [page, setPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [myReview, setMyReview] = useState<Review | null>(null);
+
+  const [showForm, setShowForm] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [title, setTitle] = useState("");
+  const [comment, setComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitMessage, setSubmitMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    reviewService.getByCourse(courseId, 1)
+      .then(({ data }) => {
+        const p = data.data;
+        setReviews(p.data);
+        setLastPage(p.last_page);
+        setTotal(p.total);
+        setPage(1);
+        const mine = user ? p.data.find((r) => r.user_id === user.id) ?? null : null;
+        if (mine) {
+          setMyReview(mine);
+          setRating(mine.rating);
+          setTitle(mine.title ?? "");
+          setComment(mine.comment ?? "");
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [courseId, user?.id]);
+
+  useEffect(() => {
+    if (searchParams.get("review") === "1" && isAuthenticated && isEnrolled) {
+      setShowForm(true);
+    }
+  }, [searchParams, isAuthenticated, isEnrolled]);
+
+  const loadMore = () => {
+    if (page >= lastPage || loadingMore) return;
+    setLoadingMore(true);
+    reviewService.getByCourse(courseId, page + 1)
+      .then(({ data }) => {
+        const p = data.data;
+        setReviews((prev) => [...prev, ...p.data]);
+        setPage(p.current_page);
+        setLastPage(p.last_page);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingMore(false));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (rating < 1) { setSubmitError("Please select a star rating."); return; }
+    setSubmitting(true);
+    setSubmitError(null);
+    try {
+      const { data } = await reviewService.create(courseId, {
+        rating,
+        title: title.trim() || undefined,
+        comment: comment.trim() || undefined,
+      });
+      const saved: Review = {
+        ...data.data,
+        user: data.data.user ?? (user ? { id: user.id, name: user.name, avatar: user.avatar ?? null } : null),
+      };
+      setMyReview(saved);
+      setReviews((prev) => [saved, ...prev.filter((r) => r.user_id !== saved.user_id)]);
+      setTotal((t) => (myReview ? t : t + 1));
+      setSubmitMessage(data.message);
+      setShowForm(false);
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { message?: string } } };
+      setSubmitError(axiosErr.response?.data?.message ?? "Failed to submit review.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <section className="detail-section" id="reviews">
+      <div className="detail-section__head">
+        <h2>Student Reviews</h2>
+        {total > 0 && <span className="detail-section__summary">{total} review{total !== 1 ? "s" : ""}</span>}
+      </div>
+
+      {submitMessage && <p className="review-submit-msg">{submitMessage}</p>}
+
+      {!isAuthenticated ? (
+        <button className="review-cta-btn" onClick={openLogin}>Log in to write a review</button>
+      ) : isEnrolled && !showForm ? (
+        <button className="review-cta-btn" onClick={() => setShowForm(true)}>
+          {myReview ? "Edit your review" : "Write a review"}
+        </button>
+      ) : null}
+
+      {showForm && (
+        <form className="review-form" onSubmit={handleSubmit}>
+          <label className="review-form__label">Your rating</label>
+          <StarInput value={rating} onChange={setRating} />
+          <input
+            className="review-form__input"
+            placeholder="Title (optional)"
+            value={title}
+            maxLength={255}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+          <textarea
+            className="review-form__textarea"
+            placeholder="Share your experience with this course (optional)"
+            value={comment}
+            maxLength={2000}
+            rows={4}
+            onChange={(e) => setComment(e.target.value)}
+          />
+          {submitError && <p className="review-form__error">{submitError}</p>}
+          <div className="review-form__actions">
+            <button type="button" className="review-form__cancel" onClick={() => setShowForm(false)} disabled={submitting}>
+              Cancel
+            </button>
+            <button type="submit" className="review-form__submit" disabled={submitting}>
+              {submitting ? "Submitting..." : myReview ? "Update review" : "Submit review"}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {loading ? (
+        <p className="review-empty">Loading reviews...</p>
+      ) : reviews.length === 0 ? (
+        <p className="review-empty">No reviews yet. Be the first to review this course!</p>
+      ) : (
+        <div className="review-list">
+          {reviews.map((r) => {
+            const avatar = resolveUrl(r.user?.avatar ?? null);
+            return (
+              <div key={r.id} className="review-card">
+                <div className="review-card__head">
+                  <div className="review-card__avatar">
+                    {avatar ? (
+                      <img src={avatar} alt={r.user?.name ?? "Student"} />
+                    ) : (
+                      <span>{(r.user?.name ?? "?").charAt(0).toUpperCase()}</span>
+                    )}
+                  </div>
+                  <div className="review-card__who">
+                    <p className="review-card__name">{r.user?.name ?? "Student"}</p>
+                    <p className="review-card__date">{timeAgo(r.created_at)}</p>
+                  </div>
+                  <StarRow rating={r.rating} />
+                </div>
+                {r.title && <p className="review-card__title">{r.title}</p>}
+                {r.comment && <p className="review-card__comment">{r.comment}</p>}
+                {!r.is_approved && r.user_id === user?.id && (
+                  <p className="review-card__pending">Awaiting moderation — only visible to you</p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {page < lastPage && (
+        <button className="review-load-more" onClick={loadMore} disabled={loadingMore}>
+          {loadingMore ? "Loading..." : "Load more reviews"}
+        </button>
+      )}
+    </section>
+  );
 }
 
 function DetailCourse() {
@@ -296,6 +529,9 @@ function DetailCourse() {
               </div>
             </section>
           )}
+
+          {/* Reviews */}
+          <ReviewsSection courseId={course.id} isEnrolled={!!course.is_enrolled} />
         </div>
 
         {/* ── Right: Enroll card ── */}

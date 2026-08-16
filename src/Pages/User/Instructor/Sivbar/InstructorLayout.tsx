@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import "../css/InstructorLayout.css";
 
@@ -95,6 +96,15 @@ const BOTTOM_LINKS = [
 
 export default function InstructorLayout() {
   const location = useLocation();
+  const navRef = useRef<HTMLElement>(null);
+
+  // On mobile the nav is a horizontally-scrolling pill bar — make sure the
+  // current page's pill is actually visible on load/navigation instead of
+  // requiring the user to find it by scrolling.
+  useEffect(() => {
+    const active = navRef.current?.querySelector<HTMLElement>(".il-link--active");
+    active?.scrollIntoView({ block: "nearest", inline: "center" });
+  }, [location.pathname]);
 
   return (
     <div className="il-page">
@@ -102,7 +112,7 @@ export default function InstructorLayout() {
         {/* ── Sidebar (persists across sub-navigation, no re-animation) ── */}
         <aside className="il-sidebar">
           <p className="il-section-label">Instructor</p>
-          <nav className="il-nav">
+          <nav className="il-nav" ref={navRef}>
             {MENU_LINKS.map((l) => (
               <NavLink
                 key={l.to}

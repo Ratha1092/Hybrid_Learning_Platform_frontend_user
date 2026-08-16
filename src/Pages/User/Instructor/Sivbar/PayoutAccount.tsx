@@ -57,16 +57,16 @@ export default function PayoutAccount() {
     <div className="flex flex-col gap-6">
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <h1 className="font-display text-[28px] font-extrabold text-slate-900 dark:text-white">Payout Account</h1>
           <p className="mt-0.5 text-[14px] text-slate-500 dark:text-slate-400">
             Register your payment details. An admin verifies the account before payouts can be processed.
           </p>
         </div>
         {statusCfg && (
-          <span className={`mt-1 inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[14.5px] font-bold ${statusCfg.cls}`}>
-            <statusCfg.Icon className="h-3.5 w-3.5" />
+          <span className={`inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1.5 text-[14.5px] font-bold sm:mt-1 sm:shrink-0 ${statusCfg.cls}`}>
+            <statusCfg.Icon className="h-3.5 w-3.5 shrink-0" />
             {statusCfg.label}
           </span>
         )}

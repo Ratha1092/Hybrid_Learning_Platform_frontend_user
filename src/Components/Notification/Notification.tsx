@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Bell } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import {
+  Bell, GraduationCap, XCircle, CheckCircle2, Trophy,
+  BookOpen, ShoppingBag, CreditCard, ShieldCheck, ChevronRight,
+} from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import {
   notificationService,
@@ -12,20 +16,51 @@ import "./Notification.css";
 // 5 min is enough — real-time events handle the instant updates.
 const POLL_INTERVAL = 5 * 60_000;
 
-const TYPE_CONFIG: Record<string, { icon: string; accent: string }> = {
-  instructor_approved: { icon: "🎉", accent: "#d97706" },
-  instructor_rejected: { icon: "❌", accent: "#ef4444" },
-  course_purchased:    { icon: "🛒", accent: "#10b981" },
-  course_completed:    { icon: "🏆", accent: "#6366f1" },
-  default:             { icon: "🔔", accent: "#3b82f6" },
+// Backend root (VITE_API_URL, no /api/v1) — needed because a handful of
+// notification links point at the Filament admin panel, which lives on the
+// backend's own domain, not this SPA's.
+const API_ORIGIN = import.meta.env.VITE_API_URL ?? "";
+
+const TYPE_CONFIG: Record<string, { Icon: typeof Bell; accent: string }> = {
+  instructor_approved:  { Icon: GraduationCap, accent: "#d97706" },
+  instructor_rejected:  { Icon: XCircle,       accent: "#ef4444" },
+  course_approved:      { Icon: CheckCircle2,  accent: "#10b981" },
+  course_rejected:      { Icon: XCircle,       accent: "#ef4444" },
+  course_completed:     { Icon: Trophy,        accent: "#6366f1" },
+  enrollment_confirmed: { Icon: BookOpen,      accent: "#10b981" },
+  order:                { Icon: ShoppingBag,   accent: "#2563eb" },
+  payment:              { Icon: CreditCard,    accent: "#10b981" },
+  role_changed:         { Icon: ShieldCheck,   accent: "#2563eb" },
+  default:              { Icon: Bell,          accent: "#3b82f6" },
 };
 
 function getConfig(type: string) {
   return TYPE_CONFIG[type] ?? TYPE_CONFIG.default;
 }
 
+// Figures out how to actually get the user to `link`: an internal SPA route
+// (React Router, no full reload), or an external one — either a link on a
+// different domain, or a relative `/admin/...` path, which only makes sense
+// resolved against the backend's own origin (the Filament panel lives there,
+// not on this frontend).
+function resolveHref(link: string): { external: boolean; href: string } {
+  if (link.startsWith("/admin")) {
+    return { external: true, href: `${API_ORIGIN}${link}` };
+  }
+  try {
+    const url = new URL(link, window.location.origin);
+    if (url.origin !== window.location.origin) {
+      return { external: true, href: link };
+    }
+    return { external: false, href: url.pathname + url.search };
+  } catch {
+    return { external: false, href: link };
+  }
+}
+
 export default function Notification() {
   const { isAuthenticated, user, refreshUser } = useAuth();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
@@ -96,17 +131,26 @@ export default function Notification() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const handleMarkRead = async (n: AppNotification) => {
-    if (!n.read) {
-      try {
-        await notificationService.markRead(n.id);
-        setNotifications((prev) =>
-          prev.map((x) => (x.id === n.id ? { ...x, read: true } : x))
-        );
-        setUnreadCount((c) => Math.max(0, c - 1));
-      } catch {
-        // silent
-      }
+  const markRead = async (n: AppNotification) => {
+    if (n.read) return;
+    setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
+    setUnreadCount((c) => Math.max(0, c - 1));
+    try {
+      await notificationService.markRead(n.id);
+    } catch {
+      // silent — optimistic update stands either way
+    }
+  };
+
+  const handleItemClick = (n: AppNotification) => {
+    markRead(n);
+    if (!n.link) return;
+    setOpen(false);
+    const { external, href } = resolveHref(n.link);
+    if (external) {
+      window.location.href = href;
+    } else {
+      navigate(href);
     }
   };
 
@@ -162,28 +206,38 @@ export default function Notification() {
           <div className="notif-list">
             {notifications.length === 0 ? (
               <div className="notif-empty">
-                <span className="notif-empty__icon">🔔</span>
+                <span className="notif-empty__icon"><Bell size={30} strokeWidth={1.5} /></span>
                 <p>You're all caught up!</p>
               </div>
             ) : (
               notifications.map((n) => {
-                const cfg = getConfig(n.type);
+                const { Icon, accent } = getConfig(n.type);
+                const clickable = !!n.link;
                 return (
                   <div
                     key={n.id}
-                    className={`notif-item${!n.read ? " notif-item--unread" : ""}`}
-                    onClick={() => handleMarkRead(n)}
+                    className={`notif-item${!n.read ? " notif-item--unread" : ""}${clickable ? " notif-item--clickable" : ""}`}
+                    onClick={() => handleItemClick(n)}
+                    role={clickable ? "button" : undefined}
+                    tabIndex={clickable ? 0 : undefined}
                   >
                     <div
                       className="notif-item__icon"
-                      style={{ background: `${cfg.accent}15`, color: cfg.accent }}
+                      style={{ background: `${accent}17`, color: accent }}
                     >
-                      {cfg.icon}
+                      <Icon size={19} strokeWidth={2} />
                     </div>
                     <div className="notif-item__body">
                       <p className="notif-item__title">{n.title}</p>
                       <p className="notif-item__msg">{n.message}</p>
-                      <span className="notif-item__time">· {formatTime(n.created_at)}</span>
+                      <div className="notif-item__foot">
+                        <span className="notif-item__time">{formatTime(n.created_at)}</span>
+                        {clickable && n.action_text && (
+                          <span className="notif-item__action" style={{ color: accent }}>
+                            {n.action_text} <ChevronRight size={12} />
+                          </span>
+                        )}
+                      </div>
                     </div>
                     {!n.read && <div className="notif-item__dot" />}
                   </div>

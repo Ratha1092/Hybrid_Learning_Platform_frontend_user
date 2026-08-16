@@ -96,7 +96,7 @@ export default function InstructorProfile() {
     }).finally(() => setLoading(false));
   }, [user]);
 
-  const avatarSrc = resolveUrl(avatarPreview ? null : (profile?.avatar ?? profile?.avatar_url ?? user?.avatar_url ?? user?.avatar));
+  const avatarSrc = resolveUrl(avatarPreview ? null : (profile?.avatar_url ?? user?.avatar_url ?? profile?.avatar ?? user?.avatar));
   const displaySrc = avatarPreview ?? avatarSrc;
   const displayName = profile?.name ?? user?.name ?? "Instructor";
 

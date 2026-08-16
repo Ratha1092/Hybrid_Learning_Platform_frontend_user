@@ -47,6 +47,7 @@ export interface InstructorPayoutAccount {
   account_number: string | null;
   phone_number: string | null;
   qr_code_path: string | null;
+  qr_code_url: string | null;
   status: "pending" | "verified" | "rejected";
   rejection_reason: string | null;
   reviewed_at: string | null;
@@ -395,7 +396,7 @@ export const instructorService = {
     courseId: number | string,
     sectionId: number | string,
     lessonId: number | string,
-    data: Partial<InstructorLesson>
+    data: Partial<InstructorLesson> & { video_url?: string; content?: string }
   ) =>
     api.put(
       `/instructor/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}`,

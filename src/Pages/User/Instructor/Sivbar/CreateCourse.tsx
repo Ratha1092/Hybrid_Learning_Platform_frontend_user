@@ -1,19 +1,22 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { Wallet, Gift, Banknote, Video, FileText, ListChecks, Paperclip, Pencil, Trash2 } from "lucide-react";
 import { instructorService, type StandaloneSection, type LessonResource } from "../../../../services/instructorService";
+import { getVideoDuration } from "../../../../utils/videoUrl";
 import api from "../../../../api/axios";
 import "../css/CreateCourse.css";
 
 interface Category { id: number; name: string; slug: string; }
 
 interface LocalLesson {
-  id: number; title: string; type: string; is_preview: boolean; video_url?: string;
+  id: number; title: string; type: string; is_preview: boolean; video_url?: string; content?: string;
 }
 interface LocalSection {
   id: number; title: string; order?: number; lessons: LocalLesson[];
 }
 interface LessonForm {
   title: string; type: string; video_url: string; content: string; is_preview: boolean; videoFile: File | null;
+  duration: number | null; articleFile: File | null;
 }
 
 const STEPS = ["Basic Info", "Curriculum", "Pricing", "Submit"];
@@ -170,21 +173,56 @@ interface SectionBlockProps {
   onDelete: () => void;
   onLessonAdded: (lesson: LocalLesson) => void;
   onLessonDeleted: (id: number) => void;
+  onLessonUpdated: (id: number, fields: Partial<LocalLesson>) => void;
 }
 
-function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLessonAdded, onLessonDeleted }: SectionBlockProps) {
+function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLessonAdded, onLessonDeleted, onLessonUpdated }: SectionBlockProps) {
   const [open, setOpen] = useState(true);
   const [showForm, setShowForm] = useState(!!autoOpenForm);
-  const [lesson, setLesson] = useState<LessonForm>({ title: "", type: "video", video_url: "", content: "", is_preview: false, videoFile: null });
+  const [lesson, setLesson] = useState<LessonForm>({ title: "", type: "video", video_url: "", content: "", is_preview: false, videoFile: null, duration: null, articleFile: null });
   const [saving, setSaving] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [expandedResources, setExpandedResources] = useState<Set<number>>(new Set());
 
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState({ title: "", is_preview: false, video_url: "", content: "" });
+  const [editSaving, setEditSaving] = useState(false);
+  const [editErr, setEditErr] = useState<string | null>(null);
+
   const toggleResources = (lessonId: number) =>
     setExpandedResources((prev) => { const s = new Set(prev); s.has(lessonId) ? s.delete(lessonId) : s.add(lessonId); return s; });
 
-  const setL = (k: keyof LessonForm, v: string | boolean) => setLesson((f) => ({ ...f, [k]: v }));
+  const startEdit = (l: LocalLesson) => {
+    setShowForm(false);
+    setEditingId(l.id);
+    setEditErr(null);
+    setEditForm({ title: l.title, is_preview: l.is_preview, video_url: l.video_url ?? "", content: l.content ?? "" });
+  };
+
+  const handleSaveEdit = async (l: LocalLesson) => {
+    if (!editForm.title.trim()) { setEditErr("Title is required."); return; }
+    setEditSaving(true); setEditErr(null);
+    try {
+      const payload: Partial<LocalLesson> & { video_url?: string; content?: string } = {
+        title: editForm.title.trim(),
+        is_preview: editForm.is_preview,
+      };
+      if (l.type === "video") payload.video_url = editForm.video_url || undefined;
+      if (l.type === "article") payload.content = editForm.content || undefined;
+      await instructorService.updateLesson(courseId, section.id, l.id, payload);
+      onLessonUpdated(l.id, {
+        title: editForm.title.trim(),
+        is_preview: editForm.is_preview,
+        ...(l.type === "video" ? { video_url: editForm.video_url } : {}),
+        ...(l.type === "article" ? { content: editForm.content } : {}),
+      });
+      setEditingId(null);
+    } catch (e) { setEditErr(getApiError(e)); }
+    setEditSaving(false);
+  };
+
+  const setL = (k: keyof LessonForm, v: string | boolean | File | number | null) => setLesson((f) => ({ ...f, [k]: v }));
 
   const handleAddLesson = async () => {
     if (!lesson.title.trim()) return;
@@ -193,6 +231,7 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
       const { data } = await instructorService.createLesson(courseId, section.id, {
         title: lesson.title.trim(),
         type: lesson.type,
+        duration: lesson.videoFile && lesson.duration != null ? lesson.duration : undefined,
         is_preview: lesson.is_preview,
         video_url: lesson.type === "video" && !lesson.videoFile ? (lesson.video_url || undefined) : undefined,
         content: lesson.content || undefined,
@@ -203,8 +242,16 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
         await instructorService.uploadVideo(courseId, section.id, lessonId, lesson.videoFile, setUploadProgress);
         setUploadProgress(null);
       }
+      if (lesson.type === "article" && lesson.articleFile) {
+        setUploadProgress(0);
+        const fd = new FormData();
+        fd.append("title", lesson.articleFile.name);
+        fd.append("file", lesson.articleFile);
+        await instructorService.uploadLessonResource(courseId, section.id, lessonId, fd, setUploadProgress);
+        setUploadProgress(null);
+      }
       onLessonAdded({ ...data.data, lessons: undefined } as unknown as LocalLesson);
-      setLesson({ title: "", type: "video", video_url: "", content: "", is_preview: false, videoFile: null });
+      setLesson({ title: "", type: "video", video_url: "", content: "", is_preview: false, videoFile: null, duration: null, articleFile: null });
       setShowForm(false);
     } catch (e) { setErr(getApiError(e)); }
     setSaving(false);
@@ -233,18 +280,68 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
           {section.lessons.map((l) => (
             <div key={l.id} className="cur-lesson-wrap">
               <div className="cur-lesson">
-                <span className="cur-lesson__icon">{l.type === "video" ? "🎬" : l.type === "quiz" ? "📝" : "📄"}</span>
+                <span className="cur-lesson__icon">
+                  {l.type === "video" ? <Video size={15} /> : l.type === "quiz" ? <ListChecks size={15} /> : <FileText size={15} />}
+                </span>
                 <span className="cur-lesson__title">{l.title}</span>
                 {l.is_preview && <span className="cur-lesson__preview">Free Preview</span>}
-                <button
-                  className={`cur-btn cur-btn--resources${expandedResources.has(l.id) ? " cur-btn--resources-active" : ""}`}
-                  onClick={() => toggleResources(l.id)}
-                  title="Lesson resources"
-                >
-                  📎 Resources
-                </button>
-                <button className="cur-btn cur-btn--icon" onClick={() => handleDeleteLesson(l.id)}>✕</button>
+                <div className="cur-lesson__actions">
+                  <button
+                    className={`cur-btn cur-btn--resources${expandedResources.has(l.id) ? " cur-btn--resources-active" : ""}`}
+                    onClick={() => toggleResources(l.id)}
+                    title="Lesson resources"
+                  >
+                    <Paperclip size={13} /> Resources
+                  </button>
+                  <button className="cur-btn cur-btn--edit" onClick={() => startEdit(l)} title="Edit lesson">
+                    <Pencil size={13} />
+                  </button>
+                  <button className="cur-btn cur-btn--icon" onClick={() => handleDeleteLesson(l.id)} title="Delete lesson">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               </div>
+
+              {editingId === l.id && (
+                <div className="cur-lesson-form cur-lesson-form--edit">
+                  <input
+                    placeholder="Lesson title *"
+                    value={editForm.title}
+                    onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
+                  />
+                  <label className="cur-lesson-form__check">
+                    <input
+                      type="checkbox"
+                      checked={editForm.is_preview}
+                      onChange={(e) => setEditForm((f) => ({ ...f, is_preview: e.target.checked }))}
+                    />
+                    Free Preview
+                  </label>
+                  {l.type === "video" && (
+                    <input
+                      placeholder="YouTube / Vimeo URL"
+                      value={editForm.video_url}
+                      onChange={(e) => setEditForm((f) => ({ ...f, video_url: e.target.value }))}
+                    />
+                  )}
+                  {l.type === "article" && (
+                    <textarea
+                      rows={3}
+                      placeholder="Article content"
+                      value={editForm.content}
+                      onChange={(e) => setEditForm((f) => ({ ...f, content: e.target.value }))}
+                    />
+                  )}
+                  {editErr && <p style={{ color: "#dc2626", fontSize: 12, margin: 0 }}>⚠ {editErr}</p>}
+                  <div className="cur-lesson-form__actions">
+                    <button className="cur-btn cur-btn--primary" onClick={() => handleSaveEdit(l)} disabled={editSaving}>
+                      {editSaving ? "Saving..." : "Save Changes"}
+                    </button>
+                    <button className="cur-btn" onClick={() => setEditingId(null)}>Cancel</button>
+                  </div>
+                </div>
+              )}
+
               {expandedResources.has(l.id) && (
                 <LessonResourcesPanel courseId={courseId} sectionId={section.id} lessonId={l.id} />
               )}
@@ -254,7 +351,7 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
           {err && <p style={{ color: "#dc2626", fontSize: 12, margin: "4px 0" }}>⚠ {err}</p>}
 
           {!showForm ? (
-            <button className="cur-add-lesson-btn" onClick={() => setShowForm(true)}>+ Add Lesson</button>
+            <button className="cur-add-lesson-btn" onClick={() => { setEditingId(null); setShowForm(true); }}>+ Add Lesson</button>
           ) : (
             <div className="cur-lesson-form">
               <input
@@ -266,7 +363,6 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
                 <select value={lesson.type} onChange={(e) => setL("type", e.target.value)}>
                   <option value="video">🎬 Video</option>
                   <option value="article">📄 Article</option>
-                  <option value="quiz">📝 Quiz</option>
                 </select>
                 <label className="cur-lesson-form__check">
                   <input type="checkbox" checked={lesson.is_preview} onChange={(e) => setL("is_preview", e.target.checked)} />
@@ -279,7 +375,11 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
                   <input
                     type="file"
                     accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm"
-                    onChange={(e) => setLesson((f) => ({ ...f, videoFile: e.target.files?.[0] ?? null }))}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0] ?? null;
+                      setLesson((prev) => ({ ...prev, videoFile: f, duration: null }));
+                      if (f) getVideoDuration(f).then((d) => setL("duration", d)).catch(() => {});
+                    }}
                   />
                   {!lesson.videoFile && (
                     <input placeholder="Or paste YouTube / Vimeo URL" value={lesson.video_url} onChange={(e) => setL("video_url", e.target.value)} />
@@ -295,7 +395,23 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
                 </>
               )}
               {lesson.type === "article" && (
-                <textarea rows={3} placeholder="Article content..." value={lesson.content} onChange={(e) => setL("content", e.target.value)} />
+                <>
+                  <textarea rows={3} placeholder="Write the article content here..." value={lesson.content} onChange={(e) => setL("content", e.target.value)} />
+                  <label style={{ fontSize: 12, color: "#6b7280" }}>Or upload a document (PDF, DOC, PPT — optional, shown as a download for students)</label>
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx,.ppt,.pptx"
+                    onChange={(e) => setL("articleFile", e.target.files?.[0] ?? null)}
+                  />
+                  {uploadProgress !== null && (
+                    <div style={{ marginTop: 4 }}>
+                      <div style={{ background: "#e5e7eb", borderRadius: 4, height: 6 }}>
+                        <div style={{ background: "#14b8a6", height: 6, borderRadius: 4, width: `${uploadProgress}%`, transition: "width 0.3s" }} />
+                      </div>
+                      <span style={{ fontSize: 11, color: "#6b7280" }}>Uploading {uploadProgress}%</span>
+                    </div>
+                  )}
+                </>
               )}
               <div className="cur-lesson-form__actions">
                 <button className="cur-btn cur-btn--primary" onClick={handleAddLesson} disabled={saving}>
@@ -484,6 +600,13 @@ function CurriculumStep({ courseId, sections, setSections, onNext, onBack }: Cur
                 s.id === section.id ? { ...s, lessons: s.lessons.filter((l) => l.id !== lId) } : s
               ))
             }
+            onLessonUpdated={(lId, fields) =>
+              setSections((prev) => prev.map((s) =>
+                s.id === section.id
+                  ? { ...s, lessons: s.lessons.map((l) => l.id === lId ? { ...l, ...fields } : l) }
+                  : s
+              ))
+            }
           />
         ))}
       </div>
@@ -542,7 +665,8 @@ export default function CreateCourse() {
   const [error, setError]     = useState<string | null>(null);
 
   const [info, setInfo]       = useState<Draft["info"]>(draft?.info ?? DEFAULT_INFO);
-  const [certificateEnabled, setCertificateEnabled] = useState(draft?.certificateEnabled ?? false);
+  // Setter unused while the UI checkbox is hidden — see note near the submit step below.
+  const [certificateEnabled] = useState(draft?.certificateEnabled ?? false);
   const [visibility, setVisibility] = useState(draft?.visibility ?? "public");
   const [isFree, setIsFree]   = useState(draft?.isFree ?? true);
   const [price, setPrice]     = useState(draft?.price ?? "");
@@ -875,7 +999,7 @@ export default function CreateCourse() {
           {step === 2 && (
             <div className="cc-card">
               <div className="cc-card__head">
-                <span className="cc-card__icon">💰</span>
+                <span className="cc-card__icon"><Wallet size={20} /></span>
                 <h2>Set your course price</h2>
               </div>
               <p className="cc-subtitle">Choose a pricing model for your course.</p>
@@ -885,7 +1009,7 @@ export default function CreateCourse() {
                   className={`cc-price-opt${isFree ? " cc-price-opt--active" : ""}`}
                   onClick={() => { setIsFree(true); setPrice(""); }}
                 >
-                  <span className="cc-price-opt__icon">🆓</span>
+                  <span className="cc-price-opt__icon"><Gift size={26} /></span>
                   <strong>Free</strong>
                   <span>Free access</span>
                 </button>
@@ -893,19 +1017,20 @@ export default function CreateCourse() {
                   className={`cc-price-opt${!isFree ? " cc-price-opt--active" : ""}`}
                   onClick={() => setIsFree(false)}
                 >
-                  <span className="cc-price-opt__icon">💵</span>
+                  <span className="cc-price-opt__icon"><Banknote size={26} /></span>
                   <strong>Paid</strong>
                   <span>Set a price</span>
                 </button>
               </div>
 
               {!isFree && (
-                <div className="cc-field" style={{ marginTop: 20, maxWidth: 200 }}>
+                <div className="cc-field" style={{ marginTop: 20, maxWidth: 240 }}>
                   <label>Price (USD)</label>
                   <div className="cc-price-input">
                     <span>$</span>
                     <input
                       type="number" min="1" step="0.01"
+                      placeholder="0.00"
                       value={price}
                       onChange={(e) => setPrice(e.target.value)}
                     />
@@ -951,12 +1076,51 @@ export default function CreateCourse() {
               <div className="cc-submit-hero">
                 <span className="cc-submit-hero__icon">{submitIssues.length === 0 ? "🚀" : "📋"}</span>
                 <h2>{submitIssues.length === 0 ? "Ready to Submit!" : "Almost there…"}</h2>
-                {submitIssues.length === 0 && (
-                  <p>
-                    <strong>{info.title}</strong><br />
-                    {sections.length} section(s) · {totalLessons} lesson(s) · {isFree ? "Free" : `$${price}`}
-                  </p>
-                )}
+                <p><strong>{info.title || "Untitled course"}</strong></p>
+              </div>
+
+              {/* Full review — everything the instructor entered, so they can check it before submitting */}
+              <div className="cc-review">
+                <div className="cc-review__group">
+                  <h3 className="cc-review__heading">Basic Info</h3>
+                  <div className="cc-review__grid">
+                    <div className="cc-review__item"><span>Category</span><strong>{selectedCategory?.name ?? "—"}</strong></div>
+                    <div className="cc-review__item"><span>Level</span><strong>{info.level || "—"}</strong></div>
+                    <div className="cc-review__item"><span>Language</span><strong>{info.language || "—"}</strong></div>
+                    <div className="cc-review__item"><span>Thumbnail</span><strong>{thumbnailPreview ? "Uploaded" : "Not set"}</strong></div>
+                  </div>
+                  {info.short_description && <p className="cc-review__text">{info.short_description}</p>}
+                </div>
+
+                <div className="cc-review__group">
+                  <h3 className="cc-review__heading">
+                    Curriculum <span className="cc-review__heading-count">{sections.length} section(s) · {totalLessons} lesson(s)</span>
+                  </h3>
+                  {sections.length === 0 ? (
+                    <p className="cc-review__text cc-review__text--muted">No sections added yet.</p>
+                  ) : (
+                    <ul className="cc-review__curriculum">
+                      {sections.map((s, i) => (
+                        <li key={s.id}>
+                          <span className="cc-review__curriculum-num">{i + 1}</span>
+                          <span className="cc-review__curriculum-title">{s.title}</span>
+                          <span className="cc-review__curriculum-count">
+                            {s.lessons.length} lesson{s.lessons.length !== 1 ? "s" : ""}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <div className="cc-review__group">
+                  <h3 className="cc-review__heading">Pricing</h3>
+                  <div className="cc-review__grid">
+                    <div className="cc-review__item"><span>Model</span><strong>{isFree ? "Free" : "Paid"}</strong></div>
+                    {!isFree && <div className="cc-review__item"><span>Price</span><strong>${price || "0.00"}</strong></div>}
+                    {!isFree && <div className="cc-review__item"><span>You earn per sale</span><strong>${(Number(price || 0) * (1 - commission / 100)).toFixed(2)}</strong></div>}
+                  </div>
+                </div>
               </div>
 
               {/* Validation issues — clickable links to each step */}
@@ -984,16 +1148,8 @@ export default function CreateCourse() {
                 </select>
               </div>
 
-              <div className="cc-field">
-                <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontWeight: 500 }}>
-                  <input
-                    type="checkbox"
-                    checked={certificateEnabled}
-                    onChange={(e) => setCertificateEnabled(e.target.checked)}
-                  />
-                  Enable certificate on course completion
-                </label>
-              </div>
+              {/* Enable Certificate — hidden until certificate PDF generation exists.
+                  certificateEnabled stays wired up (always false) so nothing breaks if restored later. */}
 
               <div className="cc-submit-actions">
                 <button className="cc-discard" onClick={() => setStep(2)}>← Back</button>

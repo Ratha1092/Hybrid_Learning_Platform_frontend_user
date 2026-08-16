@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, CheckCircle, ImagePlus, X, Globe, Lock, Award } from "lucide-react";
+import { ArrowLeft, CheckCircle, ImagePlus, X, Globe, Lock } from "lucide-react";
 import { instructorService, type InstructorCourse } from "../../../../services/instructorService";
 import { categoryService, type Category } from "../../../../services/categoryService";
 import Curriculum from "./Curriculum";
@@ -340,26 +340,8 @@ export default function EditCourse() {
                 ))}
               </div>
             </div>
-            <div>
-              <label className={LABEL}>Certificate</label>
-              <button
-                type="button"
-                onClick={() => set("certificate_enabled", !form.certificate_enabled)}
-                className={`flex w-full items-center gap-3 rounded-xl border-2 px-4 py-3 transition-all ${
-                  form.certificate_enabled
-                    ? "border-blue-500 bg-blue-50/60 dark:border-blue-400 dark:bg-blue-500/10"
-                    : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700/30"
-                }`}
-              >
-                <Award className={`h-4 w-4 shrink-0 ${form.certificate_enabled ? "text-blue-500" : "text-slate-400"}`} />
-                <span className={`flex-1 text-[13px] font-semibold ${form.certificate_enabled ? "text-blue-700 dark:text-blue-300" : "text-slate-600 dark:text-slate-400"}`}>
-                  Enable certificate on completion
-                </span>
-                <div className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${form.certificate_enabled ? "bg-blue-600" : "bg-slate-200 dark:bg-slate-600"}`}>
-                  <div className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${form.certificate_enabled ? "translate-x-4" : "translate-x-0.5"}`} />
-                </div>
-              </button>
-            </div>
+            {/* Enable Certificate toggle — hidden until certificate PDF generation exists.
+                form.certificate_enabled stays wired up (always false) so nothing breaks if restored later. */}
           </div>
 
           {/* Save button */}

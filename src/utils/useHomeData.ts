@@ -8,6 +8,7 @@ export interface HomeInstructor {
   id: number;
   name: string;
   avatar: string | null;
+  avatar_url?: string | null;
   bio: string | null;
   courses: number;
   students: number;

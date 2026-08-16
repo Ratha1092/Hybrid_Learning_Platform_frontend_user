@@ -214,7 +214,7 @@ export default function SearchBar() {
                   <div className="sb-group__label">Instructors</div>
                   {results!.instructors.map((ins, i) => {
                     const fi = flatIndex("instructor", i);
-                    const avatar = resolveImg(ins.avatar);
+                    const avatar = resolveImg(ins.avatar_url ?? ins.avatar);
                     return (
                       <button
                         key={ins.id}

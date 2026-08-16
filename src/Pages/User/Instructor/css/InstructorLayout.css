@@ -64,6 +64,11 @@
   box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
   overflow-x: auto;
   scrollbar-width: none;
+  scroll-padding-inline: 8px;
+  /* Fade the edges on mobile so a scrollable-but-clipped pill bar doesn't
+     read as "cut off" — signals there's more to scroll to. */
+  mask-image: linear-gradient(to right, transparent, black 16px, black calc(100% - 16px), transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 16px, black calc(100% - 16px), transparent);
 }
 
 .il-nav::-webkit-scrollbar { display: none; }
@@ -72,6 +77,8 @@
   .il-nav {
     flex-direction: column;
     overflow-x: visible;
+    mask-image: none;
+    -webkit-mask-image: none;
   }
 }
 

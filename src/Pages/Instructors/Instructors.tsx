@@ -13,6 +13,7 @@ interface Instructor {
   id: number;
   name: string;
   avatar: string | null;
+  avatar_url?: string | null;
   headline: string | null;
   bio: string | null;
   courses: number;
@@ -113,7 +114,7 @@ const _categoriesPromise: Promise<Category[]> =
     .catch(() => []);
 
 function resolveImg(instructor: Instructor) {
-  return resolveAvatar(instructor.avatar);
+  return instructor.avatar_url ?? resolveAvatar(instructor.avatar);
 }
 
 function InstructorAvatar({ instructor, height }: { instructor: Instructor; height: string }) {
@@ -285,9 +286,9 @@ export default function Instructors() {
         const seen = new Map<number, Instructor>();
         for (const c of courses) {
           if (!c.instructor?.id) continue;
-          const { id, name, avatar } = c.instructor;
+          const { id, name, avatar, avatar_url } = c.instructor;
           if (!seen.has(id)) {
-            seen.set(id, { id, name, avatar: avatar ?? null, headline: null, bio: null, courses: 0, students: 0 });
+            seen.set(id, { id, name, avatar: avatar ?? null, avatar_url: avatar_url ?? null, headline: null, bio: null, courses: 0, students: 0 });
           }
           const inst = seen.get(id)!;
           inst.courses++;

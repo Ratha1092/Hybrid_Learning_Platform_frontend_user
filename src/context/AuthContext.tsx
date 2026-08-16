@@ -16,6 +16,7 @@ export interface AuthUser {
   instructor_status?: string | null;
   avatar?: string | null;
   avatar_url?: string | null;
+  has_enrollments?: boolean;
   created_at?: string;
 }
 
@@ -73,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           role: fresh.role,
           instructor_status: fresh.instructor_status,
           avatar_url: fresh.avatar_url ?? prev.avatar_url,
+          has_enrollments: fresh.has_enrollments,
         };
         localStorage.setItem("user", JSON.stringify(updated));
         return updated;

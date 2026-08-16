@@ -10,6 +10,7 @@ export interface Course {
   level: string;
   language: string;
   duration: number;
+  total_duration_seconds?: number | null;
   students_count?: number;
   views_count?: number;
   average_rating?: number | null;
@@ -20,6 +21,7 @@ export interface Course {
     id: number;
     name: string;
     avatar?: string | null;
+    avatar_url?: string | null;
   } | null;
   requirements?: string | null;
   what_you_will_learn?: string | null;

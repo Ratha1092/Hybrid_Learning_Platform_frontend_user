@@ -28,6 +28,21 @@
     };
   }
 
+  export interface TwoFactorChallenge {
+    requires_2fa: true;
+    challenge_token: string;
+    email: string;
+    expires_in: number;
+    // Only present outside production — lets a dev/staging environment
+    // complete the flow without a real inbox.
+    code?: string;
+  }
+
+  export interface LoginResponse {
+    message: string;
+    data: TwoFactorChallenge | { token: string; user: AuthUser };
+  }
+
   export interface OAuthResponse {
     success: boolean;
     message: string;
@@ -50,7 +65,7 @@
     csrf: () => csrfApi.get("/sanctum/csrf-cookie"),
 
     login: (payload: LoginPayload) =>
-      api.post<AuthResponse>("/auth/login", payload),
+      api.post<LoginResponse>("/auth/login", payload),
 
     register: (payload: RegisterPayload) =>
       api.post<AuthResponse>("/auth/register", payload),
@@ -70,4 +85,30 @@
 
     githubOAuth: (code: string) =>
       api.post<OAuthResponse>("/auth/oauth/github", { code }, { timeout: 20000 }),
+
+    // 2FA — completing a login that returned a { requires_2fa } challenge.
+    send2faLoginCode: (challenge_token: string) =>
+      api.post<{ success: boolean; message: string; data: { challenge_token: string; expires_in: number; code?: string } }>(
+        "/auth/2fa/code",
+        { challenge_token }
+      ),
+
+    verify2faLogin: (challenge_token: string, code: string) =>
+      api.post<{ success: boolean; message: string; data: { token: string; user: AuthUser } }>(
+        "/auth/2fa/verify",
+        { challenge_token, code }
+      ),
+
+    // 2FA — managing it on an already-authenticated account.
+    get2faStatus: () =>
+      api.get<{ success: boolean; data: { two_factor_enabled: boolean } }>("/auth/2fa/status"),
+
+    enable2fa: () =>
+      api.post<{ success: boolean; message: string; data: { message: string; code?: string } }>("/auth/2fa/enable"),
+
+    verifyEnable2fa: (code: string) =>
+      api.post<{ success: boolean; message: string }>("/auth/2fa/verify-enable", { code }),
+
+    disable2fa: (password: string) =>
+      api.post<{ success: boolean; message: string }>("/auth/2fa/disable", { password }),
   };

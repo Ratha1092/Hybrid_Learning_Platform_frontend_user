@@ -15,3 +15,22 @@ export function classifyVideoUrl(url: string | null | undefined): VideoKind {
     return null;
   }
 }
+
+// Reads a video file's length client-side (via a throwaway <video> element)
+// so instructors never have to type it in manually.
+export function getVideoDuration(file: File): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement("video");
+    video.preload = "metadata";
+    const url = URL.createObjectURL(file);
+    video.src = url;
+    video.onloadedmetadata = () => {
+      URL.revokeObjectURL(url);
+      resolve(Math.round(video.duration));
+    };
+    video.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Could not read video duration"));
+    };
+  });
+}
