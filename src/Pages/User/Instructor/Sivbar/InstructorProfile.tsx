@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Calendar, Mail, Pencil, LogOut, BookOpen, Users, DollarSign,
+  Calendar, Mail, Phone, Pencil, LogOut, BookOpen, Users, DollarSign,
   Upload, Trash2, Check, X,
 } from "lucide-react";
 
@@ -238,6 +238,12 @@ export default function InstructorProfile() {
                 <li className="flex items-center gap-2">
                   <Mail className="h-4 w-4 shrink-0" />
                   <span className="break-all">{user.email}</span>
+                </li>
+              )}
+              {profile?.phone && !editing && (
+                <li className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 shrink-0" />
+                  <span className="break-all">{profile.phone}</span>
                 </li>
               )}
               {(form.github || profile?.github) && !editing && (

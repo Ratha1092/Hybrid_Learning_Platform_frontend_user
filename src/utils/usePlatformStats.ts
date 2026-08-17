@@ -5,6 +5,7 @@ export interface PlatformStats {
   total_students: number;
   total_courses: number;
   total_instructors: number;
+  total_enrollments: number;
   top_instructor_monthly_earnings: number;
 }
 
@@ -18,7 +19,7 @@ function fetchStats(): Promise<PlatformStats> {
   if (pending) return pending;
   pending = api.get<{ data: PlatformStats }>("/stats")
     .then(r => { cached = r.data.data; return cached!; })
-    .catch(() => ({ total_students: 0, total_courses: 0, total_instructors: 0, top_instructor_monthly_earnings: 0 }))
+    .catch(() => ({ total_students: 0, total_courses: 0, total_instructors: 0, total_enrollments: 0, top_instructor_monthly_earnings: 0 }))
     .finally(() => { pending = null; });
   return pending;
 }

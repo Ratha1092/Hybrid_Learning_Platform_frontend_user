@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Layers, PlusCircle, ArrowRight, Lightbulb, Info, Eye, Pencil, Trash2, X, Check, Plus } from "lucide-react";
+import { BookOpen, Layers, PlusCircle, ArrowRight, Lightbulb, Info, ListChecks, Pencil, Trash2, X, Check, Plus } from "lucide-react";
 import {
   instructorService,
   type StandaloneSection,
@@ -171,6 +171,12 @@ export default function SectionLibrary() {
       const { data } = await instructorService.createStandaloneSection(newTitle.trim());
       setSections((prev) => [data.data, ...prev]);
       setNewTitle(""); setShowForm(false);
+      // Creating a section is just step 1 — jump straight into adding its first
+      // lesson instead of making the instructor find and click "Manage lessons".
+      setViewSectionId(data.data.id);
+      setLessonErr(null);
+      setLessonForm({ title: "", type: "video", video_url: "", content: "", is_preview: false, videoFile: null, duration: null, articleFile: null });
+      setShowLessonForm(true);
     } catch {
       setSaveError("Failed to create section. Please try again.");
     }
@@ -302,7 +308,10 @@ export default function SectionLibrary() {
           <h1 className="font-display text-[28px] font-extrabold text-slate-900 dark:text-white">
             Section Library
           </h1>
-          <p className="mt-0.5 text-[14px] text-slate-500 dark:text-slate-400">
+          <p className="mt-1 max-w-lg text-[13.5px] leading-relaxed text-slate-500 dark:text-slate-400">
+            A <span className="font-semibold text-slate-700 dark:text-slate-200">section</span> is a group of lessons — like a chapter — that you build once here and reuse in any of your courses.
+          </p>
+          <p className="mt-1.5 text-[12.5px] font-medium text-slate-400 dark:text-slate-500">
             {loading ? "Loading…" : `${sections.length} standalone section${sections.length !== 1 ? "s" : ""}`}
           </p>
         </div>
@@ -478,7 +487,7 @@ export default function SectionLibrary() {
                         aria-label="Manage lessons"
                         title="Manage lessons"
                       >
-                        <Eye className="h-4 w-4" />
+                        <ListChecks className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => startEdit(s)}

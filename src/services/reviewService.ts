@@ -10,7 +10,7 @@ export interface Review {
   is_approved: boolean;
   is_featured: boolean;
   created_at: string;
-  user?: { id: number; name: string; avatar: string | null } | null;
+  user?: { id: number; name: string; avatar: string | null; avatar_url?: string | null } | null;
   course?: { id: number; title: string; slug: string; thumbnail_url: string | null } | null;
 }
 
@@ -30,4 +30,7 @@ export const reviewService = {
 
   getMine: (page = 1) =>
     api.get<{ data: ReviewPage }>("/users/reviews", { params: { page } }),
+
+  getFeatured: (limit = 6) =>
+    api.get<{ data: Review[] }>("/reviews/featured", { params: { limit } }),
 };
