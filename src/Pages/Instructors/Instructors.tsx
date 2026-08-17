@@ -36,11 +36,7 @@ function resolveAvatar(url: string | null): string | null {
 let _cachedTop: Instructor[] | null = null;
 let _cachedCategories: Category[] | null = null;
 let _flatStore: { key: string; instructors: Instructor[] } | null = null;
-// Detected backend page size (set on first paginated response to avoid sequential probing)
 let _batchSize: number | null = null;
-// Monotonically-increasing counter: every load() call gets its own gen.
-// Before setting any React state, a load checks gen === _loadGen.
-// If a newer load started while this one was awaiting, the check fails → discard.
 let _loadGen = 0;
 
 function extractInstructors(raw: unknown, limit?: number): Instructor[] {
@@ -52,12 +48,8 @@ function extractInstructors(raw: unknown, limit?: number): Instructor[] {
   return limit ? arr.slice(0, limit) : arr;
 }
 
-// ─── Module-level prefetches ────────────────────────────────────────────────
-// All three requests fire the instant the module is imported (before the
-// component mounts). useEffect hooks just attach to these existing Promises —
-// no duplicate requests, and the data is often already resolved by first render.
 
-// 1. Top instructors — fetch more than 4 so we can sort client-side accurately
+// 1. Top instructors — fetch more than 4 
 const _topPromise: Promise<Instructor[]> =
   api.get("/instructors", {
     params: { per_page: 10, page: 1, sort_by: "students", sort_order: "desc" },
@@ -70,8 +62,7 @@ const _topPromise: Promise<Instructor[]> =
     })
     .catch(() => []);
 
-// 2. Main grid page 1 — fire page-1 + page-2 in parallel so the component
-//    never needs to do sequential probing on first load.
+// 2. Main grid page 1 — fire page-1 + page-2 in parallel 
 type MainPageResult = { items: Instructor[]; total: number; lastPage: number };
 let _mainPageResult: MainPageResult | null = null;
 
@@ -117,29 +108,23 @@ function resolveImg(instructor: Instructor) {
   return instructor.avatar_url ?? resolveAvatar(instructor.avatar);
 }
 
-// A profile photo is a small, roughly-square image — stretching it full-bleed
-// across a wide card banner (the old approach) upscales it well past its
-// native resolution and crops out whatever wasn't centered in the original
-// shot. Showing it as a modest circular avatar over a plain backdrop instead
-// keeps it sharp regardless of the source photo's size, and looks right for
-// what it actually is: a profile picture, not a hero image.
-function InstructorAvatar({ instructor, containerHeight, avatarSize }: { instructor: Instructor; containerHeight: string; avatarSize: string }) {
+function InstructorAvatar({ instructor, containerHeight }: { instructor: Instructor; containerHeight: string }) {
   const [imgErr, setImgErr] = useState(false);
   const src = resolveImg(instructor);
   const hasImg = !!src && !imgErr;
   const initial = instructor.name.charAt(0).toUpperCase();
   return (
-    <div className={`flex ${containerHeight} w-full items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 dark:from-slate-700 dark:to-slate-900`}>
+    <div className={`${containerHeight} w-full overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 dark:from-slate-700 dark:to-slate-900`}>
       {hasImg ? (
         <img
           src={src!}
           alt={instructor.name}
-          className={`${avatarSize} rounded-full object-cover shadow-md ring-4 ring-white transition-transform duration-500 group-hover:scale-105 dark:ring-slate-800`}
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           onError={() => setImgErr(true)}
         />
       ) : (
-        <div className={`grid ${avatarSize} place-items-center rounded-full grad-blue shadow-md ring-4 ring-white transition-transform duration-500 group-hover:scale-105 dark:ring-slate-800`}>
-          <span className="font-display text-3xl font-extrabold text-white/90">{initial}</span>
+        <div className="grid h-full w-full place-items-center">
+          <span className="font-display text-5xl font-extrabold text-blue-300 dark:text-slate-500">{initial}</span>
         </div>
       )}
     </div>
@@ -153,7 +138,7 @@ function FeaturedCard({ instructor, rank }: { instructor: Instructor; rank: numb
       className="group relative block overflow-hidden rounded-2xl border-2 border-blue-200 bg-white shadow-soft transition-all duration-300 hover:-translate-y-2 hover:shadow-card dark:border-blue-900/50 dark:bg-slate-800"
     >
       <div className="relative overflow-hidden">
-        <InstructorAvatar instructor={instructor} containerHeight="h-52" avatarSize="h-28 w-28" />
+        <InstructorAvatar instructor={instructor} containerHeight="h-52" />
         <span className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-brand px-2.5 py-0.5 text-[11px] font-bold text-white shadow-glow">
           #{rank} Top
         </span>
@@ -182,7 +167,7 @@ function InstructorCard({ instructor }: { instructor: Instructor }) {
       className="group block overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-e1 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-card dark:border-slate-700 dark:bg-slate-800"
     >
       <div className="relative overflow-hidden">
-        <InstructorAvatar instructor={instructor} containerHeight="h-44" avatarSize="h-24 w-24" />
+        <InstructorAvatar instructor={instructor} containerHeight="h-44" />
         <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full glass px-2.5 py-1 text-[12px] font-bold text-blue-600">
           <BookOpen className="h-3.5 w-3.5" /> {instructor.courses}
         </span>
@@ -273,10 +258,7 @@ export default function Instructors() {
       let apiTotal = 0;
       let apiLastPage = 1;
 
-      // ── Category mode ──────────────────────────────────────────────────────
-      // /instructors doesn't support category filtering, so we derive the list
-      // from GET /courses?category_id=X which returns full Course objects
-      // (including instructor: { id, name, avatar }).
+      //  Category mode
       if (currentCategory && !currentSearch) {
         const catObj = _cachedCategories?.find((c) => c.slug === currentCategory);
         const res = await api.get("/courses", {
@@ -315,7 +297,7 @@ export default function Instructors() {
         return;
       }
 
-      // ── First-page cache (no filter) ───────────────────────────────────────
+      //  First-page cache (no filter) ─
       if (currentPage === 1 && !currentSearch && !currentCategory) {
         const cached = _mainPageResult ?? (await _mainPromise);
         if (stale()) return;
@@ -330,7 +312,7 @@ export default function Instructors() {
       }
 
       if (_batchSize && !currentSearch) {
-        // ── Fast path: batch size known → fire all pages in parallel ──────────
+        //  Fast path: batch size known → fire all pages in parallel 
         const pagesPerFrontend = Math.ceil(PER_PAGE / _batchSize);
         const backendStart = (currentPage - 1) * pagesPerFrontend + 1;
         const results = await Promise.all(
@@ -349,7 +331,7 @@ export default function Instructors() {
         items = results.flat().slice(0, PER_PAGE);
         setLastPage(Math.ceil(apiTotal / PER_PAGE));
       } else {
-        // ── Probe path: fire page 1 + speculative page 2 simultaneously ───────
+        //  Probe path: fire page 1 + speculative page 2 simultaneously ─
         const [res1, res2] = await Promise.all([
           api.get("/instructors", { params: { ...baseParams, per_page: PER_PAGE, page: 1 } }),
           !currentSearch
