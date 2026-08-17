@@ -85,10 +85,8 @@ export default function StudentProfile() {
 
   const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<number | null>(null);
   const [downloadingReceiptId, setDownloadingReceiptId] = useState<number | null>(null);
-  const [downloadingCnId, setDownloadingCnId] = useState<number | null>(null);
   const [receiptError, setReceiptError] = useState<{ id: number; message: string } | null>(null);
   const [invoiceError, setInvoiceError] = useState<{ id: number; message: string } | null>(null);
-  const [cnError, setCnError] = useState<{ id: number; message: string } | null>(null);
 
   const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
   const [orderDetails, setOrderDetails] = useState<Record<number, OrderDetail>>({});
@@ -182,13 +180,6 @@ export default function StudentProfile() {
     try { await billingService.downloadBillingReceipt(order.receipt_id, order.receipt_number); }
     catch (err) { setReceiptError({ id: order.id, message: await parseBlobError(err) }); }
     setDownloadingReceiptId(null);
-  };
-
-  const handleDownloadCreditNote = async (order: Order, cnId: number, cnNumber: string) => {
-    setDownloadingCnId(order.id); setCnError(null);
-    try { await billingService.downloadInvoice(cnId, cnNumber); }
-    catch (err) { setCnError({ id: order.id, message: await parseBlobError(err) }); }
-    setDownloadingCnId(null);
   };
 
   const avatarSrc = resolveUrl(studentProfile?.avatar_url ?? user?.avatar_url ?? studentProfile?.avatar ?? user?.avatar);
@@ -681,16 +672,6 @@ export default function StudentProfile() {
                                       <tr className="pd-inv-total"><td colSpan={3}><strong>Total</strong></td><td><strong>${Number(invoice.total).toFixed(2)}</strong></td></tr>
                                     </tfoot>
                                   </table>
-                                )}
-                                {order.status === "refunded" && (
-                                  <div className="pd-cn">
-                                    <span className="pd-cn-badge">Credit Note</span>
-                                    <span className="pd-cn-text">A credit note has been issued for this order.</span>
-                                    <button className="pd-order-pdf-btn" onClick={() => handleDownloadCreditNote(order, invoice.id, invoice.number)} disabled={downloadingCnId === order.id}>
-                                      {downloadingCnId === order.id ? "…" : "Download CN"}
-                                    </button>
-                                    {cnError?.id === order.id && <p className="pd-order-err">⚠ {cnError.message}</p>}
-                                  </div>
                                 )}
                               </>
                             ) : <p className="pd-inv-empty">No invoice details available yet.</p>}

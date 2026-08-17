@@ -299,7 +299,7 @@ export function EditProfilePanel({ profile, initialAddresses }: EditProfilePanel
 
   return (
     <>
-      <div className="space-y-6">
+      <div className={`space-y-6${isDirty ? " pb-20" : ""}`}>
 
         {/* Header */}
         <div>
@@ -725,9 +725,11 @@ export function EditProfilePanel({ profile, initialAddresses }: EditProfilePanel
         </div>
       </div>
 
-      {/* Fixed save bar */}
+      {/* Floating save bar — fixed (not sticky) so it never reserves layout
+          space while translated off-screen; sticky elements still occupy
+          their normal-flow box even when transformed out of view. */}
       <div
-        className={`sticky bottom-0 inset-x-0 z-30 border-t border-slate-200 bg-white/90 backdrop-blur transition-transform dark:border-slate-700 dark:bg-slate-900/90 ${
+        className={`fixed bottom-0 inset-x-0 z-30 border-t border-slate-200 bg-white/90 backdrop-blur transition-transform dark:border-slate-700 dark:bg-slate-900/90 ${
           isDirty ? "translate-y-0" : "translate-y-full"
         }`}
       >

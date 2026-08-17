@@ -21,6 +21,7 @@ import TopInstructors from "./Components/TopInstructors/TopInstructors";
 import Faq from "./Components/Faq/Faq";
 import FinalCta from "./Components/FinalCta/FinalCta";
 import { useHomeData } from "./utils/useHomeData";
+import { useTopCoursesAndCategories } from "./utils/useTopCoursesAndCategories";
 
 import PageCourses from "./Pages/Courses/Page_Courses";
 import FeaturedCourses from "./Components/FeaturedCourses";
@@ -28,16 +29,20 @@ import DetailCourse from "./Pages/Courses/DetailCourse";
 
 import Profile from "./Pages/User/Profile/StudentProfile";
 import InstructorRegister from "./Pages/Auth/Register/Apply_to_Instructor";
-import CreateSections from "./Pages/User/Instructor/Sivbar/CreateSection";
-import InstructorLayout from "./Pages/User/Instructor/Sivbar/InstructorLayout";
-import InstructorDashboard from "./Pages/User/Instructor/Sivbar/InstructorDashboard";
-import MyCourses from "./Pages/User/Instructor/Sivbar/MyCourses";
-import CreateCourse from "./Pages/User/Instructor/Sivbar/CreateCourse";
-import EditCourse from "./Pages/User/Instructor/EditCourse/index";
-import Revenue from "./Pages/User/Instructor/Sivbar/Revenue";
-import PayoutAccount from "./Pages/User/Instructor/Sivbar/PayoutAccount";
-import Students from "./Pages/User/Instructor/Sivbar/Students";
-import InstructorProfile from "./Pages/User/Instructor/Sivbar/InstructorProfile";
+// The whole /instructor/* tree is gated behind RequireInstructor — only
+// verified instructors ever need this code, so none of it belongs in the
+// main bundle every visitor downloads (same reasoning as the Instructors
+// listing page below).
+const CreateSections = lazy(() => import("./Pages/User/Instructor/Sivbar/CreateSection"));
+const InstructorLayout = lazy(() => import("./Pages/User/Instructor/Sivbar/InstructorLayout"));
+const InstructorDashboard = lazy(() => import("./Pages/User/Instructor/Sivbar/InstructorDashboard"));
+const MyCourses = lazy(() => import("./Pages/User/Instructor/Sivbar/MyCourses"));
+const CreateCourse = lazy(() => import("./Pages/User/Instructor/Sivbar/CreateCourse"));
+const EditCourse = lazy(() => import("./Pages/User/Instructor/EditCourse/index"));
+const Revenue = lazy(() => import("./Pages/User/Instructor/Sivbar/Revenue"));
+const PayoutAccount = lazy(() => import("./Pages/User/Instructor/Sivbar/PayoutAccount"));
+const Students = lazy(() => import("./Pages/User/Instructor/Sivbar/Students"));
+const InstructorProfile = lazy(() => import("./Pages/User/Instructor/Sivbar/InstructorProfile"));
 import Library from "./Pages/Library/Library";
 import Learn from "./Pages/Learn/Learn";
 import Contact from "./Pages/Contact/Contact";
@@ -112,11 +117,12 @@ function RegisterPage() {
 
 function MainPage() {
   const home = useHomeData();
+  const top = useTopCoursesAndCategories();
   return (
     <>
       <Hero />
-      <Categories categories={home?.categories} />
-      <FeaturedCourses courses={home?.featured_courses} />
+      <Categories categories={top?.topCategories} />
+      <FeaturedCourses courses={top?.topCourses} />
       <LearningPath />
       <BecomeInstructor />
       <Stats />
@@ -195,8 +201,17 @@ function App() {
           {/* Instructor auth (no sidebar) */}
           <Route path="/instructor/register" element={<RequireAuth><WithFooter><InstructorRegister /></WithFooter></RequireAuth>} />
 
-          {/* Instructor dashboard — requires instructor role */}
-          <Route path="/instructor" element={<RequireInstructor><InstructorLayout /></RequireInstructor>}>
+          {/* Instructor dashboard — requires instructor role. One Suspense
+              boundary at the layout level covers every lazy child route
+              rendered through its <Outlet />. */}
+          <Route
+            path="/instructor"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <RequireInstructor><InstructorLayout /></RequireInstructor>
+              </Suspense>
+            }
+          >
             <Route path="dashboard" element={<InstructorDashboard />} />
             <Route path="courses" element={<MyCourses />} />
             <Route path="courses/sections" element={<CreateSections />} />

@@ -128,13 +128,13 @@ export interface InstructorCourse {
   level: string;
   price: string;
   category_id?: number | string;
+  language?: string;
   thumbnail_url: string | null;
   students_count?: number;
   created_at: string;
   preview_video_url?: string;
   requirements?: string;
   what_you_will_learn?: string;
-  certificate_enabled?: boolean;
   visibility?: string;
   commission_percentage?: number;
 }
@@ -147,6 +147,8 @@ export interface InstructorLesson {
   duration: number;
   is_preview: boolean;
   order: number;
+  video_url?: string;
+  content?: string;
 }
 
 // Represents a file attached to a lesson as a downloadable resource.

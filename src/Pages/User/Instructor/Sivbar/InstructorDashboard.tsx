@@ -3,10 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../../context/AuthContext";
 import {
   instructorService,
-  type DashboardStats,
   type EarningsData,
   type InstructorCourse,
 } from "../../../../services/instructorService";
+import { useInstructorDashboard } from "../../../../hooks/useInstructorDashboard";
 import "../css/InstructorDashboard.css";
 
 function safeNum(v: unknown): number {
@@ -31,25 +31,18 @@ function timeAgo(dateStr: string) {
 export default function InstructorDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [data, setData]         = useState<DashboardStats | null>(null);
+  const { data, loading: loadingDash } = useInstructorDashboard();
+  const error = !loadingDash && data === null;
   const [earnings, setEarnings] = useState<EarningsData | null>(null);
   const [courses, setCourses]   = useState<InstructorCourse[]>([]);
 
   // Independent loading states so each section renders as soon as its data is ready
-  const [loadingDash, setLoadingDash]         = useState(true);
   const [loadingEarnings, setLoadingEarnings] = useState(true);
   const [loadingCourses, setLoadingCourses]   = useState(true);
-  const [error, setError] = useState(false);
   const [earningsError, setEarningsError] = useState(false);
   const [coursesError, setCoursesError] = useState(false);
 
   useEffect(() => {
-    // Fire all three requests in parallel — each updates its own slice of state
-    instructorService.getDashboard()
-      .then((r) => setData(r.data.data))
-      .catch(() => setError(true))
-      .finally(() => setLoadingDash(false));
-
     instructorService.getEarnings()
       .then((r) => setEarnings(r.data.data))
       .catch(() => setEarningsError(true))
@@ -61,11 +54,7 @@ export default function InstructorDashboard() {
       .finally(() => setLoadingCourses(false));
   }, []);
 
-  // Khmer names are "Family Given" — the given name (what people go by
-  // casually) is the last word, not the first.
   const firstName = (user?.name ?? "Instructor").split(" ").pop() || "Instructor";
-  // The dashboard endpoint is the source of truth for enrollment totals.
-  // The course-list endpoint uses a differently named count field and can be stale.
   const studentCountByCourseId = new Map(
     (data?.per_course ?? []).map(({ course_id, student_count }) => [
       Number(course_id),
@@ -103,7 +92,7 @@ export default function InstructorDashboard() {
   return (
     <div className="flex flex-col gap-6">
 
-      {/* ── Section header ── */}
+      {/* Section header */}
       <div>
         <p className="text-[11px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400">
           Instructor
@@ -116,7 +105,7 @@ export default function InstructorDashboard() {
         </p>
       </div>
 
-      {/* ── 4 stat tiles — skeleton while loadingDash ── */}
+      {/* 4 stat tiles — skeleton while loadingDash */}
       <div className="grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-white p-2 shadow-e1 dark:border-slate-700 dark:bg-slate-800 sm:grid-cols-2 sm:p-3 lg:grid-cols-4">
         {TILE_DEFS.map((t, i) => (
           <div
@@ -148,7 +137,7 @@ export default function InstructorDashboard() {
         ))}
       </div>
 
-      {/* ── Revenue chart + Recent enrollments ── */}
+      {/* Revenue chart + Recent enrollments */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_300px]">
 
         {/* Revenue overview */}
@@ -252,7 +241,7 @@ export default function InstructorDashboard() {
         </div>
       </div>
 
-      {/* ── Top courses — skeleton while loadingCourses ── */}
+      {/* Top courses — skeleton while loadingCourses */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-e1 dark:border-slate-700 dark:bg-slate-800">
         <div className="mb-4 flex items-center justify-between">
           <p className="font-display text-[15px] font-bold ink dark:text-slate-100">My courses</p>

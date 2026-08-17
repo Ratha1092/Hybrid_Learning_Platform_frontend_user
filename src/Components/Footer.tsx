@@ -66,7 +66,6 @@ export default function Footer() {
         { label: "All Courses", to: "/courses" },
         { label: "Categories", to: "/home" },
         { label: "Library", to: "/library" },
-        { label: "Certificates", to: "/courses" },
       ],
     },
     {

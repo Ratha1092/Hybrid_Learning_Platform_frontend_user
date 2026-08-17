@@ -4,8 +4,8 @@ import { Reveal } from "../../utils/anim";
 const steps = [
   { title: "Choose your path",  text: "Pick a curated track aligned to your career goal.",       Icon: Compass       },
   { title: "Enroll & learn",    text: "Access lessons, resources and hands-on projects.",          Icon: PlayCircle    },
-  { title: "Practice & quiz",   text: "Reinforce skills with real exercises and quizzes.",          Icon: ClipboardCheck },
-  { title: "Earn certificate",  text: "Get a verifiable certificate on completion.",                Icon: Award         },
+  { title: "Practice ",   text: "Reinforce skills with real exercises.",          Icon: ClipboardCheck },
+  { title: "Complete ",  text: "Complete everythings.",                Icon: Award         },
   { title: "Grow your career",  text: "Showcase skills and unlock new opportunities.",              Icon: Rocket        },
 ];
 

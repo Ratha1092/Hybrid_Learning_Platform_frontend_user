@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { ArrowRight, Star, Clock, BookOpen, BarChart3, Globe, Heart, Award } from "lucide-react";
+import { ArrowRight, Star, Clock, BookOpen, BarChart3, Globe, Heart } from "lucide-react";
 import { courseService, type Course } from "../../services/courseService";
 import { categoryService } from "../../services/categoryService";
 import { useProtectedWishlist } from "../../hooks/useProtectedWishlist";
@@ -396,9 +396,6 @@ function Courses() {
                       Enroll <ArrowRight className="h-3.5 w-3.5" />
                     </button>
                   </div>
-                  <p className="mt-3 flex items-center gap-1.5 text-[11.5px] muted2">
-                    <Award className="h-3.5 w-3.5 text-emerald-500" /> Certificate included
-                  </p>
                 </div>
               </div>
             );
