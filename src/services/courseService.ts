@@ -26,7 +26,6 @@ export interface Course {
   requirements?: string | null;
   what_you_will_learn?: string | null;
   preview_video_url?: string | null;
-  certificate_enabled?: boolean;
 }
 
 export interface Lesson {

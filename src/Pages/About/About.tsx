@@ -130,7 +130,7 @@ export default function About() {
                 {siteName} started with a simple frustration: too many online courses were long on
                 theory and short on outcomes. We set out to build a platform where every course is
                 built around real, job-ready skills — taught by instructors who've actually done the
-                work — and where progress is easy to track from day one to certificate.
+                work — and where progress is easy to track from day one.
               </p>
               <p className="mt-4 max-w-lg text-[15px] leading-relaxed muted2">
                 Today we connect students with expert instructors across design, programming, data,

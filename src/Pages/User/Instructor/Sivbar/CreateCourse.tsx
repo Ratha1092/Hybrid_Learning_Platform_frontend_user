@@ -2,11 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Wallet, Gift, Banknote, Video, FileText, ListChecks, Paperclip, Pencil, Trash2 } from "lucide-react";
 import { instructorService, type StandaloneSection, type LessonResource } from "../../../../services/instructorService";
+import { categoryService, type Category } from "../../../../services/categoryService";
 import { getVideoDuration } from "../../../../utils/videoUrl";
-import api from "../../../../api/axios";
 import "../css/CreateCourse.css";
-
-interface Category { id: number; name: string; slug: string; }
 
 interface LocalLesson {
   id: number; title: string; type: string; is_preview: boolean; video_url?: string; content?: string;
@@ -32,7 +30,6 @@ interface Draft {
     short_description: string; description: string; preview_video_url: string;
     requirements: string; what_you_will_learn: string;
   };
-  certificateEnabled: boolean;
   visibility: string;
   isFree: boolean;
   price: string;
@@ -665,8 +662,6 @@ export default function CreateCourse() {
   const [error, setError]     = useState<string | null>(null);
 
   const [info, setInfo]       = useState<Draft["info"]>(draft?.info ?? DEFAULT_INFO);
-  // Setter unused while the UI checkbox is hidden — see note near the submit step below.
-  const [certificateEnabled] = useState(draft?.certificateEnabled ?? false);
   const [visibility, setVisibility] = useState(draft?.visibility ?? "public");
   const [isFree, setIsFree]   = useState(draft?.isFree ?? true);
   const [price, setPrice]     = useState(draft?.price ?? "");
@@ -683,8 +678,8 @@ export default function CreateCourse() {
 
   // Persist draft on every relevant state change (File objects are not serialisable — skip thumbnail)
   useEffect(() => {
-    saveDraft({ step, courseId, info, certificateEnabled, visibility, isFree, price });
-  }, [step, courseId, info, certificateEnabled, visibility, isFree, price]);
+    saveDraft({ step, courseId, info, visibility, isFree, price });
+  }, [step, courseId, info, visibility, isFree, price]);
 
   // Re-fetch sections + commission when courseId is restored from draft on refresh
   useEffect(() => {
@@ -711,7 +706,7 @@ export default function CreateCourse() {
   }, [courseId]);
 
   useEffect(() => {
-    api.get<{ data: Category[] }>("/categories")
+    categoryService.getAll()
       .then(({ data }) => setCategories(data.data ?? []))
       .catch(() => {});
   }, []);
@@ -792,7 +787,6 @@ export default function CreateCourse() {
     try {
       await instructorService.updateCourse(courseId, {
         price: isFree ? "0" : String(Number(price)),
-        certificate_enabled: certificateEnabled,
         visibility,
       });
       await instructorService.submitForReview(courseId);
@@ -1147,9 +1141,6 @@ export default function CreateCourse() {
                   <option value="private">🔒 Private — only enrolled students</option>
                 </select>
               </div>
-
-              {/* Enable Certificate — hidden until certificate PDF generation exists.
-                  certificateEnabled stays wired up (always false) so nothing breaks if restored later. */}
 
               <div className="cc-submit-actions">
                 <button className="cc-discard" onClick={() => setStep(2)}>← Back</button>

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronDown, ChevronRight, Trash2, Plus } from "lucide-react";
-import { instructorService, type InstructorSection, type LessonResource } from "../../../../services/instructorService";
+import { ChevronDown, ChevronRight, Trash2, Plus, Video, FileText, ListChecks, Paperclip, Pencil } from "lucide-react";
+import { instructorService, type InstructorSection, type InstructorLesson, type LessonResource } from "../../../../services/instructorService";
 import { getVideoDuration } from "../../../../utils/videoUrl";
 
 interface Props { courseId: number; }
@@ -120,6 +120,11 @@ export default function Curriculum({ courseId }: Props) {
   const [uploadProgress, setUploadProgress] = useState<Record<number, number>>({});
   const [error, setError]                 = useState<string | null>(null);
 
+  const [editingLessonId, setEditingLessonId] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState({ title: "", is_preview: false, video_url: "", content: "" });
+  const [editSaving, setEditSaving] = useState(false);
+  const [editErr, setEditErr] = useState<string | null>(null);
+
   useEffect(() => {
     instructorService.getSections(courseId)
       .then(({ data }) => {
@@ -221,6 +226,42 @@ export default function Curriculum({ courseId }: Props) {
     }
   };
 
+  const startEditLesson = (lesson: InstructorLesson) => {
+    setAddingLesson(null);
+    setEditingLessonId(lesson.id);
+    setEditErr(null);
+    setEditForm({
+      title: lesson.title,
+      is_preview: lesson.is_preview,
+      video_url: lesson.video_url ?? "",
+      content: lesson.content ?? "",
+    });
+  };
+
+  const handleSaveEditLesson = async (sectionId: number, lesson: InstructorLesson) => {
+    if (!editForm.title.trim()) { setEditErr("Title is required."); return; }
+    setEditSaving(true); setEditErr(null);
+    try {
+      const payload: Partial<InstructorLesson> & { video_url?: string; content?: string } = {
+        title: editForm.title.trim(),
+        is_preview: editForm.is_preview,
+      };
+      if (lesson.type === "video") payload.video_url = editForm.video_url || undefined;
+      if (lesson.type === "article") payload.content = editForm.content || undefined;
+      await instructorService.updateLesson(courseId, sectionId, lesson.id, payload);
+      setSections((prev) => prev.map((s) =>
+        s.id === sectionId
+          ? { ...s, lessons: s.lessons.map((l) => l.id === lesson.id ? { ...l, ...payload, title: editForm.title.trim() } : l) }
+          : s
+      ));
+      setEditingLessonId(null);
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } }; message?: string };
+      setEditErr(err.response?.data?.message ?? "Failed to update lesson.");
+    }
+    setEditSaving(false);
+  };
+
   if (loading) return (
     <div className="flex min-h-[200px] items-center justify-center">
       <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-blue-600" />
@@ -281,7 +322,9 @@ export default function Curriculum({ courseId }: Props) {
                 {section.lessons.map((lesson) => (
                   <div key={lesson.id} className="border-b border-slate-100 last:border-0 dark:border-slate-700">
                     <div className="flex items-center gap-3 px-6 py-3">
-                      <span className="text-[15px]">{lesson.type === "video" ? "🎬" : lesson.type === "quiz" ? "📝" : "📄"}</span>
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+                        {lesson.type === "video" ? <Video className="h-3.5 w-3.5" /> : lesson.type === "quiz" ? <ListChecks className="h-3.5 w-3.5" /> : <FileText className="h-3.5 w-3.5" />}
+                      </span>
                       <span className="flex-1 text-[13.5px] font-medium text-slate-700 dark:text-slate-200">{lesson.title}</span>
                       {lesson.is_preview && (
                         <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400">
@@ -291,21 +334,83 @@ export default function Curriculum({ courseId }: Props) {
                       <span className="text-[11px] uppercase tracking-wide text-slate-400 dark:text-slate-500">{lesson.type}</span>
                       <button
                         onClick={() => toggleResources(lesson.id)}
-                        className={`rounded-lg px-2.5 py-1 text-[11.5px] font-semibold transition-colors ${
+                        className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11.5px] font-semibold transition-colors ${
                           expandedResources.has(lesson.id)
-                            ? "bg-blue-100 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400"
-                            : "bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-400 dark:hover:bg-slate-600"
+                            ? "bg-blue-600 text-white"
+                            : "bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20"
                         }`}
                       >
-                        📎 Resources
+                        <Paperclip className="h-3 w-3" /> Resources
+                      </button>
+                      <button
+                        onClick={() => startEditLesson(lesson)}
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-blue-50 hover:text-blue-600 dark:text-slate-500 dark:hover:bg-blue-500/10 dark:hover:text-blue-400"
+                        title="Edit lesson"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => handleDeleteLesson(section.id, lesson.id)}
-                        className="rounded-lg p-1 text-slate-300 transition-colors hover:bg-rose-50 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400"
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-rose-50 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400"
+                        title="Delete lesson"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
+
+                    {editingLessonId === lesson.id && (
+                      <div className="mx-6 mb-3 flex flex-col gap-3 rounded-xl border border-blue-100 bg-blue-50/50 p-4 dark:border-blue-500/20 dark:bg-blue-500/5">
+                        <input
+                          autoFocus
+                          placeholder="Lesson title *"
+                          value={editForm.title}
+                          onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
+                          className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13.5px] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+                        />
+                        <label className="flex cursor-pointer items-center gap-2 text-[13px] text-slate-600 dark:text-slate-400">
+                          <input
+                            type="checkbox"
+                            checked={editForm.is_preview}
+                            onChange={(e) => setEditForm((f) => ({ ...f, is_preview: e.target.checked }))}
+                          />
+                          Free Preview
+                        </label>
+                        {lesson.type === "video" && (
+                          <input
+                            placeholder="YouTube / Vimeo URL"
+                            value={editForm.video_url}
+                            onChange={(e) => setEditForm((f) => ({ ...f, video_url: e.target.value }))}
+                            className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13.5px] outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+                          />
+                        )}
+                        {lesson.type === "article" && (
+                          <textarea
+                            rows={3}
+                            placeholder="Article content"
+                            value={editForm.content}
+                            onChange={(e) => setEditForm((f) => ({ ...f, content: e.target.value }))}
+                            className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13.5px] outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+                          />
+                        )}
+                        {editErr && <p className="text-[11.5px] font-medium text-rose-500">⚠ {editErr}</p>}
+                        <div className="flex gap-2.5">
+                          <button
+                            onClick={() => handleSaveEditLesson(section.id, lesson)}
+                            disabled={editSaving}
+                            className="rounded-xl bg-blue-600 px-5 py-2 text-[13px] font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                          >
+                            {editSaving ? "Saving…" : "Save Changes"}
+                          </button>
+                          <button
+                            onClick={() => setEditingLessonId(null)}
+                            className="rounded-xl border border-slate-200 px-5 py-2 text-[13px] font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-400"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     {expandedResources.has(lesson.id) && (
                       <ResourcesPanel courseId={courseId} sectionId={section.id} lessonId={lesson.id} />
                     )}
@@ -419,6 +524,7 @@ export default function Curriculum({ courseId }: Props) {
                   <div className="border-t border-slate-100 px-6 py-3 dark:border-slate-700">
                     <button
                       onClick={() => {
+                        setEditingLessonId(null);
                         setAddingLesson(section.id);
                         setNewLesson((p) => ({ ...p, [section.id]: { title: "", type: "video", video_url: "", is_preview: false } }));
                       }}

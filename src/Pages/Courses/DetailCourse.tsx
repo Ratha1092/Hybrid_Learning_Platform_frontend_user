@@ -556,9 +556,6 @@ function DetailCourse() {
             <li><span>Sections</span><strong>{course.sections?.length ?? 0}</strong></li>
             <li><span>Lessons</span><strong>{totalLessons}</strong></li>
             <li><span>Duration</span><strong>{fmtDuration(totalDuration)}</strong></li>
-            {course.certificate_enabled && (
-              <li><span>Certificate</span><strong>Included</strong></li>
-            )}
           </ul>
         </aside>
       </div>

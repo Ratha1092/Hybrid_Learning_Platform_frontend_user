@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, CheckCircle, ImagePlus, X, Globe, Lock } from "lucide-react";
+import { ArrowLeft, CheckCircle, ImagePlus, X, Globe, Lock, FileText, Layers } from "lucide-react";
 import { instructorService, type InstructorCourse } from "../../../../services/instructorService";
 import { categoryService, type Category } from "../../../../services/categoryService";
 import Curriculum from "./Curriculum";
@@ -28,9 +28,9 @@ export default function EditCourse() {
   const [categories, setCategories] = useState<Category[]>([]);
 
   const [form, setForm] = useState({
-    title: "", short_description: "", description: "", price: "0", level: "beginner",
+    title: "", short_description: "", description: "", price: "0", level: "beginner", language: "English",
     category_id: "", preview_video_url: "", requirements: "", what_you_will_learn: "",
-    certificate_enabled: false, visibility: "public",
+    visibility: "public",
   });
   const [saving, setSaving]   = useState(false);
   const [saved, setSaved]     = useState(false);
@@ -58,11 +58,11 @@ export default function EditCourse() {
           description:         c.description ?? "",
           price:               c.price,
           level:               c.level,
+          language:            c.language ?? "English",
           category_id:         c.category_id != null ? String(c.category_id) : "",
           preview_video_url:   c.preview_video_url ?? "",
           requirements:        c.requirements ?? "",
           what_you_will_learn: c.what_you_will_learn ?? "",
-          certificate_enabled: c.certificate_enabled ?? false,
           visibility:          c.visibility ?? "public",
         });
       })
@@ -93,7 +93,12 @@ export default function EditCourse() {
     if (saving || !id) return;
     setSaving(true); setError(null);
     try {
-      const { data } = await instructorService.updateCourse(id, form);
+      // category_id is validated as `exists:categories,id` when present — omit it
+      // entirely rather than sending "" when no category has been picked, or every
+      // save on a category-less course fails with a 422.
+      const { category_id, ...rest } = form;
+      const payload = category_id ? { ...rest, category_id } : rest;
+      const { data } = await instructorService.updateCourse(id, payload);
       setCourse(data.data);
       if (thumbFile) await instructorService.uploadThumbnail(id, thumbFile);
       setSaved(true);
@@ -142,9 +147,9 @@ export default function EditCourse() {
       {/* Tabs */}
       <div className="flex gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 dark:border-slate-700 dark:bg-slate-800/50">
         {([
-          { key: "info",       emoji: "📝", label: "Basic Info" },
-          { key: "curriculum", emoji: "🎬", label: "Course Info" },
-        ] as const).map(({ key, emoji, label }) => (
+          { key: "info",       Icon: FileText, label: "Basic Info" },
+          { key: "curriculum", Icon: Layers,   label: "Curriculum" },
+        ] as const).map(({ key, Icon, label }) => (
           <button
             key={key}
             onClick={() => setTab(key)}
@@ -154,7 +159,7 @@ export default function EditCourse() {
                 : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
             }`}
           >
-            <span>{emoji}</span>
+            <Icon className="h-4 w-4" />
             {label}
           </button>
         ))}
@@ -227,8 +232,8 @@ export default function EditCourse() {
                   className={FIELD}
                 />
               </div>
-              {/* Category / Level row */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* Category / Level / Language row */}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <div>
                   <label className={LABEL}>Category</label>
                   <select value={form.category_id} onChange={(e) => set("category_id", e.target.value)} className={FIELD}>
@@ -244,6 +249,13 @@ export default function EditCourse() {
                     <option value="beginner">Beginner</option>
                     <option value="intermediate">Intermediate</option>
                     <option value="advanced">Advanced</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={LABEL}>Language</label>
+                  <select value={form.language} onChange={(e) => set("language", e.target.value)} className={FIELD}>
+                    <option>English</option>
+                    <option>Khmer</option>
                   </select>
                 </div>
               </div>
@@ -313,35 +325,31 @@ export default function EditCourse() {
             </div>
           </div>
 
-          {/* Visibility + Certificate */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className={LABEL}>Visibility</label>
-              <div className="flex gap-2.5">
-                {([
-                  { value: "public",  Icon: Globe, label: "Public" },
-                  { value: "private", Icon: Lock,  label: "Private" },
-                ] as const).map(({ value, Icon, label }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => set("visibility", value)}
-                    className={`flex flex-1 items-center gap-2.5 rounded-xl border-2 px-4 py-3 text-left transition-all ${
-                      form.visibility === value
-                        ? "border-blue-500 bg-blue-50/60 dark:border-blue-400 dark:bg-blue-500/10"
-                        : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700/30"
-                    }`}
-                  >
-                    <Icon className={`h-4 w-4 shrink-0 ${form.visibility === value ? "text-blue-500" : "text-slate-400"}`} />
-                    <span className={`text-[13px] font-semibold ${form.visibility === value ? "text-blue-700 dark:text-blue-300" : "text-slate-600 dark:text-slate-400"}`}>
-                      {label}
-                    </span>
-                  </button>
-                ))}
-              </div>
+          {/* Visibility */}
+          <div>
+            <label className={LABEL}>Visibility</label>
+            <div className="flex gap-2.5">
+              {([
+                { value: "public",  Icon: Globe, label: "Public" },
+                { value: "private", Icon: Lock,  label: "Private" },
+              ] as const).map(({ value, Icon, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => set("visibility", value)}
+                  className={`flex flex-1 items-center gap-2.5 rounded-xl border-2 px-4 py-3 text-left transition-all ${
+                    form.visibility === value
+                      ? "border-blue-500 bg-blue-50/60 dark:border-blue-400 dark:bg-blue-500/10"
+                      : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700/30"
+                  }`}
+                >
+                  <Icon className={`h-4 w-4 shrink-0 ${form.visibility === value ? "text-blue-500" : "text-slate-400"}`} />
+                  <span className={`text-[13px] font-semibold ${form.visibility === value ? "text-blue-700 dark:text-blue-300" : "text-slate-600 dark:text-slate-400"}`}>
+                    {label}
+                  </span>
+                </button>
+              ))}
             </div>
-            {/* Enable Certificate toggle — hidden until certificate PDF generation exists.
-                form.certificate_enabled stays wired up (always false) so nothing breaks if restored later. */}
           </div>
 
           {/* Save button */}

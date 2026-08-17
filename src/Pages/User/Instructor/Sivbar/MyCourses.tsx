@@ -3,10 +3,10 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
   instructorService,
-  type DashboardStats,
   type InstructorCourse,
   type StudentEnrollment,
 } from "../../../../services/instructorService";
+import { useInstructorDashboard } from "../../../../hooks/useInstructorDashboard";
 import "../css/MyCourses.css";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
@@ -25,7 +25,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function MyCourses() {
   const navigate = useNavigate();
   const [courses, setCourses] = useState<InstructorCourse[]>([]);
-  const [dashboard, setDashboard] = useState<DashboardStats | null>(null);
+  const { data: dashboard } = useInstructorDashboard();
   const [enrollments, setEnrollments] = useState<StudentEnrollment[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmId, setConfirmId] = useState<number | null>(null);
@@ -35,10 +35,6 @@ export default function MyCourses() {
     instructorService.getMyCourses()
       .then(({ data }) => setCourses(data.data))
       .finally(() => setLoading(false));
-
-    instructorService.getDashboard()
-      .then(({ data }) => setDashboard(data.data))
-      .catch(() => setDashboard(null));
 
     instructorService.getStudents()
       .then(({ data }) => setEnrollments(data.data?.students ?? []))

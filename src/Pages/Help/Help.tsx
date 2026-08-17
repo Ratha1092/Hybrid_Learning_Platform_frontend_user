@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Search, ChevronDown, MessageCircleQuestion, Compass,
-  UserPlus, PlayCircle, Award, FileEdit, UploadCloud, Wallet,
+  UserPlus, PlayCircle, FileEdit, UploadCloud, Wallet,
 } from "lucide-react";
 import { Reveal } from "../../utils/anim";
 
@@ -10,7 +10,6 @@ const STUDENT_STEPS = [
   { title: "Create your account",  text: "Sign up free with email, Google, or GitHub — takes less than a minute.", Icon: UserPlus },
   { title: "Find a course",        text: "Browse categories or search for exactly what you want to learn.",        Icon: Search },
   { title: "Enroll & learn",       text: "Watch lessons and track your progress from your dashboard.",              Icon: PlayCircle },
-  { title: "Earn your certificate", text: "Finish a course to unlock a shareable certificate of completion.",       Icon: Award },
 ];
 
 const INSTRUCTOR_STEPS = [
@@ -24,10 +23,6 @@ const FAQS = [
   {
     q: "How do I enroll in a course?",
     a: "Browse the Courses page, click on any course you're interested in, and hit the Enroll button. If it's a paid course, you'll be guided through the payment flow.",
-  },
-  {
-    q: "Can I get a refund if I'm not satisfied?",
-    a: "Yes — we offer a 7-day money-back guarantee on all purchases. Reach out to our support team within 7 days of purchase and we'll process your refund.",
   },
   {
     q: "How do I become an instructor?",

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Star, Clock, BookOpen, BarChart3, Globe, Heart, Award } from "lucide-react";
+import { ArrowRight, Star, Clock, BookOpen, BarChart3, Globe, Heart } from "lucide-react";
 import { type Course } from "../services/courseService";
 import { Reveal } from "../utils/anim";
 import { useProtectedWishlist } from "../hooks/useProtectedWishlist";
@@ -173,9 +173,6 @@ export default function FeaturedCourses({ courses: coursesProp }: { courses?: Co
                           Enroll <ArrowRight className="h-3.5 w-3.5" />
                         </button>
                       </div>
-                      <p className="mt-3 flex items-center gap-1.5 text-[11.5px] muted2">
-                        <Award className="h-3.5 w-3.5 text-emerald-500" /> Certificate included
-                      </p>
                     </div>
                   </div>
                 </Reveal>

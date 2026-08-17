@@ -3,7 +3,6 @@ import { Plus, Minus } from "lucide-react";
 import { Reveal } from "../../utils/anim";
 
 const faqs = [
-  { q: "Do I get a certificate after completing a course?", a: "Yes. Some course includes a verifiable certificate of completion you can share on LinkedIn or with employers." },
   { q: "Can I learn at my own pace?", a: "Absolutely. All courses offer limit long time access, so you can start, pause and resume whenever it suits your schedule." },
   { q: "How do I enroll in a course?", a: "Browse our catalog, pick a course, and click Enroll. Free courses are instantly accessible; paid courses go through a secure checkout." },
   { q: "What payment methods are accepted?", a: "Currently We accept with Bakong Payment, Major credit and debit cards, PayPal, and various regional payment methods are not yet available still in progressed." },
