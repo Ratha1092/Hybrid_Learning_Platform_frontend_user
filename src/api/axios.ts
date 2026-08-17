@@ -2,9 +2,6 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_URL}/api/v1`,
-  // This app authenticates API calls with a Sanctum personal-access token.
-  // Never include cookies: a shared Railway cookie could authenticate the
-  // request as an administrator from another application.
   withCredentials: false,
   headers: {
     "Content-Type": "application/json",

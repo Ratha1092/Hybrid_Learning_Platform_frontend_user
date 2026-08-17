@@ -17,6 +17,7 @@ import SessionExpiredOverlay from "./Components/SessionExpiredOverlay/SessionExp
 import LearningPath from "./Components/LearningPath/LearningPath";
 import BecomeInstructor from "./Components/BecomeInstructor/BecomeInstructor";
 import Stats from "./Components/Stats/Stats";
+import Testimonials from "./Components/Testimonials/Testimonials";
 import TopInstructors from "./Components/TopInstructors/TopInstructors";
 import Faq from "./Components/Faq/Faq";
 import FinalCta from "./Components/FinalCta/FinalCta";
@@ -126,6 +127,7 @@ function MainPage() {
       <LearningPath />
       <BecomeInstructor />
       <Stats />
+      <Testimonials />
       <TopInstructors instructors={home?.top_instructors} />
       <Faq />
       <FinalCta />

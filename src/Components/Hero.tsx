@@ -23,9 +23,10 @@ function Hero() {
   const { openRegister } = useAuthModal();
   const stats = usePlatformStats();
 
-  const students = stats?.total_students    ?? 0; // 0 while loading; real value triggers count-up
-  const courses  = stats?.total_courses     ?? 0;
-  const instrs   = stats?.total_instructors ?? 0;
+  const students    = stats?.total_students    ?? 0; // 0 while loading; real value triggers count-up
+  const courses     = stats?.total_courses     ?? 0;
+  const instrs      = stats?.total_instructors ?? 0;
+  const enrollments = stats?.total_enrollments ?? 0;
 
   return (
     <section className="hero-section grad-navy relative overflow-hidden pb-12 pt-16 sm:pt-20 lg:pb-32">
@@ -102,12 +103,12 @@ function Hero() {
               </div>
             </div>
 
-            {/* Floating badge — bottom right (real student count) */}
+            {/* Floating badge — bottom right (real enrollment count) */}
             <div className="animate-floaty2 absolute -bottom-4 -right-6 z-20 rounded-2xl glass px-4 py-3 shadow-card">
               <p className="text-[11px] text-slate-500 dark:text-slate-400">Total learners enrolled</p>
               <p className="flex items-center gap-1 font-display text-xl font-extrabold text-slate-900 dark:text-white">
                 <Users className="h-4 w-4 text-blue-600" />
-                {students > 0 ? `${students.toLocaleString()}+` : "—"}
+                {enrollments > 0 ? `${enrollments.toLocaleString()}+` : "—"}
               </p>
             </div>
 

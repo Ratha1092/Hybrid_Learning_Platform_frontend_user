@@ -380,11 +380,11 @@ export default function Revenue() {
               const barH = Math.max(6, (safeNum(t.total) / maxVal) * 148);
               return (
                 <div key={t.month} className="group flex flex-1 flex-col items-center gap-1.5 justify-end">
-                  <span className="text-[10px] font-semibold text-slate-400 transition-colors group-hover:text-blue-600 dark:text-slate-500 dark:group-hover:text-blue-400">
+                  <span className="text-[10px] font-semibold text-slate-500 transition-colors group-hover:text-blue-600 dark:text-slate-400 dark:group-hover:text-blue-400">
                     {fmtK(safeNum(t.total))}
                   </span>
                   <div
-                    className="w-full max-w-12 rounded-t-lg bg-slate-100 transition-colors group-hover:bg-blue-500 dark:bg-slate-700 dark:group-hover:bg-blue-500"
+                    className="w-full max-w-12 rounded-t-lg bg-blue-400 transition-colors group-hover:bg-blue-500 dark:bg-blue-500/70 dark:group-hover:bg-blue-500"
                     style={{ height: barH }}
                   />
                 </div>
