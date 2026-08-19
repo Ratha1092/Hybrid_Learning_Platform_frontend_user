@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { GraduationCap, MapPin, Phone, Mail } from "lucide-react";
 import { Link, NavLink } from "react-router-dom";
 import { useSettings } from "../context/SettingsContext";
+import { useAuth } from "../context/AuthContext";
 import { categoryService, type Category } from "../services/categoryService";
 
 type FooterLink = {
@@ -20,6 +21,8 @@ const socialIcons: { key: "social_facebook" | "social_twitter" | "social_youtube
 
 export default function Footer() {
   const { settings } = useSettings();
+  const { user, isAuthenticated } = useAuth();
+  const isInstructor = isAuthenticated && (user?.role === "instructor" || user?.instructor_status === "verified");
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
@@ -39,7 +42,9 @@ export default function Footer() {
 
   const companyItems: FooterLink[] = [
     { label: "About Us", to: "/about" },
-    { label: "Become Instructor", to: "/instructor/register" },
+    isInstructor
+      ? { label: "Create a Course", to: "/instructor/courses/create" }
+      : { label: "Become Instructor", to: "/instructor/register" },
     { label: "Contact", to: "/contact" },
   ];
 

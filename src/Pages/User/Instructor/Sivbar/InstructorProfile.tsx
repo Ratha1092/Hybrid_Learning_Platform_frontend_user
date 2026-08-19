@@ -27,7 +27,7 @@ function LinkedinIcon({ className }: { className?: string }) {
 }
 import { useAuth } from "../../../../context/AuthContext";
 import { profileService, type StudentProfile } from "../../../../services/profileService";
-import { instructorService, type DashboardStats } from "../../../../services/instructorService";
+import { instructorService, type DashboardStats, type EarningsData } from "../../../../services/instructorService";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 function resolveUrl(url: string | null | undefined): string | null {
@@ -62,6 +62,7 @@ export default function InstructorProfile() {
 
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [earnings, setEarnings] = useState<EarningsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
 
@@ -80,10 +81,12 @@ export default function InstructorProfile() {
     Promise.all([
       profileService.get(),
       instructorService.getDashboard().catch(() => null),
-    ]).then(([profileRes, statsRes]) => {
+      instructorService.getEarnings().catch(() => null),
+    ]).then(([profileRes, statsRes, earningsRes]) => {
       const p = profileRes.data.data;
       setProfile(p);
       setStats(statsRes?.data?.data ?? null);
+      setEarnings(earningsRes?.data?.data ?? null);
       const loaded: FormState = {
         name:     p.name     ?? user?.name ?? "",
         phone:    p.phone    ?? "",
@@ -160,7 +163,9 @@ export default function InstructorProfile() {
   const totalCourses  = stats?.courses?.total ?? 0;
   const published     = stats?.courses?.published ?? 0;
   const totalStudents = stats?.students?.total_unique ?? 0;
-  const totalRevenue  = stats?.revenue?.total_earned ?? 0;
+  // Same "prefer finance endpoint, fall back to dashboard endpoint" rule as
+  // InstructorDashboard.tsx, so lifetime revenue agrees across both pages.
+  const totalRevenue  = safeNum(earnings?.total_earned ?? stats?.revenue?.total_earned ?? 0);
 
   return (
     <div className="flex flex-col gap-6">

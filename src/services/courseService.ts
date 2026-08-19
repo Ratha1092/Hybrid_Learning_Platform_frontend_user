@@ -70,8 +70,19 @@ export interface EnrolledCourse {
   average_rating: number | null;
   reviews_count: number;
   progress_percentage: number;
+  // Some backend responses still send this pre-rename key instead of progress_percentage.
+  progress?: number;
   enrolled_at: string;
   completed_at: string | null;
+}
+
+// Guards against progress_percentage arriving as the legacy `progress` key
+// (or missing) on either endpoint that returns EnrolledCourse[].
+export function normalizeEnrolledCourses(courses: EnrolledCourse[]): EnrolledCourse[] {
+  return courses.map((c) => ({
+    ...c,
+    progress_percentage: c.progress_percentage ?? c.progress ?? 0,
+  }));
 }
 
 export interface CoursePage {
