@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../../context/AuthContext";
 import { useWishlist } from "../../../context/WishlistContext";
-import type { EnrolledCourse } from "../../../services/courseService";
+import { normalizeEnrolledCourses, type EnrolledCourse } from "../../../services/courseService";
 import { orderService, type Order } from "../../../services/orderService";
 import { billingService, type Invoice, type BillingAddress } from "../../../services/billingService";
 import { profileService, type DashboardData } from "../../../services/profileService";
@@ -68,6 +68,7 @@ export default function StudentProfile() {
 
   const [editMounted, setEditMounted] = useState(false);
   const [studentProfile, setStudentProfile] = useState<DashboardData["profile"] | null>(null);
+  const [dashboardStats, setDashboardStats] = useState<DashboardData["stats"] | null>(null);
   const [billingAddresses, setBillingAddresses] = useState<BillingAddress[]>([]);
   const [courses, setCourses] = useState<EnrolledCourse[]>([]);
   const [loadingCourses, setLoadingCourses] = useState(true);
@@ -102,7 +103,7 @@ export default function StudentProfile() {
   useEffect(() => {
     if (!isAuthenticated) return;
     profileService.getDashboard()
-      .then(({ data }) => { setStudentProfile(data.data.profile); setCourses(data.data.courses ?? []); setBillingAddresses(data.data.addresses ?? []); })
+      .then(({ data }) => { setStudentProfile(data.data.profile); setCourses(normalizeEnrolledCourses(data.data.courses ?? [])); setBillingAddresses(data.data.addresses ?? []); setDashboardStats(data.data.stats ?? null); })
       .catch(() => setCoursesError(true))
       .finally(() => setLoadingCourses(false));
   }, [isAuthenticated]);
@@ -185,8 +186,10 @@ export default function StudentProfile() {
   const avatarSrc = resolveUrl(studentProfile?.avatar_url ?? user?.avatar_url ?? studentProfile?.avatar ?? user?.avatar);
   const displayName = studentProfile?.name || user?.name || "Learner";
   const firstName = displayName.split(" ").pop() || displayName;
-  const enrolledCount = courses.length;
-  const completedCount = courses.filter(c => c.progress_percentage >= 100).length;
+  // Prefer the backend's own totals (which may cover courses beyond what this
+  // response's `courses` array returns) and fall back to counting the array.
+  const enrolledCount = dashboardStats?.enrolled_courses ?? courses.length;
+  const completedCount = dashboardStats?.completed_courses ?? courses.filter(c => c.progress_percentage >= 100).length;
   const inProgressCount = courses.filter(c => c.progress_percentage < 100).length;
   const today = todayKey();
 

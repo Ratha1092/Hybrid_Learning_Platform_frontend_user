@@ -14,12 +14,18 @@ export interface WalletData {
   balance: number;
   pending_balance: number;
   currency: string;
+  // Admin-configurable payout hold period (default 14 days) and when the
+  // oldest pending amount clears into `balance`, if anything is pending.
+  hold_period_days?: number;
+  next_release_at?: string | null;
 }
 
 // Represents monthly earnings data for charts.
 export interface MonthlyTrend {
   month: string;
   total: number;
+  // Some backend responses still use the pre-rename key for this value.
+  amount?: number;
 }
 
 // Represents instructor earnings summary.

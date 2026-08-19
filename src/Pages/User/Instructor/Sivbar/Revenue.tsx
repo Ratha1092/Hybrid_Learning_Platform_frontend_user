@@ -23,6 +23,11 @@ function safeNum(v: unknown): number {
   return isNaN(n) ? 0 : n;
 }
 
+// Some backend responses still send the pre-rename `amount` key instead of `total`.
+function trendTotal(t: { total: number; amount?: number }): number {
+  return safeNum(t.total) || safeNum(t.amount);
+}
+
 function fmt(n: number) {
   return new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(safeNum(n));
 }
@@ -31,6 +36,16 @@ function fmtK(n: number) {
   const v = safeNum(n);
   if (v >= 1000) return `$${(v / 1000).toFixed(1)}k`;
   return `$${v.toFixed(0)}`;
+}
+
+function releaseDateLabel(wallet: WalletData | null): string | null {
+  if (!wallet?.next_release_at) return null;
+  const date = new Date(wallet.next_release_at);
+  if (isNaN(date.getTime())) return null;
+  const days = Math.ceil((date.getTime() - Date.now()) / 86_400_000);
+  const formatted = date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  if (days <= 0) return `Available ${formatted}`;
+  return `Available ${formatted} (in ${days} day${days === 1 ? "" : "s"})`;
 }
 
 function Spinner({ size = 24 }: { size?: number }) {
@@ -169,9 +184,9 @@ export default function Revenue() {
   };
 
   const trend  = earnings?.monthly_trend ?? [];
-  const maxVal = trend.reduce((m, t) => Math.max(m, safeNum(t.total)), 1);
+  const maxVal = trend.reduce((m, t) => Math.max(m, trendTotal(t)), 1);
   const growthPct = trend.length >= 2
-    ? Math.round(((safeNum(trend[trend.length - 1].total) - safeNum(trend[0].total)) / Math.max(1, safeNum(trend[0].total))) * 100)
+    ? Math.round(((trendTotal(trend[trend.length - 1]) - trendTotal(trend[0])) / Math.max(1, trendTotal(trend[0]))) * 100)
     : null;
 
 
@@ -324,6 +339,14 @@ export default function Revenue() {
                 ${fmt(safeNum(wallet?.pending_balance))}
               </p>
               <p className="mt-1 text-[13px] text-slate-500 dark:text-slate-400">Pending settlement</p>
+              {releaseDateLabel(wallet) && (
+                <p className="mt-1 text-[11.5px] text-amber-600 dark:text-amber-400">{releaseDateLabel(wallet)}</p>
+              )}
+              {!releaseDateLabel(wallet) && wallet?.hold_period_days && (
+                <p className="mt-1 text-[11.5px] text-slate-400 dark:text-slate-500">
+                  New earnings clear after {wallet.hold_period_days} days
+                </p>
+              )}
             </div>
           </>
         )}
@@ -377,11 +400,11 @@ export default function Revenue() {
 
           <div className="flex items-end gap-2 border-b border-slate-100 pb-3 dark:border-slate-700" style={{ height: 200 }}>
             {trend.map((t) => {
-              const barH = Math.max(6, (safeNum(t.total) / maxVal) * 148);
+              const barH = Math.max(6, (trendTotal(t) / maxVal) * 148);
               return (
                 <div key={t.month} className="group flex flex-1 flex-col items-center gap-1.5 justify-end">
                   <span className="text-[10px] font-semibold text-slate-500 transition-colors group-hover:text-blue-600 dark:text-slate-400 dark:group-hover:text-blue-400">
-                    {fmtK(safeNum(t.total))}
+                    {fmtK(trendTotal(t))}
                   </span>
                   <div
                     className="w-full max-w-12 rounded-t-lg bg-blue-400 transition-colors group-hover:bg-blue-500 dark:bg-blue-500/70 dark:group-hover:bg-blue-500"
@@ -618,7 +641,12 @@ export default function Revenue() {
               </div>
               {safeNum(wallet?.pending_balance) > 0 && (
                 <div className="flex items-center justify-between text-[13px]">
-                  <span className="text-slate-500 dark:text-slate-400">Pending (not withdrawable)</span>
+                  <span className="text-slate-500 dark:text-slate-400">
+                    Pending (not withdrawable)
+                    {releaseDateLabel(wallet) && (
+                      <span className="block text-[11.5px] text-slate-400 dark:text-slate-500">{releaseDateLabel(wallet)}</span>
+                    )}
+                  </span>
                   <span className="font-semibold text-amber-600">${fmt(safeNum(wallet?.pending_balance))}</span>
                 </div>
               )}

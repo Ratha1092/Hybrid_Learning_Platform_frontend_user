@@ -30,10 +30,7 @@ import DetailCourse from "./Pages/Courses/DetailCourse";
 
 import Profile from "./Pages/User/Profile/StudentProfile";
 import InstructorRegister from "./Pages/Auth/Register/Apply_to_Instructor";
-// The whole /instructor/* tree is gated behind RequireInstructor — only
-// verified instructors ever need this code, so none of it belongs in the
-// main bundle every visitor downloads (same reasoning as the Instructors
-// listing page below).
+
 const CreateSections = lazy(() => import("./Pages/User/Instructor/Sivbar/CreateSection"));
 const InstructorLayout = lazy(() => import("./Pages/User/Instructor/Sivbar/InstructorLayout"));
 const InstructorDashboard = lazy(() => import("./Pages/User/Instructor/Sivbar/InstructorDashboard"));

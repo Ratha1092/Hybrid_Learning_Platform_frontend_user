@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { BookOpen, CheckCircle2, Play, Clock, Search, X, RotateCcw, GraduationCap, LogIn } from "lucide-react";
-import { courseService, type EnrolledCourse } from "../../services/courseService";
+import { courseService, normalizeEnrolledCourses, type EnrolledCourse } from "../../services/courseService";
 import { useAuth } from "../../context/AuthContext";
 import { useAuthModal } from "../../context/AuthModalContext";
 import "./Library.css";
@@ -68,7 +68,7 @@ export default function Library() {
     setError(null);
     courseService
       .getEnrolled()
-      .then(({ data }) => setCourses(data.data ?? []))
+      .then(({ data }) => setCourses(normalizeEnrolledCourses(data.data ?? [])))
       .catch(() => setError("Failed to load your library. Please try again."))
       .finally(() => setLoading(false));
   }

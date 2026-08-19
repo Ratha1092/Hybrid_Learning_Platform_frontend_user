@@ -1,21 +1,31 @@
-import { Check, ArrowRight, Wallet, TrendingUp } from "lucide-react";
+import { Check, ArrowRight, Wallet, TrendingUp, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Reveal } from "../../utils/anim";
 import { usePlatformStats } from "../../utils/usePlatformStats";
+import { useAuth } from "../../context/AuthContext";
 
 export default function BecomeInstructor() {
+  const { user, isAuthenticated } = useAuth();
+  const isInstructor = isAuthenticated && (user?.role === "instructor" || user?.instructor_status === "verified");
   const stats = usePlatformStats();
   const students = stats?.total_students ?? 0;
   const topEarnings = stats?.top_instructor_monthly_earnings ?? 0;
 
-  const perks = [
-    students > 0
-      ? `Reach a global audience of ${students.toLocaleString()}+ learners`
-      : "Reach a growing global audience of learners",
-    "Secure monthly payouts & transparent revenue reports",
-    "Powerful analytics dashboard for every course",
-    "Dedicated instructor success & marketing support",
-  ];
+  const perks = isInstructor
+    ? [
+        "Publish a new course in minutes",
+        "Secure monthly payouts & transparent revenue reports",
+        "Powerful analytics dashboard for every course",
+        "Dedicated instructor success & marketing support",
+      ]
+    : [
+        students > 0
+          ? `Reach a global audience of ${students.toLocaleString()}+ learners`
+          : "Reach a growing global audience of learners",
+        "Secure monthly payouts & transparent revenue reports",
+        "Powerful analytics dashboard for every course",
+        "Dedicated instructor success & marketing support",
+      ];
 
   return (
     <section className="bg-[#EEF1F6] dark:bg-slate-900 py-16 md:py-20">
@@ -26,14 +36,16 @@ export default function BecomeInstructor() {
 
             <Reveal>
               <span className="inline-flex items-center gap-2 rounded-full glass-dark px-3.5 py-1.5 text-[13px] font-semibold text-blue-700 dark:text-blue-200">
-                <Wallet className="h-3.5 w-3.5" /> Instructor Marketplace
+                {isInstructor ? <BookOpen className="h-3.5 w-3.5" /> : <Wallet className="h-3.5 w-3.5" />}
+                {isInstructor ? "Instructor Studio" : "Instructor Marketplace"}
               </span>
               <h2 className="mt-5 font-display text-[32px] font-extrabold leading-tight text-slate-900 dark:text-white sm:text-[42px]">
-                Turn your knowledge into income
+                {isInstructor ? "Ready to publish your next course?" : "Turn your knowledge into income"}
               </h2>
               <p className="mt-4 max-w-md text-[15px] leading-relaxed text-slate-600 dark:text-slate-300">
-                Publish courses on our marketplace and earn monthly from a global
-                community of motivated learners.
+                {isInstructor
+                  ? "Keep growing your audience — create a new course and reach even more learners."
+                  : "Publish courses on our marketplace and earn monthly from a global community of motivated learners."}
               </p>
               <ul className="mt-7 space-y-3">
                 {perks.map((p) => (
@@ -46,10 +58,10 @@ export default function BecomeInstructor() {
                 ))}
               </ul>
               <Link
-                to="/instructor/register"
+                to={isInstructor ? "/instructor/courses/create" : "/instructor/register"}
                 className="mt-8 inline-flex items-center gap-2 rounded-xl bg-brand px-6 py-3.5 text-sm font-semibold text-white shadow-glow transition-all hover:-translate-y-0.5 hover:bg-blue-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-50"
               >
-                Start Teaching <ArrowRight className="h-4 w-4" />
+                {isInstructor ? "Create a Course" : "Start Teaching"} <ArrowRight className="h-4 w-4" />
               </Link>
             </Reveal>
 
