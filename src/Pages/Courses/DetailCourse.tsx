@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Star } from "lucide-react";
-import { courseService, type CourseDetail, type Section } from "../../services/courseService";
+import { courseService, type CourseDetail, type Section, type Lesson } from "../../services/courseService";
+import { classifyVideoUrl, buildYouTubeEmbed, buildVimeoEmbed } from "../../utils/videoUrl";
 import { reviewService, type Review } from "../../services/reviewService";
 import { useAuth } from "../../context/AuthContext";
 import { useAuthModal } from "../../context/AuthModalContext";
@@ -22,6 +23,45 @@ function sectionTotalDuration(section: Section) {
   return section.lessons.reduce((sum, l) => sum + l.duration, 0);
 }
 
+function PreviewPlayer({ lesson }: { lesson: Lesson }) {
+  const kind = classifyVideoUrl(lesson.video_url);
+  if (!lesson.video_url || !kind) {
+    return <p className="lesson-preview__unavailable">Preview unavailable.</p>;
+  }
+  if (kind === "youtube") {
+    return (
+      <iframe
+        src={buildYouTubeEmbed(lesson.video_url)}
+        title={lesson.title}
+        allow="autoplay; fullscreen; picture-in-picture"
+        allowFullScreen
+        className="lesson-preview__video"
+      />
+    );
+  }
+  if (kind === "vimeo") {
+    return (
+      <iframe
+        src={buildVimeoEmbed(lesson.video_url)}
+        title={lesson.title}
+        allow="autoplay; fullscreen; picture-in-picture"
+        allowFullScreen
+        className="lesson-preview__video"
+      />
+    );
+  }
+  return (
+    <video
+      src={lesson.video_url}
+      controls
+      autoPlay
+      controlsList="nodownload"
+      onContextMenu={(e) => e.preventDefault()}
+      className="lesson-preview__video"
+    />
+  );
+}
+
 function SectionAccordion({ section, index, open, onToggle }: {
   section: Section;
   index: number;
@@ -29,6 +69,7 @@ function SectionAccordion({ section, index, open, onToggle }: {
   onToggle: () => void;
 }) {
   const total = sectionTotalDuration(section);
+  const [previewLessonId, setPreviewLessonId] = useState<number | null>(null);
   return (
     <div className={`accordion${open ? " accordion--open" : ""}`}>
       <button className="accordion__header" onClick={onToggle}>
@@ -48,24 +89,40 @@ function SectionAccordion({ section, index, open, onToggle }: {
 
       {open && (
         <ul className="accordion__lessons">
-          {section.lessons.map((lesson) => (
-            <li key={lesson.id} className="lesson-row">
-              <span className="lesson-row__icon">
-                {lesson.type === "video" ? (
-                  <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                ) : (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="13" height="13" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          {section.lessons.map((lesson) => {
+            const isExpanded = previewLessonId === lesson.id;
+            return (
+              <li key={lesson.id} className="lesson-row-wrap">
+                <div
+                  className={`lesson-row${lesson.is_preview ? " lesson-row--clickable" : ""}`}
+                  role={lesson.is_preview ? "button" : undefined}
+                  tabIndex={lesson.is_preview ? 0 : undefined}
+                  onClick={lesson.is_preview ? () => setPreviewLessonId(isExpanded ? null : lesson.id) : undefined}
+                  onKeyDown={lesson.is_preview ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPreviewLessonId(isExpanded ? null : lesson.id); } } : undefined}
+                >
+                  <span className="lesson-row__icon">
+                    {lesson.type === "video" ? (
+                      <svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="13" height="13" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    )}
+                  </span>
+                  <span className="lesson-row__title">{lesson.title}</span>
+                  <div className="lesson-row__right">
+                    {lesson.is_preview && (
+                      <span className="lesson-row__preview">Preview</span>
+                    )}
+                    <span className="lesson-row__dur">{fmtDuration(lesson.duration)}</span>
+                  </div>
+                </div>
+                {isExpanded && (
+                  <div className="lesson-preview">
+                    <PreviewPlayer lesson={lesson} />
+                  </div>
                 )}
-              </span>
-              <span className="lesson-row__title">{lesson.title}</span>
-              <div className="lesson-row__right">
-                {lesson.is_preview && (
-                  <span className="lesson-row__preview">Preview</span>
-                )}
-                <span className="lesson-row__dur">{fmtDuration(lesson.duration)}</span>
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
@@ -140,7 +197,6 @@ function ReviewsSection({ courseId, isEnrolled }: { courseId: number; isEnrolled
 
   const [showForm, setShowForm] = useState(false);
   const [rating, setRating] = useState(0);
-  const [title, setTitle] = useState("");
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -159,7 +215,6 @@ function ReviewsSection({ courseId, isEnrolled }: { courseId: number; isEnrolled
         if (mine) {
           setMyReview(mine);
           setRating(mine.rating);
-          setTitle(mine.title ?? "");
           setComment(mine.comment ?? "");
         }
       })
@@ -195,7 +250,6 @@ function ReviewsSection({ courseId, isEnrolled }: { courseId: number; isEnrolled
     try {
       const { data } = await reviewService.create(courseId, {
         rating,
-        title: title.trim() || undefined,
         comment: comment.trim() || undefined,
       });
       const saved: Review = {
@@ -236,13 +290,6 @@ function ReviewsSection({ courseId, isEnrolled }: { courseId: number; isEnrolled
         <form className="review-form" onSubmit={handleSubmit}>
           <label className="review-form__label">Your rating</label>
           <StarInput value={rating} onChange={setRating} />
-          <input
-            className="review-form__input"
-            placeholder="Title (optional)"
-            value={title}
-            maxLength={255}
-            onChange={(e) => setTitle(e.target.value)}
-          />
           <textarea
             className="review-form__textarea"
             placeholder="Share your experience with this course (optional)"

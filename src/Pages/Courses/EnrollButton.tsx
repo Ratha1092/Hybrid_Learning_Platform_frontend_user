@@ -417,15 +417,15 @@ export default function EnrollButton({ course }: Props) {
           <div className="enroll-success__icon">🎉</div>
           <h3 className="enroll-success__title">Enrolled Successfully!</h3>
           <p className="enroll-success__sub">You can now access all course content.</p>
-          {!!orderInfo?.discount_amount && (
+          {Number(orderInfo?.discount_amount) > 0 && (
             <p className="enroll-success__discount">
-              You saved ${Number(orderInfo.discount_amount).toFixed(2)}!
+              You saved ${Number(orderInfo!.discount_amount).toFixed(2)}!
             </p>
           )}
           <a href={`/learn/${course.slug}`} className="enroll-success__link">
             Start Learning →
           </a>
-          {orderInfo && (
+          {orderInfo && Number(course.price) > 0 && (
             <div className="enroll-success__receipt">
               <button
                 className="enroll-success__receipt-btn"

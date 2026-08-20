@@ -35,6 +35,42 @@ export interface BillingAddress {
 
 export type BillingAddressInput = Omit<BillingAddress, "id" | "is_default">;
 
+// The backend's billing_addresses table/API uses `line1`/`line2`, not
+// `address_line_1`/`address_line_2` — translate at the service boundary so
+// the rest of the app can keep using the more readable field names.
+interface BillingAddressWire {
+  id: number;
+  name: string;
+  line1: string;
+  line2?: string | null;
+  city: string;
+  country: string;
+  tax_id?: string | null;
+  is_default: boolean;
+}
+
+function fromWire(w: BillingAddressWire): BillingAddress {
+  return {
+    id: w.id,
+    name: w.name,
+    address_line_1: w.line1,
+    address_line_2: w.line2,
+    city: w.city,
+    country: w.country,
+    tax_id: w.tax_id,
+    is_default: w.is_default,
+  };
+}
+
+function toWire(data: Partial<BillingAddressInput>) {
+  const { address_line_1, address_line_2, ...rest } = data;
+  return {
+    ...rest,
+    ...(address_line_1 !== undefined ? { line1: address_line_1 } : {}),
+    ...(address_line_2 !== undefined ? { line2: address_line_2 } : {}),
+  };
+}
+
 interface InvoiceListResponse {
   success: boolean;
   data: {
@@ -53,12 +89,12 @@ interface InvoiceResponse {
 
 interface AddressListResponse {
   success: boolean;
-  data: BillingAddress[];
+  data: BillingAddressWire[];
 }
 
 interface AddressResponse {
   success: boolean;
-  data: BillingAddress;
+  data: BillingAddressWire;
 }
 
 async function downloadBlob(endpoint: string, filename: string) {
@@ -86,16 +122,29 @@ export const billingService = {
   downloadBillingReceipt: (id: number, number: string) =>
     downloadBlob(`/billing/receipts/${id}/download`, `receipt-${number}.pdf`),
 
-  getAddresses: () => api.get<AddressListResponse>("/billing/addresses"),
+  getAddresses: () =>
+    api.get<AddressListResponse>("/billing/addresses").then((res) => ({
+      ...res,
+      data: { ...res.data, data: res.data.data.map(fromWire) },
+    })),
 
   createAddress: (data: BillingAddressInput) =>
-    api.post<AddressResponse>("/billing/addresses", data),
+    api.post<AddressResponse>("/billing/addresses", toWire(data)).then((res) => ({
+      ...res,
+      data: { ...res.data, data: fromWire(res.data.data) },
+    })),
 
   updateAddress: (id: number, data: Partial<BillingAddressInput>) =>
-    api.put<AddressResponse>(`/billing/addresses/${id}`, data),
+    api.put<AddressResponse>(`/billing/addresses/${id}`, toWire(data)).then((res) => ({
+      ...res,
+      data: { ...res.data, data: fromWire(res.data.data) },
+    })),
 
   deleteAddress: (id: number) => api.delete(`/billing/addresses/${id}`),
 
   setDefaultAddress: (id: number) =>
-    api.post<AddressResponse>(`/billing/addresses/${id}/default`),
+    api.post<AddressResponse>(`/billing/addresses/${id}/default`).then((res) => ({
+      ...res,
+      data: { ...res.data, data: fromWire(res.data.data) },
+    })),
 };

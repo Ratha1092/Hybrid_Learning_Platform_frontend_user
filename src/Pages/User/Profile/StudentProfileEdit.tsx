@@ -160,6 +160,45 @@ export function EditProfilePanel({ profile, initialAddresses }: EditProfilePanel
     setTwoFAStep("idle"); setTwoFACode(""); setTwoFAPassword(""); setTwoFAError("");
   };
 
+  // Password change / first-time set (OAuth-only accounts have has_password: false)
+  const [pwStep, setPwStep] = useState<"idle" | "editing">("idle");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [pwBusy, setPwBusy] = useState(false);
+  const [pwError, setPwError] = useState("");
+  const [pwSuccess, setPwSuccess] = useState(false);
+
+  const startPasswordChange = () => {
+    setPwStep("editing"); setPwError(""); setPwSuccess(false);
+    setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
+  };
+
+  const cancelPasswordChange = () => {
+    setPwStep("idle"); setPwError("");
+    setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
+  };
+
+  const submitPasswordChange = async () => {
+    if (user?.has_password && !currentPassword) { setPwError("Enter your current password."); return; }
+    if (newPassword !== confirmPassword) { setPwError("Passwords do not match."); return; }
+    setPwBusy(true); setPwError("");
+    try {
+      await authService.updatePassword({
+        ...(user?.has_password ? { current_password: currentPassword } : {}),
+        password: newPassword,
+        password_confirmation: confirmPassword,
+      });
+      updateUser({ has_password: true });
+      setPwStep("idle"); setPwSuccess(true);
+      setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
+    } catch (err: unknown) {
+      const res = (err as { response?: { data?: { message?: string } } }).response;
+      setPwError(res?.data?.message ?? "Could not update password.");
+    }
+    setPwBusy(false);
+  };
+
   // Billing address state
   const [addresses, setAddresses] = useState<BillingAddress[]>(initialAddresses);
   const [addressForm, setAddressForm] = useState<BillingAddressInput | null>(null);
@@ -486,17 +525,80 @@ export function EditProfilePanel({ profile, initialAddresses }: EditProfilePanel
 
             {/* Security */}
             <CardSection title="Security" sub="Keep your account safe.">
-              <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
-                <div>
-                  <p className="text-[14px] font-semibold ink dark:text-slate-100">Password</p>
-                  <p className="text-[12.5px] muted2 dark:text-slate-400">Last changed 3 months ago.</p>
+              <div className="flex flex-col gap-3 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-[14px] font-semibold ink dark:text-slate-100">Password</p>
+                    <p className="text-[12.5px] muted2 dark:text-slate-400">
+                      {user?.has_password
+                        ? "Change your account password."
+                        : "You signed in with a social account — set a password to also sign in directly."}
+                    </p>
+                  </div>
+                  {pwStep === "idle" && (
+                    <button
+                      type="button"
+                      onClick={startPasswordChange}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3.5 py-2 text-[13px] font-semibold ink hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
+                    >
+                      <ShieldCheck className="h-4 w-4" /> {user?.has_password ? "Change password" : "Set password"}
+                    </button>
+                  )}
                 </div>
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3.5 py-2 text-[13px] font-semibold ink hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
-                >
-                  <ShieldCheck className="h-4 w-4" /> Change password
-                </button>
+
+                {pwSuccess && pwStep === "idle" && (
+                  <p className="text-[12.5px] font-medium text-emerald-600 dark:text-emerald-400">✓ Password updated successfully.</p>
+                )}
+
+                {pwStep === "editing" && (
+                  <div className="flex flex-col gap-3">
+                    {user?.has_password && (
+                      <input
+                        type="password"
+                        className={inputCls}
+                        placeholder="Current password"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        autoComplete="current-password"
+                      />
+                    )}
+                    <input
+                      type="password"
+                      className={inputCls}
+                      placeholder="New password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      autoComplete="new-password"
+                    />
+                    <input
+                      type="password"
+                      className={inputCls}
+                      placeholder="Confirm new password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      autoComplete="new-password"
+                    />
+                    <span className="text-[12px] muted2 dark:text-slate-400">At least 8 characters, with uppercase, lowercase, and a number.</span>
+                    {pwError && <p className="text-[12.5px] text-rose-500">⚠ {pwError}</p>}
+                    <div className="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={cancelPasswordChange}
+                        className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={submitPasswordChange}
+                        disabled={pwBusy}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white shadow-glow hover:bg-blue-700 disabled:opacity-60"
+                      >
+                        {pwBusy ? "Saving…" : user?.has_password ? "Update password" : "Set password"}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {settings.enable_2fa === "true" && (
@@ -685,10 +787,6 @@ export function EditProfilePanel({ profile, initialAddresses }: EditProfilePanel
                       <input className={inputCls} name="country" value={addressForm.country} onChange={handleAddressFieldChange} placeholder="Cambodia" />
                     </label>
                   </div>
-                  <label className="block">
-                    <FieldLabel>Tax ID</FieldLabel>
-                    <input className={inputCls} name="tax_id" value={addressForm.tax_id ?? ""} onChange={handleAddressFieldChange} placeholder="Optional — for business invoices" />
-                  </label>
                   {addressError && <p className="text-[12.5px] text-rose-500">⚠ {addressError}</p>}
                   <div className="flex justify-end gap-2 pt-1">
                     <button

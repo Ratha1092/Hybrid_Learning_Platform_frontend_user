@@ -16,6 +16,7 @@ export interface AuthUser {
   instructor_status?: string | null;
   avatar?: string | null;
   avatar_url?: string | null;
+  has_password?: boolean;
   has_enrollments?: boolean;
   created_at?: string;
 }

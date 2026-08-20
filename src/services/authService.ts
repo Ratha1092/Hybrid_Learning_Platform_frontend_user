@@ -111,4 +111,9 @@
 
     disable2fa: (password: string) =>
       api.post<{ success: boolean; message: string }>("/auth/2fa/disable", { password }),
+
+    // current_password is omitted entirely for OAuth-only accounts (has_password: false),
+    // which is allowed to set a password for the first time without one.
+    updatePassword: (data: { current_password?: string; password: string; password_confirmation: string }) =>
+      api.put<{ success: boolean; message: string }>("/auth/password", data),
   };
