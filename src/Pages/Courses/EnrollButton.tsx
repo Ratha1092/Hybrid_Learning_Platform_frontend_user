@@ -494,7 +494,11 @@ export default function EnrollButton({ course }: Props) {
             disabled={step === "loading"}
             style={step === "loading" ? { background: "#94a3b8", boxShadow: "none", cursor: "not-allowed" } : undefined}
           >
-            {step === "loading" ? "Processing..." : `Renew Access — $${course.price}`}
+            {step === "loading"
+              ? "Processing..."
+              : Number(course.price) === 0
+              ? "Renew for Free"
+              : `Renew Access — $${course.price}`}
           </button>
         </div>
       ) : (
