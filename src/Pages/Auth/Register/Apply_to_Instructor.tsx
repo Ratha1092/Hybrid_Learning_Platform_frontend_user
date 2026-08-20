@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { instructorService } from "../../../services/instructorService";
 import "./Apply_to_Instructor.css";
@@ -32,6 +32,7 @@ interface FormErrors {
   identity_file?: string;
   account_name?: string;
   qr_code_file?: string;
+  terms?: string;
   general?: string;
 }
 
@@ -63,6 +64,7 @@ export default function InstructorRegister() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [previewFile, setPreviewFile] = useState<File | null>(null);
+  const [agreed, setAgreed] = useState(false);
 
   const previewUrl = previewFile ? URL.createObjectURL(previewFile) : null;
   const isPdf = previewFile?.type === "application/pdf";
@@ -98,6 +100,7 @@ export default function InstructorRegister() {
       newErrors.portfolio_url = "Portfolio URL must start with http:// or https://";
     if (!form.account_name.trim()) newErrors.account_name = "Bank account name is required.";
     if (!form.qr_code_file) newErrors.qr_code_file = "Please upload your payment QR code.";
+    if (!agreed) newErrors.terms = "Please agree to the Instructor Terms of Service and Privacy Policy to continue.";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -489,7 +492,20 @@ export default function InstructorRegister() {
 
             {/* Submit bar */}
             <div className="ai-submit-bar">
-              <p className="ai-submit-note">By submitting, you agree to our Instructor Terms of Service.</p>
+              <div>
+                <label className="ai-terms">
+                  <input
+                    type="checkbox"
+                    checked={agreed}
+                    onChange={(e) => { setAgreed(e.target.checked); setErrors((prev) => ({ ...prev, terms: undefined })); }}
+                  />
+                  <span>
+                    I agree to the <Link to="/terms">Instructor Terms of Service</Link> and{" "}
+                    <Link to="/privacy">Privacy Policy</Link>
+                  </span>
+                </label>
+                {errors.terms && <span className="ai-err">{errors.terms}</span>}
+              </div>
               <div className="ai-submit-actions">
                 <button type="button" className="ai-btn ai-btn--ghost" onClick={() => navigate(-1)} disabled={loading}>
                   Cancel

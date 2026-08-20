@@ -105,7 +105,10 @@ export default function MyCourses() {
         </div>
       ) : (
         <div className="mc-list">
-          {courses.map((course) => (
+          {courses.map((course) => {
+          const enrolledCount = enrollmentCountForCourse(course);
+          const deleteLocked = course.status === "published" && enrolledCount > 0;
+          return (
             <div key={course.id} className="mc-row">
               <div className="mc-row__thumb">
                 {resolveUrl(course.thumbnail_url) ? (
@@ -131,7 +134,7 @@ export default function MyCourses() {
                   <span className="mc-row__price">
                     {Number(course.price) === 0 ? "Free" : `$${course.price}`}
                   </span>
-                  <span className="mc-row__students">👥 {enrollmentCountForCourse(course)}</span>
+                  <span className="mc-row__students">👥 {enrolledCount}</span>
                 </div>
               </div>
 
@@ -146,12 +149,15 @@ export default function MyCourses() {
                 <button
                   className="mc-btn mc-btn--delete"
                   onClick={() => handleDelete(course.id)}
+                  disabled={deleteLocked}
+                  title={deleteLocked ? "This course is public and has enrolled students, so it can't be deleted." : undefined}
                 >
                   Delete
                 </button>
               </div>
             </div>
-          ))}
+          );
+          })}
         </div>
       )}
 

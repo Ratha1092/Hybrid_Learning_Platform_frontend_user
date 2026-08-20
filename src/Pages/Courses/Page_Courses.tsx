@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { ArrowRight, Star, Clock, BookOpen, BarChart3, Globe, Heart } from "lucide-react";
-import { courseService, type Course } from "../../services/courseService";
+import { ArrowRight, Star, Clock, BookOpen, BarChart3, Globe, Heart, CheckCircle2 } from "lucide-react";
+import { courseService, normalizeEnrolledCourses, type Course, type EnrolledCourse } from "../../services/courseService";
 import { categoryService } from "../../services/categoryService";
 import { useProtectedWishlist } from "../../hooks/useProtectedWishlist";
+import { useAuth } from "../../context/AuthContext";
 import "./Page_Courses.css";
 
 const SKELETON_COUNT = 6;
@@ -52,6 +53,8 @@ const _flatStore = new Map<string, { search: string; courses: Course[] }>();
 
 function Courses() {
   const { toggle, isWishlisted } = useProtectedWishlist();
+  const { isAuthenticated } = useAuth();
+  const [enrolledById, setEnrolledById] = useState<Record<number, EnrolledCourse>>({});
   const [courses, setCourses] = useState<Course[]>(_cachedDefault?.courses ?? []);
   const [categories, setCategories] = useState<import("../../services/categoryService").Category[]>(_cachedCategories ?? []);
   const [loading, setLoading] = useState(!_cachedDefault);
@@ -149,9 +152,19 @@ function Courses() {
       .catch(() => {});
   }, []);
 
-  // Debounce search — reset to page 1.
-  // Category browsing is fully client-side (getByCategory ignores search server-side),
-  // so skip the network round trip entirely and just re-page the already-cached list.
+  // So the grid can show "Continue Learning" / "Completed" instead of "Enroll"
+  // for courses the user is already enrolled in.
+  useEffect(() => {
+    if (!isAuthenticated) { setEnrolledById({}); return; }
+    courseService.getEnrolled()
+      .then(({ data }) => {
+        const byId: Record<number, EnrolledCourse> = {};
+        normalizeEnrolledCourses(data.data).forEach((e) => { byId[e.course_id] = e; });
+        setEnrolledById(byId);
+      })
+      .catch(() => {});
+  }, [isAuthenticated]);
+
   useEffect(() => {
     if (!isMounted.current) { isMounted.current = true; return; }
     if (category) { setPage(1); return; }
@@ -320,12 +333,14 @@ function Courses() {
             const isFree = Number(course.price) === 0;
             const slug = course.slug ?? String(course.id);
             const duration = formatDuration(course.total_duration_seconds);
+            const enrollment = enrolledById[course.id];
+            const isCompleted = !!enrollment && (enrollment.progress_percentage >= 100 || !!enrollment.completed_at);
             return (
               <div
                 key={course.id}
                 className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-e1 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-card dark:border-slate-700 dark:bg-slate-800"
                 style={{ animationDelay: `${(i % 3) * 90}ms` }}
-                onClick={() => navigate(`/courses/${slug}`)}
+                onClick={() => navigate(enrollment ? `/learn/${slug}` : `/courses/${slug}`)}
               >
                 {/* Thumbnail */}
                 <div className="relative overflow-hidden">
@@ -370,6 +385,9 @@ function Courses() {
                       <span className="ml-auto flex items-center gap-1 text-[13px] font-bold text-amber-500">
                         <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
                         {course.average_rating.toFixed(1)}
+                        {!!course.reviews_count && (
+                          <span className="font-normal text-slate-400 dark:text-slate-500">({course.reviews_count})</span>
+                        )}
                       </span>
                     )}
                   </div>
@@ -389,12 +407,28 @@ function Courses() {
                     <span className="font-display text-xl font-extrabold ink">
                       {isFree ? "Free" : `$${course.price}`}
                     </span>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); navigate(`/courses/${slug}`); }}
-                      className="inline-flex items-center gap-1 rounded-lg bg-brand px-4 py-2 text-[13px] font-semibold text-white transition-all hover:gap-2 hover:bg-blue-700"
-                    >
-                      Enroll <ArrowRight className="h-3.5 w-3.5" />
-                    </button>
+                    {isCompleted ? (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); navigate(`/learn/${slug}`); }}
+                        className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-4 py-2 text-[13px] font-semibold text-white transition-all hover:gap-2 hover:bg-emerald-700"
+                      >
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Completed
+                      </button>
+                    ) : enrollment ? (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); navigate(`/learn/${slug}`); }}
+                        className="inline-flex items-center gap-1 rounded-lg bg-brand px-4 py-2 text-[13px] font-semibold text-white transition-all hover:gap-2 hover:bg-blue-700"
+                      >
+                        Continue Learning <ArrowRight className="h-3.5 w-3.5" />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); navigate(`/courses/${slug}`); }}
+                        className="inline-flex items-center gap-1 rounded-lg bg-brand px-4 py-2 text-[13px] font-semibold text-white transition-all hover:gap-2 hover:bg-blue-700"
+                      >
+                        Enroll <ArrowRight className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
