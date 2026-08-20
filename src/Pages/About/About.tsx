@@ -148,7 +148,7 @@ export default function About() {
               <div className="relative mx-auto max-w-sm">
                 <div className="absolute inset-4 rounded-[40px] bg-blue-500/[0.08] blur-2xl dark:bg-blue-600/25" />
                 <img
-                  src={assetImg("hero.png")}
+                  src={assetImg("aboutus.jpg")}
                   alt="Team collaborating"
                   className="relative z-10 h-80 w-full rounded-[32px] object-cover shadow-card"
                 />

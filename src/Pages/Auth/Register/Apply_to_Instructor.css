@@ -523,6 +523,25 @@
   margin: 0;
 }
 
+.ai-terms {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 12.5px;
+  color: #9C988C;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.ai-terms input[type="checkbox"] {
+  margin-top: 2px;
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  accent-color: #2563EB;
+}
+.ai-terms a { color: #2563EB; font-weight: 600; text-decoration: none; }
+.ai-terms a:hover { text-decoration: underline; }
+
 .ai-submit-actions {
   display: flex;
   gap: 10px;
@@ -770,6 +789,7 @@ html.dark .ai-submit-bar {
   border-color: #334155;
 }
 html.dark .ai-submit-note { color: #64748b; }
+html.dark .ai-terms { color: #64748b; }
 
 /* Buttons */
 html.dark .ai-btn--primary {

@@ -1,6 +1,6 @@
 import { Check, ArrowRight, Wallet, TrendingUp, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
-import instructorImage from "../../assets/hero.png";
+import instructorImage from "../../assets/become.jpg";
 import { Reveal } from "../../utils/anim";
 import { usePlatformStats } from "../../utils/usePlatformStats";
 import { useAuth } from "../../context/AuthContext";

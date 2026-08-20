@@ -1,8 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import { classifyVideoUrl, buildYouTubeEmbed, buildVimeoEmbed } from "../../utils/videoUrl";
 import "./Learn.css";
+
+// Fraction of the video that must actually be played (not just seeked past)
+// before a lesson auto-completes.
+const AUTO_COMPLETE_THRESHOLD = 0.9;
+// How often we persist the resume position while playing.
+const RESUME_SAVE_INTERVAL_MS = 5000;
+const resumeKey = (lessonId: number) => `learn:resume:${lessonId}`;
+
+// video.played gives the ranges of currentTime the user has actually played
+// through (seeking ahead leaves a gap), so summing it — rather than trusting
+// the furthest currentTime reached — stops "drag to the end" from counting
+// as watched.
+function playedCoverage(video: HTMLVideoElement): number {
+  if (!video.duration) return 0;
+  let covered = 0;
+  const ranges = video.played;
+  for (let i = 0; i < ranges.length; i++) covered += ranges.end(i) - ranges.start(i);
+  return covered / video.duration;
+}
 
 interface LessonItem {
   id: number;
@@ -42,6 +61,8 @@ export default function Learn() {
   const [completedIds, setCompletedIds] = useState<Set<number>>(new Set());
   const [openSections, setOpenSections] = useState<Set<number>>(new Set([0]));
   const [completeError, setCompleteError] = useState<string | null>(null);
+  const lastResumeSaveRef = useRef(0);
+  const autoCompletingRef = useRef<Set<number>>(new Set());
 
   useEffect(() => {
     if (!slug) return;
@@ -83,10 +104,46 @@ export default function Learn() {
       await api.post(`/lessons/${lessonId}/progress`, {
         is_completed: true,
       });
+      localStorage.removeItem(resumeKey(lessonId));
     } catch {
       // Roll back and show error
       setCompletedIds((prev) => { const next = new Set(prev); next.delete(lessonId); return next; });
       setCompleteError("Could not save progress. Please try again.");
+    } finally {
+      autoCompletingRef.current.delete(lessonId);
+    }
+  };
+
+  // Called on every timeupdate tick of a direct-hosted <video>. Persists a
+  // resume position (throttled) and auto-completes once actual watched
+  // coverage — not just how far the scrubber was dragged — crosses the
+  // threshold.
+  const handleVideoProgress = (lessonId: number, video: HTMLVideoElement) => {
+    const now = Date.now();
+    if (now - lastResumeSaveRef.current > RESUME_SAVE_INTERVAL_MS) {
+      lastResumeSaveRef.current = now;
+      if (!completedIds.has(lessonId)) {
+        localStorage.setItem(resumeKey(lessonId), String(video.currentTime));
+      }
+    }
+
+    if (completedIds.has(lessonId) || autoCompletingRef.current.has(lessonId)) return;
+    if (playedCoverage(video) >= AUTO_COMPLETE_THRESHOLD) {
+      autoCompletingRef.current.add(lessonId);
+      handleComplete(lessonId);
+    }
+  };
+
+  const handleVideoEnded = (lessonId: number) => {
+    if (completedIds.has(lessonId) || autoCompletingRef.current.has(lessonId)) return;
+    autoCompletingRef.current.add(lessonId);
+    handleComplete(lessonId);
+  };
+
+  const handleVideoLoadedMetadata = (lessonId: number, video: HTMLVideoElement) => {
+    const saved = Number(localStorage.getItem(resumeKey(lessonId)));
+    if (saved > 0 && saved < video.duration - 5) {
+      video.currentTime = saved;
     }
   };
 
@@ -213,6 +270,9 @@ export default function Learn() {
                       controls
                       controlsList="nodownload"
                       onContextMenu={(e) => e.preventDefault()}
+                      onLoadedMetadata={(e) => handleVideoLoadedMetadata(activeLesson.id, e.currentTarget)}
+                      onTimeUpdate={(e) => handleVideoProgress(activeLesson.id, e.currentTarget)}
+                      onEnded={() => handleVideoEnded(activeLesson.id)}
                       className="learn-video"
                       style={{ background: "#000" }}
                     />

@@ -45,6 +45,8 @@ import Library from "./Pages/Library/Library";
 import Learn from "./Pages/Learn/Learn";
 import Contact from "./Pages/Contact/Contact";
 import Help from "./Pages/Help/Help";
+import Terms from "./Pages/Legal/Terms";
+import Privacy from "./Pages/Legal/Privacy";
 const Instructors = lazy(() => import("./Pages/Instructors/Instructors"));
 import About from "./Pages/About/About";
 import GitHubCallback from "./Pages/Auth/GitHub/GitHubCallback";
@@ -187,6 +189,8 @@ function App() {
           <Route path="/about" element={<WithFooter><About /></WithFooter>} />
           <Route path="/contact" element={<WithFooter><Contact /></WithFooter>} />
           <Route path="/help" element={<WithFooter><Help /></WithFooter>} />
+          <Route path="/terms" element={<WithFooter><Terms /></WithFooter>} />
+          <Route path="/privacy" element={<WithFooter><Privacy /></WithFooter>} />
           <Route path="/auth/github/callback" element={<GitHubCallback />} />
           <Route path="/PageLogin" element={<LoginPage />} />
           <Route path="/PageRegister" element={<RegisterPage />} />

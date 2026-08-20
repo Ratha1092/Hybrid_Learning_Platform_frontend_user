@@ -257,6 +257,15 @@
   background: #F0B8B0;
 }
 
+.mc-btn--delete:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.mc-btn--delete:disabled:hover {
+  background: var(--pt-rose-s, #FBECE9);
+}
+
 /* Responsive */
 @media (max-width: 640px) {
   .mc-row { flex-wrap: wrap; }
@@ -370,6 +379,7 @@ html.dark .mc-btn--submit { background: rgba(16,185,129,0.15); color: #6ee7b7; b
 html.dark .mc-btn--submit:hover { background: rgba(16,185,129,0.25); }
 html.dark .mc-btn--delete { background: rgba(239,68,68,0.1); color: #fca5a5; border-color: rgba(239,68,68,0.25); }
 html.dark .mc-btn--delete:hover { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); }
+html.dark .mc-btn--delete:disabled:hover { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.25); }
 
 /* Delete confirm modal */
 html.dark .mc-modal-backdrop { background: rgba(0,0,0,0.6); }

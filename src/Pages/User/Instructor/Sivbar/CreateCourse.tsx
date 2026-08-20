@@ -487,6 +487,16 @@ function CurriculumStep({ courseId, sections, setSections, onNext, onBack }: Cur
       setAttachErr(null);
       try {
         await instructorService.attachSections(courseId, [...selectedIds]);
+        const { data } = await instructorService.getSections(courseId);
+        setSections((data.data ?? []).map((s) => ({
+          id: s.id,
+          title: s.title,
+          order: s.order,
+          lessons: (s.lessons ?? []).map((l) => ({
+            id: l.id, title: l.title, type: l.type, is_preview: l.is_preview,
+          })),
+        })));
+        setSelectedIds(new Set());
       } catch {
         setAttachErr("Failed to attach sections. Please try again.");
         setAttaching(false);

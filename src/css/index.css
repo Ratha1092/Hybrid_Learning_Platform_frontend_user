@@ -14,13 +14,12 @@
   #root { min-height: 100vh; }
 }
 
-/* Reserve space for the desktop scrollbar only above the "lg" breakpoint —
-   on real mobile/touch devices scrollbars overlay content (zero width), so
-   reserving a gutter there just eats into the viewport for no benefit; at
-   desktop widths it still prevents content from shifting when a page's
-   height crosses the scrollbar threshold. */
 @media (min-width: 1024px) {
   html { scrollbar-gutter: stable; }
+}
+
+@media (max-width: 767px) {
+  input, textarea, select { font-size: 16px !important; }
 }
 
 @layer utilities {

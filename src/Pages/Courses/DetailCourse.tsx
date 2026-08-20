@@ -201,6 +201,7 @@ function ReviewsSection({ courseId, isEnrolled }: { courseId: number; isEnrolled
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitMessage, setSubmitMessage] = useState<string | null>(null);
+  const [pendingOwnReview, setPendingOwnReview] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -263,7 +264,19 @@ function ReviewsSection({ courseId, isEnrolled }: { courseId: number; isEnrolled
       setShowForm(false);
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { message?: string } } };
-      setSubmitError(axiosErr.response?.data?.message ?? "Failed to submit review.");
+      const message = axiosErr.response?.data?.message ?? "Failed to submit review.";
+      // The backend can reject a resubmit as "already reviewed" even when that
+      // review is still pending moderation and was never included in the list
+      // above — without this, the user is stuck seeing a rejection next to an
+      // empty/contradictory reviews list with no way to know why.
+      if (/already reviewed/i.test(message)) {
+        setShowForm(false);
+        setPendingOwnReview(true);
+        setSubmitMessage("You've already submitted a review for this course. It's awaiting moderation and will appear here once approved.");
+        setSubmitError(null);
+      } else {
+        setSubmitError(message);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -280,7 +293,7 @@ function ReviewsSection({ courseId, isEnrolled }: { courseId: number; isEnrolled
 
       {!isAuthenticated ? (
         <button className="review-cta-btn" onClick={openLogin}>Log in to write a review</button>
-      ) : isEnrolled && !showForm ? (
+      ) : isEnrolled && !showForm && !pendingOwnReview ? (
         <button className="review-cta-btn" onClick={() => setShowForm(true)}>
           {myReview ? "Edit your review" : "Write a review"}
         </button>
