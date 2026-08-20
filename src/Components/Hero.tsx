@@ -1,6 +1,6 @@
 import { ArrowRight, CheckCircle2, Users, BookOpen, GraduationCap } from "lucide-react";
 import { Link } from "react-router-dom";
-import heroImage from "../assets/student3.jpg";
+import heroImage from "../assets/heroimage.jpg";
 import { useAuth } from "../context/AuthContext";
 import { useAuthModal } from "../context/AuthModalContext";
 import { useCountUp } from "../utils/anim";
