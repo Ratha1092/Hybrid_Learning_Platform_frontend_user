@@ -1,11 +1,6 @@
 import { GraduationCap, BookOpen } from "lucide-react";
 import { useDashboardSwitch } from "../../hooks/useDashboardSwitch";
 
-// Segmented Teaching/Learning switcher — same look everywhere it appears
-// (navbar account menu, instructor sidebar, student profile sidebar), so
-// switching feels like one consistent control rather than three different
-// widgets. Renders nothing for accounts that aren't both an instructor and
-// a student.
 export default function DashboardModeToggle({ className = "" }: { className?: string }) {
   const { canSwitch, view, switchTo } = useDashboardSwitch();
   if (!canSwitch) return null;

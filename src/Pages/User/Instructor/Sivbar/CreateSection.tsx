@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Layers, PlusCircle, ArrowRight, Lightbulb, Info, Eye, Pencil, Trash2, X, Plus } from "lucide-react";
+import { BookOpen, Layers, PlusCircle, ArrowRight, Lightbulb, Info, Eye, Pencil, Trash2, X, Plus, Paperclip } from "lucide-react";
 import {
   instructorService,
   type StandaloneSection,
@@ -435,11 +435,10 @@ export default function SectionLibrary() {
                       <Pencil className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => { if (s.lessons_count === 0) { setDeleteError(null); setConfirmDelete(s); } }}
-                      disabled={s.lessons_count > 0}
-                      className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
+                      onClick={() => { setDeleteError(null); setConfirmDelete(s); }}
+                      className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
                       aria-label="Delete section"
-                      title={s.lessons_count > 0 ? "Remove all lessons before deleting" : "Delete"}
+                      title="Delete"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -633,13 +632,16 @@ export default function SectionLibrary() {
                       )}
                       <button
                         onClick={() => toggleResources(l.id)}
-                        className={`rounded-lg px-2 py-1 text-[11px] font-semibold transition-colors ${
+                        title="View or attach resources for this lesson"
+                        aria-label="View or attach resources for this lesson"
+                        className={`flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold transition-colors ${
                           expandedResources.has(l.id)
                             ? "bg-blue-100 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400"
                             : "bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-400 dark:hover:bg-slate-600"
                         }`}
                       >
-                        📎
+                        <Paperclip className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">Resources</span>
                       </button>
                       <button
                         onClick={() => { setLessonDeleteError(null); setConfirmDeleteLesson(l); }}
@@ -842,13 +844,16 @@ export default function SectionLibrary() {
                     )}
                     <button
                       onClick={() => toggleResources(l.id)}
-                      className={`rounded-lg px-2 py-1 text-[11px] font-semibold transition-colors ${
+                      title="View resources for this lesson"
+                      aria-label="View resources for this lesson"
+                      className={`flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold transition-colors ${
                         expandedResources.has(l.id)
                           ? "bg-blue-100 text-blue-600 dark:bg-blue-500/15 dark:text-blue-400"
                           : "bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-400 dark:hover:bg-slate-600"
                       }`}
                     >
-                      📎
+                      <Paperclip className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">Resources</span>
                     </button>
                   </div>
                   {expandedResources.has(l.id) && (
@@ -892,7 +897,9 @@ export default function SectionLibrary() {
               Delete "{confirmDelete.title}"?
             </h3>
             <p className="mb-6 text-center text-[13px] leading-relaxed text-slate-500 dark:text-slate-400">
-              This section has no lessons, so this can be undone only by re-creating it. This cannot be undone.
+              {confirmDelete.lessons_count > 0
+                ? `This will also delete all ${confirmDelete.lessons_count} lesson${confirmDelete.lessons_count === 1 ? "" : "s"} inside this section. This cannot be undone.`
+                : "This cannot be undone."}
             </p>
             {deleteError && (
               <p className="mb-4 text-center text-[12.5px] font-medium text-rose-600 dark:text-rose-400">⚠ {deleteError}</p>

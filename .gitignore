@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Environment variables (contains local/deploy-specific values;
+# set the real values as Variables on the Railway service instead)
+.env
+.env.*
+!.env.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

@@ -880,50 +880,6 @@ export default function StudentProfile() {
             </div>
 
             <div className="flex flex-col gap-4">
-              {/* Notifications */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-e1 dark:border-slate-700 dark:bg-slate-800">
-                <h2 className="font-display text-[16px] font-bold ink dark:text-slate-100">Notifications</h2>
-                <p className="mt-0.5 text-[13px] muted2 dark:text-slate-400">Choose what updates you want to receive.</p>
-                <div className="mt-5 flex flex-col gap-4">
-                  {[
-                    { label: "Course updates", desc: "New lessons, announcements from instructors", on: true },
-                    { label: "Promotions & offers", desc: "Discounts and limited-time deals", on: false },
-                    { label: "Weekly digest", desc: "A weekly summary of your learning progress", on: true },
-                  ].map(item => (
-                    <div key={item.label} className="flex items-center justify-between gap-4">
-                      <div>
-                        <p className="text-[14px] font-semibold ink dark:text-slate-100">{item.label}</p>
-                        <p className="text-[12.5px] muted2 dark:text-slate-400">{item.desc}</p>
-                      </div>
-                      <div className={`relative h-6 w-11 cursor-pointer rounded-full transition-colors ${item.on ? "bg-blue-600" : "bg-slate-200 dark:bg-slate-600"}`}>
-                        <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${item.on ? "translate-x-5" : "translate-x-0.5"}`} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Privacy */}
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-e1 dark:border-slate-700 dark:bg-slate-800">
-                <h2 className="font-display text-[16px] font-bold ink dark:text-slate-100">Privacy</h2>
-                <p className="mt-0.5 text-[13px] muted2 dark:text-slate-400">Control who can see your profile.</p>
-                <div className="mt-5 flex flex-col gap-4">
-                  {[
-                    { label: "Public profile", desc: "Allow others to view your learning activity", on: true },
-                  ].map(item => (
-                    <div key={item.label} className="flex items-center justify-between gap-4">
-                      <div>
-                        <p className="text-[14px] font-semibold ink dark:text-slate-100">{item.label}</p>
-                        <p className="text-[12.5px] muted2 dark:text-slate-400">{item.desc}</p>
-                      </div>
-                      <div className={`relative h-6 w-11 cursor-pointer rounded-full transition-colors ${item.on ? "bg-blue-600" : "bg-slate-200 dark:bg-slate-600"}`}>
-                        <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${item.on ? "translate-x-5" : "translate-x-0.5"}`} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
               {/* Account actions */}
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-e1 dark:border-slate-700 dark:bg-slate-800">
                 <h2 className="font-display text-[16px] font-bold ink dark:text-slate-100">Account</h2>

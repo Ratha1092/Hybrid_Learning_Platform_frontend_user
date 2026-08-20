@@ -1,16 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../api/axios";
-import { classifyVideoUrl } from "../../utils/videoUrl";
+import { classifyVideoUrl, buildYouTubeEmbed, buildVimeoEmbed } from "../../utils/videoUrl";
 import "./Learn.css";
-
-function buildYouTubeEmbed(url: string): string {
-  return url.replace("watch?v=", "embed/").replace("youtu.be/", "www.youtube.com/embed/");
-}
-
-function buildVimeoEmbed(url: string): string {
-  return url.replace("vimeo.com/", "player.vimeo.com/video/");
-}
 
 interface LessonItem {
   id: number;
@@ -219,6 +211,8 @@ export default function Learn() {
                     <video
                       src={activeLesson.video_url!}
                       controls
+                      controlsList="nodownload"
+                      onContextMenu={(e) => e.preventDefault()}
                       className="learn-video"
                       style={{ background: "#000" }}
                     />

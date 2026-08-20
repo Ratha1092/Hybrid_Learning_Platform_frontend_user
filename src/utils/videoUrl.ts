@@ -16,6 +16,14 @@ export function classifyVideoUrl(url: string | null | undefined): VideoKind {
   }
 }
 
+export function buildYouTubeEmbed(url: string): string {
+  return url.replace("watch?v=", "embed/").replace("youtu.be/", "www.youtube.com/embed/");
+}
+
+export function buildVimeoEmbed(url: string): string {
+  return url.replace("vimeo.com/", "player.vimeo.com/video/");
+}
+
 // Reads a video file's length client-side (via a throwaway <video> element)
 // so instructors never have to type it in manually.
 export function getVideoDuration(file: File): Promise<number> {

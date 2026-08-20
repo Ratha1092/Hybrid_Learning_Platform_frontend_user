@@ -408,16 +408,37 @@
   border-top: 1px solid #e2e8f0;
 }
 
+.lesson-row-wrap { border-bottom: 1px solid #f1f5f9; }
+.lesson-row-wrap:last-child { border-bottom: none; }
+
 .lesson-row {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 11px 18px;
-  border-bottom: 1px solid #f1f5f9;
   transition: background 0.12s;
 }
-.lesson-row:last-child { border-bottom: none; }
 .lesson-row:hover { background: #f8fafc; }
+.lesson-row--clickable { cursor: pointer; }
+
+.lesson-preview {
+  padding: 0 18px 14px;
+  background: #f8fafc;
+}
+.lesson-preview__video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: none;
+  border-radius: 10px;
+  background: #000;
+}
+.lesson-preview__unavailable {
+  margin: 0;
+  padding: 14px 0;
+  font-size: 13px;
+  color: #94a3b8;
+  text-align: center;
+}
 
 .lesson-row__icon {
   font-size: 12px;
@@ -1150,12 +1171,14 @@ html.dark .accordion--open .accordion__chevron { color: #60a5fa; }
 html.dark .accordion__lessons { border-top-color: #334155; }
 
 /* Lesson rows */
-html.dark .lesson-row { border-bottom-color: #334155; }
+html.dark .lesson-row-wrap { border-bottom-color: #334155; }
 html.dark .lesson-row:hover { background: #273548; }
 html.dark .lesson-row__icon { color: #64748b; }
 html.dark .lesson-row__title { color: #e2e8f0; }
 html.dark .lesson-row__preview { color: #60a5fa; background: rgba(37,99,235,0.12); border-color: rgba(96,165,250,0.25); }
 html.dark .lesson-row__dur { color: #64748b; }
+html.dark .lesson-preview { background: #1e293b; }
+html.dark .lesson-preview__unavailable { color: #64748b; }
 
 /* Enroll card */
 html.dark .detail-card { background: #1e293b; border-color: #334155; }

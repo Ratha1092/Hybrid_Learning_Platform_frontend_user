@@ -1,5 +1,6 @@
 import { Check, ArrowRight, Wallet, TrendingUp, BookOpen } from "lucide-react";
 import { Link } from "react-router-dom";
+import instructorImage from "../../assets/hero.png";
 import { Reveal } from "../../utils/anim";
 import { usePlatformStats } from "../../utils/usePlatformStats";
 import { useAuth } from "../../context/AuthContext";
@@ -68,7 +69,7 @@ export default function BecomeInstructor() {
             <Reveal delay={140} className="relative hidden md:block">
               <div className="relative mx-auto max-w-sm">
                 <img
-                  src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=700&q=75"
+                  src={instructorImage}
                   alt="Instructor teaching"
                   className="h-72 w-full rounded-2xl object-cover shadow-soft-dark dark:brightness-[0.65] dark:contrast-[0.95] transition-[filter] duration-300"
                 />
