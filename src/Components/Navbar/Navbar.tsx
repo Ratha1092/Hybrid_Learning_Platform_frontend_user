@@ -228,7 +228,7 @@ function Navbar() {
                         )}
                         <button
                           className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
-                          onClick={() => { setDropdownOpen(false); navigate("/profile/edit"); }}
+                          onClick={() => { setDropdownOpen(false); navigate(isInstructor ? "/instructor/profile" : "/profile/edit"); }}
                         >
                           <Settings className="h-4 w-4 text-slate-400 dark:text-slate-500" /> Account settings
                         </button>
