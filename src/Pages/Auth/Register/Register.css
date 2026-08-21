@@ -255,58 +255,6 @@
 }
 
 /* Step Indicator */
-.rg-steps {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 24px;
-}
-
-.rg-step {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #94a3b8;
-}
-
-.rg-step__dot {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 2px solid #e2e8f0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 800;
-  background: #fff;
-  color: #94a3b8;
-  transition: all 0.2s;
-}
-
-.rg-step--active .rg-step__dot {
-  background: linear-gradient(135deg, #2563EB, #3B82F6);
-  border-color: transparent;
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(37,99,235,0.35);
-}
-.rg-step--active { color: #2563EB; }
-
-.rg-step--done .rg-step__dot {
-  background: #f0fdf4;
-  border-color: #86efac;
-  color: #16a34a;
-}
-.rg-step--done { color: #16a34a; }
-
-.rg-step__line {
-  flex: 1;
-  height: 1.5px;
-  background: #e2e8f0;
-}
-
 /* Headings */
 .rg-title {
   font-family: "Plus Jakarta Sans", sans-serif;
@@ -626,6 +574,3 @@ html.dark .rg-otp-box:focus  { background: #1e293b; border-color: #2563EB; }
 html.dark .rg-otp-box--filled { background: rgba(59,130,246,0.1); border-color: #3B82F6; }
 html.dark .rg-otp-box--err   { background: rgba(239,68,68,0.08); border-color: #ef4444; }
 html.dark .rg-otp-timer { color: #64748b; }
-html.dark .rg-step__dot { border-color: #334155; background: #1e293b; color: #64748b; }
-html.dark .rg-step { color: #64748b; }
-html.dark .rg-step__line { background: #334155; }

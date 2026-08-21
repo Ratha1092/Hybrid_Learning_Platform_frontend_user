@@ -10,23 +10,6 @@
 /* Page header */
 .cc-header { margin-bottom: 28px; }
 
-.cc-header__back {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  color: var(--pt-muted, #6C6A61);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  margin-bottom: 14px;
-  transition: color 0.15s;
-}
-
-.cc-header__back:hover { color: var(--pt-pine, #27695A); }
-
 .cc-header h1 {
   font-family: var(--pt-font-disp, "Bricolage Grotesque", system-ui, sans-serif);
   font-size: 1.75rem;
@@ -1466,7 +1449,6 @@
 }
 
 /* Dark mode─ */
-html.dark .cc-header__back:hover { color: var(--pt-pine, #27695A); }
 html.dark .cc-tabs {
   background: var(--pt-card);
   border-color: var(--pt-line);
