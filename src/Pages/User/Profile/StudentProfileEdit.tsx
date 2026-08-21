@@ -29,16 +29,12 @@ interface FormState {
 }
 
 export function formEqual(a: FormState, b: FormState) {
-  // Interests are a set, not a sequence — toggling one off and back on
-  // re-appends it at the end instead of restoring its original position,
-  // so this must compare membership, not order, or an unchanged set of
-  // interests would still be flagged as dirty.
   return a.name === b.name && a.phone === b.phone && a.bio === b.bio &&
     a.learning_goals === b.learning_goals && a.github === b.github && a.linkedin === b.linkedin &&
     a.interests.length === b.interests.length && a.interests.every(v => b.interests.includes(v));
 }
 
-/* ── Local helper components ── */
+/* Local helper components */
 function CardSection({ title, sub, children }: { title: string; sub: string; children: React.ReactNode }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-e1 dark:border-slate-700 dark:bg-slate-800">
@@ -62,7 +58,7 @@ const inputCls =
   "focus:border-blue-400 focus:ring-4 focus:ring-blue-100 " +
   "dark:border-slate-600 dark:bg-slate-700/50 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-blue-500 dark:focus:ring-blue-500/20";
 
-/* ── Main export ── */
+/* Main export */
 interface EditProfilePanelProps {
   profile: DashboardData["profile"];
   initialAddresses: BillingAddress[];
@@ -89,8 +85,8 @@ export function EditProfilePanel({ profile, initialAddresses }: EditProfilePanel
   const { settings } = useSettings();
 
   const [form, setForm] = useState<FormState>(() => computeFormState(profile, user?.name, user?.id));
-  const initialForm = useRef<FormState>(form);
-  const isDirty = !formEqual(form, initialForm.current);
+  const [savedForm, setSavedForm] = useState<FormState>(form);
+  const isDirty = !formEqual(form, savedForm);
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -270,8 +266,7 @@ export function EditProfilePanel({ profile, initialAddresses }: EditProfilePanel
         }));
       }
       updateUser({ name: form.name });
-      initialForm.current = { ...form };
-      setForm(f => ({ ...f }));
+      setSavedForm({ ...form });
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string; errors?: Record<string, string[]> } } };
       const errs = e.response?.data?.errors;
@@ -280,9 +275,9 @@ export function EditProfilePanel({ profile, initialAddresses }: EditProfilePanel
     setSaving(false);
   };
 
-  const handleDiscard = () => { setForm({ ...initialForm.current }); };
+  const handleDiscard = () => { setForm({ ...savedForm }); };
 
-  // ── Billing address handlers ──
+  // Billing address handlers
   const openAddAddress = () => { setEditingAddressId(null); setAddressForm({ ...EMPTY_ADDRESS_FORM }); setAddressError(""); };
   const openEditAddress = (addr: BillingAddress) => {
     setEditingAddressId(addr.id);

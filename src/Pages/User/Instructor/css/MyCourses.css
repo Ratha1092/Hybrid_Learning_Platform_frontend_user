@@ -202,31 +202,6 @@
   transition: background 0.15s, border-color 0.15s;
 }
 
-.mc-btn--copy {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: var(--pt-warm, #FBFAF6);
-  color: var(--pt-muted, #6C6A61);
-  border-color: var(--pt-line-2, #DCD7CA);
-  font-size: 0.78rem;
-  white-space: nowrap;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-
-.mc-btn--copy svg { width: 13px; height: 13px; flex-shrink: 0; }
-
-.mc-btn--copy:hover {
-  background: var(--pt-line, #E7E3D9);
-  color: var(--pt-ink, #17191F);
-}
-
-.mc-btn--copied {
-  background: var(--pt-pine-s, #E4F0EC) !important;
-  color: var(--pt-pine, #27695A) !important;
-  border-color: var(--pt-pine-l, #CFE5DE) !important;
-}
-
 .mc-btn--edit {
   background: var(--pt-pine-s, #E4F0EC);
   color: var(--pt-pine, #27695A);
@@ -235,16 +210,6 @@
 
 .mc-btn--edit:hover {
   background: var(--pt-pine-l, #CFE5DE);
-}
-
-.mc-btn--submit {
-  background: var(--pt-gold-s, #FAF0DF);
-  color: var(--pt-gold, #E0922E);
-  border-color: var(--pt-gold-l, #F0DCBC);
-}
-
-.mc-btn--submit:hover {
-  background: var(--pt-gold-l, #F0DCBC);
 }
 
 .mc-btn--delete {
@@ -370,13 +335,8 @@ html.dark .mc-row__price,
 html.dark .mc-row__students { color: #64748b; }
 
 /* Action buttons */
-html.dark .mc-btn--copy { background: #273548; color: #94a3b8; border-color: #334155; }
-html.dark .mc-btn--copy:hover { background: #334155; color: #e2e8f0; border-color: #475569; }
-html.dark .mc-btn--copied { background: rgba(39,105,90,0.2) !important; color: #4ade80 !important; border-color: rgba(74,222,128,0.3) !important; }
 html.dark .mc-btn--edit { background: rgba(37,99,235,0.15); color: #93c5fd; border-color: rgba(59,130,246,0.3); }
 html.dark .mc-btn--edit:hover { background: rgba(37,99,235,0.25); border-color: rgba(59,130,246,0.5); }
-html.dark .mc-btn--submit { background: rgba(16,185,129,0.15); color: #6ee7b7; border-color: rgba(16,185,129,0.3); }
-html.dark .mc-btn--submit:hover { background: rgba(16,185,129,0.25); }
 html.dark .mc-btn--delete { background: rgba(239,68,68,0.1); color: #fca5a5; border-color: rgba(239,68,68,0.25); }
 html.dark .mc-btn--delete:hover { background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.4); }
 html.dark .mc-btn--delete:disabled:hover { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.25); }

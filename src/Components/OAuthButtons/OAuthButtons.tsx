@@ -35,7 +35,10 @@ export default function OAuthButtons({ onError, onSuccess, from }: Props) {
   const navigate = useNavigate();
   const [googleLoading, setGoogleLoading] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
-  googleCallbacks = { onError, onSuccess, from, login, navigate, setGoogleLoading };
+
+  useEffect(() => {
+    googleCallbacks = { onError, onSuccess, from, login, navigate, setGoogleLoading };
+  }, [onError, onSuccess, from, login, navigate, setGoogleLoading]);
 
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return;

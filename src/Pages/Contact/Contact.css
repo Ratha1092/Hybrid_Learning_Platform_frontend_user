@@ -1,4 +1,4 @@
-/* ── Hero ── */
+/* Hero */
 .ct-hero {
   background: linear-gradient(135deg, #2563EB 0%, #1e3a8a 100%);
   padding: 56px 0 48px;
@@ -20,7 +20,7 @@
   margin: 0 auto;
 }
 
-/* ── Info Cards ── */
+/* Info Cards */
 .ct-cards-wrap {
   background: #f8fafc;
   padding: 48px 0;
@@ -88,7 +88,7 @@
   color: var(--text-light);
 }
 
-/* ── Main layout ── */
+/* Main layout */
 .ct-main {
   padding: 64px 0 80px;
 }
@@ -100,7 +100,7 @@
   align-items: start;
 }
 
-/* ── Form card ── */
+/* Form card */
 .ct-form-card {
   background: #fff;
   border: 1px solid var(--border);
@@ -220,7 +220,7 @@
 
 @keyframes ct-spin { to { transform: rotate(360deg); } }
 
-/* ── Success state ── */
+/* Success state */
 .ct-success {
   display: flex;
   flex-direction: column;
@@ -261,7 +261,7 @@
 
 .ct-btn-reset:hover { background: #eff6ff; }
 
-/* ── Sidebar cards ── */
+/* Sidebar cards */
 .ct-side-col { display: flex; flex-direction: column; gap: 20px; }
 
 .ct-side-card {
@@ -282,11 +282,6 @@
   align-items: center;
   justify-content: center;
   margin-bottom: 14px;
-}
-
-.ct-side-icon--orange {
-  background: #fff3ef;
-  color: #f97316;
 }
 
 .ct-side-title {
@@ -340,89 +335,7 @@
 
 .ct-support-list a:hover { color: #2563EB; }
 
-/* ── FAQ ── */
-.ct-faq-section {
-  background: #f8fafc;
-  padding: 64px 0 80px;
-}
-
-.ct-faq-header {
-  text-align: center;
-  margin-bottom: 40px;
-}
-
-.ct-faq-title {
-  font-family: var(--font-display);
-  font-size: clamp(24px, 3vw, 34px);
-  font-weight: 700;
-  color: var(--navy);
-  margin-bottom: 8px;
-}
-
-.ct-faq-sub {
-  font-size: 0.95rem;
-  color: var(--text-light);
-}
-
-.ct-faq-sub a {
-  color: #1d4ed8;
-  font-weight: 600;
-}
-
-.ct-faq-sub a:hover { color: #2563EB; }
-
-.ct-faq-list {
-  max-width: 760px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.ct-faq-item {
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  transition: box-shadow 0.18s;
-}
-
-.ct-faq-item[open] { box-shadow: var(--shadow-sm); }
-
-.ct-faq-q {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 20px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--navy);
-  cursor: pointer;
-  list-style: none;
-  gap: 12px;
-  user-select: none;
-}
-
-.ct-faq-q::-webkit-details-marker { display: none; }
-
-.ct-faq-chevron {
-  flex-shrink: 0;
-  color: var(--text-light);
-  transition: transform 0.22s;
-}
-
-.ct-faq-item[open] .ct-faq-chevron { transform: rotate(180deg); }
-
-.ct-faq-a {
-  padding: 0 20px 18px;
-  font-size: 0.9rem;
-  color: var(--text);
-  line-height: 1.7;
-  border-top: 1px solid var(--border);
-  padding-top: 14px;
-}
-
-/* ── Responsive ── */
+/* Responsive */
 @media (max-width: 900px) {
   .ct-grid {
     grid-template-columns: 1fr;
@@ -438,7 +351,7 @@
   .ct-side-col { flex-direction: column; }
 }
 
-/* ── Dark mode ─────────────────────────────────── */
+/* Dark mode─ */
 html.dark .ct-cards-wrap { background: #0f172a; }
 html.dark .ct-card { background: #1e293b; border-color: #334155; }
 html.dark .ct-card-title { color: #f1f5f9; }
@@ -472,23 +385,11 @@ html.dark .ct-server-error { color: #f87171; background: rgba(239,68,68,0.1); bo
 html.dark .ct-side-card { background: #1e293b; border-color: #334155; }
 html.dark .ct-side-title { color: #f1f5f9; }
 html.dark .ct-side-icon { background: rgba(37,99,235,0.18); color: #60a5fa; }
-html.dark .ct-side-icon--orange { background: rgba(249,115,22,0.18); color: #fb923c; }
 html.dark .ct-hours li   { border-bottom-color: #334155; color: #e2e8f0; }
 html.dark .ct-hours li span:first-child { color: #94a3b8; }
 html.dark .ct-support-list li { color: #94a3b8; }
 html.dark .ct-support-list li svg { color: #64748b; }
 html.dark .ct-support-list a { color: #60a5fa; }
-/* FAQ section */
-html.dark .ct-faq-section { background: #0f172a; }
-html.dark .ct-faq-header h2 { color: #f1f5f9; }
-html.dark .ct-faq-header p  { color: #94a3b8; }
-html.dark .ct-faq-header p a { color: #60a5fa; }
-html.dark .ct-faq-item { background: #1e293b; border-color: #334155; }
-html.dark .ct-faq-item[open] { box-shadow: none; }
-html.dark .ct-faq-q    { color: #f1f5f9; }
-html.dark .ct-faq-q:hover { background: #263349; }
-html.dark .ct-faq-a    { color: #94a3b8; border-top-color: #334155; }
-html.dark .ct-faq-chevron { color: #64748b; }
 html.dark .ct-btn-reset { border-color: #334155; color: #94a3b8; }
 html.dark .ct-btn-reset:hover { background: #1e293b; }
 html.dark .ct-success-title { color: #f1f5f9; }
