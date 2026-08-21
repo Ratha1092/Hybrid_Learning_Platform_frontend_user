@@ -602,23 +602,84 @@
 }
 .enroll-qr__title { font-family: "Plus Jakarta Sans", sans-serif; font-size: 17px; font-weight: 700; color: #0f172a; margin: 0 0 6px; }
 .enroll-qr__meta { font-size: 13px; color: #64748b; margin: 0 0 12px; }
-.enroll-qr__img {
-  width: 200px;
-  height: 200px;
-  object-fit: contain;
-  border: 3px solid #2563EB;
-  border-radius: 10px;
-  display: block;
-  margin: 0 auto 10px;
-}
 .enroll-qr__placeholder {
-  width: 200px; height: 200px;
-  border: 3px solid #e2e8f0;
+  width: 100%; height: 100%;
+  border: 2px solid #e2e8f0;
   border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
   color: #94a3b8; font-size: 13px;
-  margin: 0 auto 10px;
+  box-sizing: border-box;
 }
+/* KHQR-style payment card frame around the generated QR image.
+   Kept the same in light and dark mode on purpose — it's meant to read as a
+   real payment card/receipt, not an app surface that follows the site theme. */
+.khqr-card {
+  width: 220px;
+  margin: 0 auto 10px;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  border: 1px solid #e2e8f0;
+}
+.khqr-card__header {
+  background: #e02b2b;
+  padding: 12px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  clip-path: polygon(0 0, 100% 0, 100% 55%, 78% 100%, 0 100%);
+}
+.khqr-card__logo {
+  color: #fff;
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.6px;
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+.khqr-card__body {
+  background: #fff;
+  padding: 4px 16px 18px;
+}
+.khqr-card__name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 10px;
+  text-align: left;
+}
+.khqr-card__divider {
+  border-top: 1.5px dashed #cbd5e1;
+  margin-bottom: 14px;
+}
+.khqr-card__qr-wrap {
+  position: relative;
+  width: 168px;
+  height: 168px;
+  margin: 0 auto;
+}
+.khqr-card__qr {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.khqr-card__badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #e02b2b;
+  border: 3px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
+
 .enroll-qr__hint { font-size: 12px; color: #94a3b8; margin: 0 0 14px; }
 .enroll-qr__actions { display: flex; flex-direction: column; gap: 8px; }
 .enroll-qr__cancel {

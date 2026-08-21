@@ -40,11 +40,10 @@ const VALUES = [
 const ADVISOR = {
   name: "Prum Chansamedy",
   role: "Education Advisor & Mentor",
-  image: assetImg(""),
+  image: assetImg("advisor.jpg"),
   about: "Brings years of experience in education and mentorship, helping shape the platform's direction — from curriculum quality to the overall student experience.",
-  years: 8,
-  linkedin: "",
-  email: "",
+  years: 30,
+  email: "chansamedy@gmail.com",
 };
 
 const TEAM = [
@@ -219,19 +218,6 @@ export default function About() {
 
                 <div className="mt-6 flex items-center justify-between border-t border-slate-200/70 pt-5 dark:border-white/10">
                   <div className="flex items-center gap-2">
-                    {ADVISOR.linkedin && (
-                      <a
-                        href={ADVISOR.linkedin}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label={`${ADVISOR.name} on LinkedIn`}
-                        className="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-slate-600 transition-colors hover:text-blue-600 dark:bg-white/10 dark:text-slate-300 dark:hover:text-blue-400"
-                      >
-                        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
-                          <path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5ZM3 9h4v12H3V9Zm7 0h3.8v1.6h.1c.5-1 1.8-2 3.7-2 4 0 4.7 2.6 4.7 6V21h-4v-5.3c0-1.3 0-2.9-1.8-2.9s-2 1.4-2 2.8V21h-4V9Z" />
-                        </svg>
-                      </a>
-                    )}
                     {ADVISOR.email && (
                       <a
                         href={`mailto:${ADVISOR.email}`}
