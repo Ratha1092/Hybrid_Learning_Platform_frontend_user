@@ -93,8 +93,12 @@
   .skeleton-line--md  { width: 70%; }
   .skeleton-line--lg  { width: 90%; height: 16px; }
 
-  /* Page transition wrapper */
-  .page-transition { min-height: 100vh; }
+  /* Page transition wrapper — sits below the fixed h-16 (64px) Navbar, so its
+     minimum must leave room for that instead of also claiming a full 100vh,
+     which pushed every page's document height to Navbar + 100vh and left a
+     blank strip below any route (like Learn) that caps itself to exactly
+     one viewport below the Navbar. */
+  .page-transition { min-height: calc(100vh - 64px); }
   .page-fade {
     /* No fill-mode: a held `transform` animation breaks position:fixed descendants after it ends. */
     animation: page-fade-in .45s cubic-bezier(.22,.61,.36,1);
