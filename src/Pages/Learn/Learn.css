@@ -1,7 +1,7 @@
 /* ── Learn Page ─────────────────────────────────── */
 .learn-wrap {
   display: flex;
-  height: calc(100vh - 70px);
+  height: calc(100vh - 64px);
   font-family: "Nunito", system-ui, sans-serif;
   background: #f9fafb;
   overflow: hidden;
@@ -11,7 +11,7 @@
 .learn-state {
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  min-height: calc(100vh - 70px);
+  min-height: calc(100vh - 64px);
   gap: 14px; font-size: 15px; color: #6b7280;
 }
 .learn-state--error { color: #ef4444; }
