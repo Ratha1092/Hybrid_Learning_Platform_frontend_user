@@ -7,7 +7,9 @@ import { orderService } from "../../services/orderService";
 import { billingService, type BillingAddress } from "../../services/billingService";
 import { useAuthModal } from "../../context/AuthModalContext";
 import { useAuth } from "../../context/AuthContext";
+import { useSettings } from "../../context/SettingsContext";
 import { useScrollLock } from "../../hooks/useScrollLock";
+import { GraduationCap } from "lucide-react";
 
 type Step = "idle" | "loading" | "review" | "qr" | "done" | "error";
 type CouponStatus = "idle" | "checking" | "valid" | "invalid";
@@ -29,6 +31,7 @@ interface Props {
 
 export default function EnrollButton({ course }: Props) {
   const { isAuthenticated } = useAuth();
+  const { settings } = useSettings();
   const [step, setStep] = useState<Step>("idle");
   const [justEnrolled, setJustEnrolled] = useState(false);
   const [cancelling, setCancelling] = useState(false);
@@ -389,15 +392,31 @@ export default function EnrollButton({ course }: Props) {
               <> · Expires in <strong>{expiresIn} min</strong></>
             )}
           </p>
-          {payment.qr_code_image ? (
-            <img
-              src={payment.qr_code_image}
-              alt="Payment QR Code"
-              className="enroll-qr__img"
-            />
-          ) : (
-            <div className="enroll-qr__placeholder">QR loading...</div>
-          )}
+          <div className="khqr-card">
+            <div className="khqr-card__header">
+              <span className="khqr-card__logo">KHQR</span>
+            </div>
+            <div className="khqr-card__body">
+              <p className="khqr-card__name">{settings.site_name?.trim() || "Hybrid Learning"}</p>
+              <div className="khqr-card__divider" />
+              <div className="khqr-card__qr-wrap">
+                {payment.qr_code_image ? (
+                  <img
+                    src={payment.qr_code_image}
+                    alt="Payment QR Code"
+                    className="khqr-card__qr"
+                  />
+                ) : (
+                  <div className="enroll-qr__placeholder">QR loading...</div>
+                )}
+                {payment.qr_code_image && (
+                  <span className="khqr-card__badge">
+                    <GraduationCap className="h-4 w-4" strokeWidth={2.4} />
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
           <p className="enroll-qr__hint">Scan with Bakong / ABA / Wing app</p>
           <p className="enroll-qr__auto">
             <span className="enroll-qr__pulse" /> Waiting for payment confirmation…
