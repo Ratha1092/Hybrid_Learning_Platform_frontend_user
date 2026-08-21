@@ -336,6 +336,26 @@ export const instructorService = {
     });
   },
 
+  // Upload course-level preview/trailer video.
+  uploadPreviewVideo: (
+    id: number | string,
+    file: File,
+    onProgress?: (percent: number) => void
+  ) => {
+    const form = new FormData();
+    form.append("preview_video", file);
+    return api.post<{ data: { preview_video_path: string; preview_video_url: string } }>(
+      `/instructor/courses/${id}/upload-preview-video`,
+      form,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (e) => {
+          if (onProgress && e.total) onProgress(Math.round((e.loaded / e.total) * 100));
+        },
+      }
+    );
+  },
+
   // Delete a course.
   deleteCourse: (id: number | string) =>
     api.delete(`/instructor/courses/${id}`),

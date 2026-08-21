@@ -43,6 +43,7 @@ export default function EditCourse() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const thumbRef = useRef<HTMLInputElement>(null);
+  const previewVideoRef = useRef<HTMLInputElement>(null);
 
   const [course, setCourse]   = useState<InstructorCourse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -51,7 +52,7 @@ export default function EditCourse() {
 
   const [form, setForm] = useState({
     title: "", short_description: "", description: "", price: "0", level: "beginner", language: "English",
-    category_id: "", preview_video_url: "", requirements: "", what_you_will_learn: "",
+    category_id: "", requirements: "", what_you_will_learn: "",
     visibility: "public",
   });
   const [saving, setSaving]   = useState(false);
@@ -60,12 +61,22 @@ export default function EditCourse() {
 
   const [thumbFile, setThumbFile]       = useState<File | null>(null);
   const [thumbPreview, setThumbPreview] = useState<string | null>(null);
+  const [previewVideoFile, setPreviewVideoFile] = useState<File | null>(null);
+  const [previewVideoPreview, setPreviewVideoPreview] = useState<string | null>(null);
+  const [previewVideoUploadProgress, setPreviewVideoUploadProgress] = useState<number | null>(null);
 
   const handleThumbChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setThumbFile(file);
     setThumbPreview(URL.createObjectURL(file));
+  };
+
+  const handlePreviewVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPreviewVideoFile(file);
+    setPreviewVideoPreview(URL.createObjectURL(file));
   };
 
   useEffect(() => {
@@ -82,7 +93,6 @@ export default function EditCourse() {
           level:               c.level,
           language:            c.language ?? "English",
           category_id:         c.category_id != null ? String(c.category_id) : "",
-          preview_video_url:   c.preview_video_url ?? "",
           requirements:        c.requirements ?? "",
           what_you_will_learn: c.what_you_will_learn ?? "",
           visibility:          c.visibility ?? "public",
@@ -123,6 +133,11 @@ export default function EditCourse() {
       const { data } = await instructorService.updateCourse(id, payload);
       setCourse(data.data);
       if (thumbFile) await instructorService.uploadThumbnail(id, thumbFile);
+      if (previewVideoFile) {
+        setPreviewVideoUploadProgress(0);
+        try { await instructorService.uploadPreviewVideo(id, previewVideoFile, setPreviewVideoUploadProgress); }
+        finally { setPreviewVideoUploadProgress(null); }
+      }
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err) { setError(getError(err)); }
@@ -143,6 +158,7 @@ export default function EditCourse() {
 
   const statusCfg = STATUS_CFG[course.status] ?? STATUS_CFG.draft;
   const currentThumb = thumbPreview ?? course.thumbnail_url;
+  const currentPreviewVideo = previewVideoPreview ?? course.preview_video_url;
 
   return (
     <div className="flex flex-col gap-6">
@@ -345,13 +361,39 @@ export default function EditCourse() {
               </Section>
 
               <Section title="Preview Video" description="Optional trailer shown before enrollment" icon={Video}>
-                <label className={LABEL}>Preview Video URL</label>
+                <div
+                  className="group relative cursor-pointer overflow-hidden rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 transition-colors hover:border-blue-400 dark:border-slate-600 dark:bg-slate-700/30"
+                  style={{ width: 220, height: 140 }}
+                  onClick={() => previewVideoRef.current?.click()}
+                >
+                  {currentPreviewVideo ? (
+                    <video src={currentPreviewVideo} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full flex-col items-center justify-center gap-2">
+                      <Video className="h-7 w-7 text-slate-300" />
+                      <p className="text-center text-[12px] text-slate-400">Click to upload<br />MP4, MOV, WebM</p>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                    <p className="text-[12px] font-semibold text-white">Change video</p>
+                  </div>
+                </div>
                 <input
-                  placeholder="https://youtube.com/watch?v=..."
-                  value={form.preview_video_url}
-                  onChange={(e) => set("preview_video_url", e.target.value)}
-                  className={FIELD}
+                  ref={previewVideoRef}
+                  type="file"
+                  accept="video/mp4,video/quicktime,video/webm,video/x-msvideo"
+                  className="hidden"
+                  onChange={handlePreviewVideoChange}
                 />
+                {previewVideoUploadProgress !== null && (
+                  <p className="mt-2 text-[12px] text-slate-400">Uploading… {previewVideoUploadProgress}%</p>
+                )}
+                {previewVideoFile && previewVideoUploadProgress === null && (
+                  <button type="button" onClick={() => { setPreviewVideoFile(null); setPreviewVideoPreview(null); }}
+                    className="mt-2 flex items-center gap-1.5 text-[12px] font-medium text-rose-500 hover:text-rose-600">
+                    <X className="h-3.5 w-3.5" /> Remove new video
+                  </button>
+                )}
               </Section>
             </div>
 

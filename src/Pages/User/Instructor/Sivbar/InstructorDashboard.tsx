@@ -186,7 +186,7 @@ export default function InstructorDashboard() {
             ) : bars.length === 0 ? (
               <p className="m-auto text-sm muted2 dark:text-slate-500">No revenue recorded yet.</p>
             ) : bars.map((b, i) => (
-              <div key={b.month || i} className="flex flex-1 flex-col items-center gap-2">
+              <div key={b.month || i} className="flex h-full flex-1 flex-col items-center gap-2">
                 <div className="flex w-full flex-1 items-end">
                   <div
                     className={`w-full rounded-t-lg transition-all duration-500 ${
