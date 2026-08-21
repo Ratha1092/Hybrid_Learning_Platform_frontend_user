@@ -27,7 +27,7 @@ interface Draft {
   courseId: number | null;
   info: {
     title: string; category_id: string; level: string; language: string;
-    short_description: string; description: string; preview_video_url: string;
+    short_description: string; description: string;
     requirements: string; what_you_will_learn: string;
   };
   visibility: string;
@@ -655,7 +655,7 @@ function CurriculumStep({ courseId, sections, setSections, onNext, onBack }: Cur
 const DEFAULT_INFO = {
   title: "", category_id: "", level: "beginner",
   language: "English", short_description: "", description: "",
-  preview_video_url: "", requirements: "", what_you_will_learn: "",
+  requirements: "", what_you_will_learn: "",
 };
 
 export default function CreateCourse() {
@@ -678,12 +678,22 @@ export default function CreateCourse() {
   const [commission, setCommission] = useState(20);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const [previewVideoFile, setPreviewVideoFile] = useState<File | null>(null);
+  const [previewVideoPreview, setPreviewVideoPreview] = useState<string | null>(null);
+  const [previewVideoUploadProgress, setPreviewVideoUploadProgress] = useState<number | null>(null);
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setThumbnailFile(file);
     setThumbnailPreview(URL.createObjectURL(file));
+  };
+
+  const handlePreviewVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPreviewVideoFile(file);
+    setPreviewVideoPreview(URL.createObjectURL(file));
   };
 
   // Persist draft on every relevant state change (File objects are not serialisable — skip thumbnail)
@@ -740,6 +750,14 @@ export default function CreateCourse() {
         category_id: Number(info.category_id),
       };
 
+      const uploadPreviewVideo = async (id: number) => {
+        if (!previewVideoFile) return;
+        setPreviewVideoUploadProgress(0);
+        try { await instructorService.uploadPreviewVideo(id, previewVideoFile, setPreviewVideoUploadProgress); }
+        catch { /* non-blocking */ }
+        setPreviewVideoUploadProgress(null);
+      };
+
       if (courseId) {
         // Updating existing course — don't create a duplicate
         const { data: upd } = await instructorService.updateCourse(courseId, payload);
@@ -747,6 +765,7 @@ export default function CreateCourse() {
         if (thumbnailFile) {
           try { await instructorService.uploadThumbnail(courseId, thumbnailFile); } catch { /* non-blocking */ }
         }
+        await uploadPreviewVideo(courseId);
       } else {
         const { data } = await instructorService.createCourse(payload);
         const newId = data.data.id;
@@ -755,6 +774,7 @@ export default function CreateCourse() {
         if (thumbnailFile) {
           try { await instructorService.uploadThumbnail(newId, thumbnailFile); } catch { /* non-blocking */ }
         }
+        await uploadPreviewVideo(newId);
       }
       setStep(1);
     } catch (err) { setError(getApiError(err)); }
@@ -938,12 +958,36 @@ export default function CreateCourse() {
               </div>
 
               <div className="cc-field">
-                <label>Preview Video URL</label>
-                <input
-                  placeholder="https://youtube.com/watch?v=..."
-                  value={info.preview_video_url}
-                  onChange={(e) => setI("preview_video_url", e.target.value)}
-                />
+                <label>Preview Video <span className="cc-char">Optional — a short trailer shown to prospective students</span></label>
+                {previewVideoPreview ? (
+                  <video src={previewVideoPreview} controls className="cc-thumb-preview" />
+                ) : (
+                  <label className="cc-thumb-upload">
+                    <div className="cc-thumb-placeholder">
+                      <span className="cc-thumb-placeholder__icon">🎬</span>
+                      <span className="cc-thumb-placeholder__text">Click to upload video</span>
+                      <span className="cc-thumb-placeholder__hint">MP4, MOV, WebM</span>
+                    </div>
+                    <input
+                      type="file"
+                      accept="video/mp4,video/quicktime,video/webm,video/x-msvideo"
+                      style={{ display: "none" }}
+                      onChange={handlePreviewVideoChange}
+                    />
+                  </label>
+                )}
+                {previewVideoUploadProgress !== null && (
+                  <p className="cc-thumb-placeholder__hint">Uploading… {previewVideoUploadProgress}%</p>
+                )}
+                {previewVideoFile && previewVideoUploadProgress === null && (
+                  <button
+                    type="button"
+                    className="cc-thumb-remove"
+                    onClick={() => { setPreviewVideoFile(null); setPreviewVideoPreview(null); }}
+                  >
+                    ✕ Remove video
+                  </button>
+                )}
               </div>
 
               <div className="cc-field">
@@ -1172,7 +1216,7 @@ export default function CreateCourse() {
         {step !== 1 && (
           <aside className="cc-aside">
             <div className="cc-preview">
-              <div className="cc-preview__thumb" style={thumbnailPreview ? { backgroundImage: `url(${thumbnailPreview})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}>
+              <div className="cc-preview__thumb" style={thumbnailPreview ? { backgroundImage: `url(${thumbnailPreview})`, backgroundSize: "contain", backgroundPosition: "center", backgroundRepeat: "no-repeat" } : undefined}>
                 {!thumbnailPreview && <button className="cc-preview__play">▶</button>}
               </div>
               <div className="cc-preview__body">
