@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Star } from "lucide-react";
-import { courseService, type CourseDetail, type Section, type Lesson } from "../../services/courseService";
+import { courseService, type CourseDetail, type Section, type Lesson, type LessonVideo } from "../../services/courseService";
 import { classifyVideoUrl, buildYouTubeEmbed, buildVimeoEmbed } from "../../utils/videoUrl";
 import { reviewService, type Review } from "../../services/reviewService";
 import { useAuth } from "../../context/AuthContext";
 import { useAuthModal } from "../../context/AuthModalContext";
+import { resolveUrl, timeAgo } from "../../utils/format";
 import EnrollButton from "./EnrollButton";
 import "./DetailCourse.css";
 
@@ -24,49 +25,97 @@ function sectionTotalDuration(section: Section) {
 }
 
 function PreviewPlayer({ lesson }: { lesson: Lesson }) {
-  const kind = classifyVideoUrl(lesson.video_url);
-  if (!lesson.video_url || !kind) {
+  const [partIndex, setPartIndex] = useState(0);
+
+  if (lesson.type === "article") {
+    return lesson.content ? (
+      <div className="lesson-preview__article">{lesson.content}</div>
+    ) : (
+      <p className="lesson-preview__unavailable">No content provided for this lesson.</p>
+    );
+  }
+  if (lesson.type === "quiz") {
+    return <p className="lesson-preview__unavailable">Quiz preview coming soon.</p>;
+  }
+
+  const videos: LessonVideo[] = lesson.videos?.length
+    ? lesson.videos
+    : lesson.video_url
+      ? [{ id: lesson.id, video_url: lesson.video_url, duration: lesson.duration, order: 0 }]
+      : [];
+  const hasMultiple = videos.length > 1;
+  const idx = Math.min(partIndex, Math.max(videos.length - 1, 0));
+  const currentVideo = videos[idx] ?? null;
+  const kind = classifyVideoUrl(currentVideo?.video_url);
+
+  const selector = hasMultiple ? (
+    <div className="lesson-preview__parts">
+      {videos.map((v, i) => (
+        <button
+          key={v.id}
+          onClick={() => setPartIndex(i)}
+          className={`lesson-preview__part-btn${i === idx ? " active" : ""}`}
+        >
+          Part {i + 1}
+        </button>
+      ))}
+    </div>
+  ) : null;
+
+  if (!currentVideo?.video_url || !kind) {
     return <p className="lesson-preview__unavailable">Preview unavailable.</p>;
   }
   if (kind === "youtube") {
     return (
-      <iframe
-        src={buildYouTubeEmbed(lesson.video_url)}
-        title={lesson.title}
-        allow="autoplay; fullscreen; picture-in-picture"
-        allowFullScreen
-        className="lesson-preview__video"
-      />
+      <>
+        {selector}
+        <iframe
+          src={buildYouTubeEmbed(currentVideo.video_url)}
+          title={lesson.title}
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowFullScreen
+          className="lesson-preview__video"
+        />
+      </>
     );
   }
   if (kind === "vimeo") {
     return (
-      <iframe
-        src={buildVimeoEmbed(lesson.video_url)}
-        title={lesson.title}
-        allow="autoplay; fullscreen; picture-in-picture"
-        allowFullScreen
-        className="lesson-preview__video"
-      />
+      <>
+        {selector}
+        <iframe
+          src={buildVimeoEmbed(currentVideo.video_url)}
+          title={lesson.title}
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowFullScreen
+          className="lesson-preview__video"
+        />
+      </>
     );
   }
   return (
-    <video
-      src={lesson.video_url}
-      controls
-      autoPlay
-      controlsList="nodownload"
-      onContextMenu={(e) => e.preventDefault()}
-      className="lesson-preview__video"
-    />
+    <>
+      {selector}
+      <video
+        key={currentVideo.id}
+        src={currentVideo.video_url}
+        controls
+        autoPlay
+        controlsList="nodownload"
+        onContextMenu={(e) => e.preventDefault()}
+        onEnded={() => { if (idx < videos.length - 1) setPartIndex(idx + 1); }}
+        className="lesson-preview__video"
+      />
+    </>
   );
 }
 
-function SectionAccordion({ section, index, open, onToggle }: {
+function SectionAccordion({ section, index, open, onToggle, isFreeCourse }: {
   section: Section;
   index: number;
   open: boolean;
   onToggle: () => void;
+  isFreeCourse: boolean;
 }) {
   const total = sectionTotalDuration(section);
   const [previewLessonId, setPreviewLessonId] = useState<number | null>(null);
@@ -91,14 +140,15 @@ function SectionAccordion({ section, index, open, onToggle }: {
         <ul className="accordion__lessons">
           {section.lessons.map((lesson) => {
             const isExpanded = previewLessonId === lesson.id;
+            const isPlayable = lesson.is_preview || isFreeCourse;
             return (
               <li key={lesson.id} className="lesson-row-wrap">
                 <div
-                  className={`lesson-row${lesson.is_preview ? " lesson-row--clickable" : ""}`}
-                  role={lesson.is_preview ? "button" : undefined}
-                  tabIndex={lesson.is_preview ? 0 : undefined}
-                  onClick={lesson.is_preview ? () => setPreviewLessonId(isExpanded ? null : lesson.id) : undefined}
-                  onKeyDown={lesson.is_preview ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPreviewLessonId(isExpanded ? null : lesson.id); } } : undefined}
+                  className={`lesson-row${isPlayable ? " lesson-row--clickable" : ""}`}
+                  role={isPlayable ? "button" : undefined}
+                  tabIndex={isPlayable ? 0 : undefined}
+                  onClick={isPlayable ? () => setPreviewLessonId(isExpanded ? null : lesson.id) : undefined}
+                  onKeyDown={isPlayable ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPreviewLessonId(isExpanded ? null : lesson.id); } } : undefined}
                 >
                   <span className="lesson-row__icon">
                     {lesson.type === "video" ? (
@@ -127,23 +177,6 @@ function SectionAccordion({ section, index, open, onToggle }: {
       )}
     </div>
   );
-}
-
-const API_BASE = import.meta.env.VITE_API_URL ?? "";
-function resolveUrl(url: string | null): string | null {
-  if (!url) return null;
-  return url.startsWith("http") ? url : `${API_BASE}${url}`;
-}
-
-function timeAgo(iso: string): string {
-  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
-  if (days <= 0) return "Today";
-  if (days === 1) return "Yesterday";
-  if (days < 30) return `${days} days ago`;
-  const months = Math.floor(days / 30);
-  if (months < 12) return `${months} month${months > 1 ? "s" : ""} ago`;
-  const years = Math.floor(months / 12);
-  return `${years} year${years > 1 ? "s" : ""} ago`;
 }
 
 function StarRow({ rating, size = 15 }: { rating: number; size?: number }) {
@@ -584,6 +617,7 @@ function DetailCourse() {
                       index={i}
                       open={openSections.has(i)}
                       onToggle={() => toggleSection(i)}
+                      isFreeCourse={Number(course.price) === 0}
                     />
                   ))}
               </div>

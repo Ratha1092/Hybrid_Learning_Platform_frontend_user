@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
 import api from "../../api/axios";
-import { classifyVideoUrl, buildYouTubeEmbed, buildVimeoEmbed } from "../../utils/videoUrl";
+import { classifyVideoUrl, buildYouTubeEmbed, buildVimeoEmbed, seekEmbeddedVideo } from "../../utils/videoUrl";
+import { resolveUrl } from "../../utils/format";
+import LessonComments from "../../Components/LessonComments/LessonComments";
 import "./Learn.css";
 
 // Fraction of the video that must actually be played (not just seeked past)
@@ -9,7 +12,11 @@ import "./Learn.css";
 const AUTO_COMPLETE_THRESHOLD = 0.9;
 // How often we persist the resume position while playing.
 const RESUME_SAVE_INTERVAL_MS = 5000;
-const resumeKey = (lessonId: number) => `learn:resume:${lessonId}`;
+// A lesson with a single video keeps the legacy key (`learn:resume:{lessonId}`)
+// so existing saved resume positions keep working; a lesson with several
+// videos gets one key per part.
+const resumeKey = (lessonId: number, videoId?: number) =>
+  videoId != null ? `learn:resume:${lessonId}:${videoId}` : `learn:resume:${lessonId}`;
 
 // video.played gives the ranges of currentTime the user has actually played
 // through (seeking ahead leaves a gap), so summing it — rather than trusting
@@ -30,6 +37,14 @@ interface LessonAttachment {
   file_url: string;
 }
 
+// A lesson can hold several videos (e.g. a lecture split into parts).
+interface LessonVideoItem {
+  id: number;
+  video_url?: string | null;
+  duration?: number | null;
+  order: number;
+}
+
 interface LessonItem {
   id: number;
   title: string;
@@ -38,6 +53,7 @@ interface LessonItem {
   is_preview: boolean;
   order: number;
   video_url?: string;
+  videos?: LessonVideoItem[];
   content?: string;
   description?: string;
   attachments?: LessonAttachment[];
@@ -57,7 +73,11 @@ interface CourseData {
   sections: SectionItem[];
   access_expired?: boolean;
   access_expires_at?: string | null;
+  category?: { id: number; name: string; slug: string } | null;
+  instructor?: { id: number; name: string; avatar?: string | null; avatar_url?: string | null } | null;
 }
+
+type LessonTab = "lesson" | "comments";
 
 export default function Learn() {
   const { slug } = useParams<{ slug: string }>();
@@ -65,13 +85,53 @@ export default function Learn() {
 
   const [course, setCourse] = useState<CourseData | null>(null);
   const [activeLesson, setActiveLesson] = useState<LessonItem | null>(null);
+  const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [completedIds, setCompletedIds] = useState<Set<number>>(new Set());
   const [openSections, setOpenSections] = useState<Set<number>>(new Set([0]));
   const [completeError, setCompleteError] = useState<string | null>(null);
+  const [tab, setTab] = useState<LessonTab>("lesson");
   const lastResumeSaveRef = useRef(0);
   const autoCompletingRef = useRef<Set<number>>(new Set());
+  const videoElRef = useRef<HTMLVideoElement>(null);
+  const iframeElRef = useRef<HTMLIFrameElement>(null);
+  const activeMediaKindRef = useRef<"youtube" | "vimeo" | "direct" | null>(null);
+  const activeVideoIdRef = useRef<number | null>(null);
+  const pendingSeekRef = useRef<number | null>(null);
+
+  const getVideoCurrentTime = (): number | null => {
+    if (activeMediaKindRef.current === "direct" && videoElRef.current) {
+      return videoElRef.current.currentTime;
+    }
+    return null;
+  };
+
+  const getActiveVideoId = (): number | null => activeVideoIdRef.current;
+
+  const performSeek = (seconds: number) => {
+    if (activeMediaKindRef.current === "direct" && videoElRef.current) {
+      videoElRef.current.currentTime = seconds;
+      videoElRef.current.play().catch(() => {});
+    } else if (
+      (activeMediaKindRef.current === "youtube" || activeMediaKindRef.current === "vimeo") &&
+      iframeElRef.current
+    ) {
+      seekEmbeddedVideo(iframeElRef.current, activeMediaKindRef.current, seconds);
+    }
+  };
+
+  const seekActiveVideo = (seconds: number, videoId: number | null) => {
+    if (videoId != null && videoId !== activeVideoIdRef.current) {
+      const targetIndex = activeLesson?.videos?.findIndex((v) => v.id === videoId) ?? -1;
+      if (targetIndex >= 0) {
+        pendingSeekRef.current = seconds;
+        setActiveVideoIndex(targetIndex);
+        return;
+      }
+    }
+    performSeek(seconds);
+  };
 
   useEffect(() => {
     if (!slug) return;
@@ -102,7 +162,9 @@ export default function Learn() {
 
   const handleSelectLesson = (lesson: LessonItem) => {
     setActiveLesson(lesson);
+    setActiveVideoIndex(0);
     setCompleteError(null);
+    setTab("lesson");
   };
 
   const handleComplete = async (lessonId: number) => {
@@ -123,19 +185,16 @@ export default function Learn() {
     }
   };
 
-  // Called on every timeupdate tick of a direct-hosted <video>. Persists a
-  // resume position (throttled) and auto-completes once actual watched
-  // coverage — not just how far the scrubber was dragged — crosses the
-  // threshold.
-  const handleVideoProgress = (lessonId: number, video: HTMLVideoElement) => {
+  const handleVideoProgress = (lessonId: number, video: HTMLVideoElement, videoId?: number, isLastVideo = true) => {
     const now = Date.now();
     if (now - lastResumeSaveRef.current > RESUME_SAVE_INTERVAL_MS) {
       lastResumeSaveRef.current = now;
       if (!completedIds.has(lessonId)) {
-        localStorage.setItem(resumeKey(lessonId), String(video.currentTime));
+        localStorage.setItem(resumeKey(lessonId, videoId), String(video.currentTime));
       }
     }
 
+    if (!isLastVideo) return;
     if (completedIds.has(lessonId) || autoCompletingRef.current.has(lessonId)) return;
     if (playedCoverage(video) >= AUTO_COMPLETE_THRESHOLD) {
       autoCompletingRef.current.add(lessonId);
@@ -149,11 +208,26 @@ export default function Learn() {
     handleComplete(lessonId);
   };
 
-  const handleVideoLoadedMetadata = (lessonId: number, video: HTMLVideoElement) => {
-    const saved = Number(localStorage.getItem(resumeKey(lessonId)));
+  const handleVideoLoadedMetadata = (lessonId: number, video: HTMLVideoElement, videoId?: number) => {
+    if (pendingSeekRef.current != null) {
+      video.currentTime = pendingSeekRef.current;
+      pendingSeekRef.current = null;
+      video.play().catch(() => {});
+      return;
+    }
+    const saved = Number(localStorage.getItem(resumeKey(lessonId, videoId)));
     if (saved > 0 && saved < video.duration - 5) {
       video.currentTime = saved;
     }
+  };
+
+  const handleEmbedLoad = (kind: "youtube" | "vimeo") => {
+    if (pendingSeekRef.current == null) return;
+    const seconds = pendingSeekRef.current;
+    pendingSeekRef.current = null;
+    setTimeout(() => {
+      if (iframeElRef.current) seekEmbeddedVideo(iframeElRef.current, kind, seconds);
+    }, 800);
   };
 
   const toggleSection = (i: number) => {
@@ -192,7 +266,7 @@ export default function Learn() {
 
   return (
     <div className="learn-wrap">
-      {/* ── Sidebar ── */}
+      {/* Sidebar */}
       <aside className="learn-sidebar">
         <div className="learn-sidebar__head">
           <button className="learn-back" onClick={() => navigate("/courses")}>← Exit</button>
@@ -246,7 +320,7 @@ export default function Learn() {
         </div>
       </aside>
 
-      {/* ── Main content ── */}
+      {/* Main content */}
       <main className="learn-main">
         {course.access_expired && (
           <div className="learn-expired-banner">
@@ -260,43 +334,89 @@ export default function Learn() {
             {activeLesson.type === "video" && (
               <div className="learn-video-wrap">
                 {(() => {
-                  const kind = classifyVideoUrl(activeLesson.video_url);
+                  const lessonVideos: LessonVideoItem[] = activeLesson.videos?.length
+                    ? activeLesson.videos
+                    : activeLesson.video_url
+                      ? [{ id: activeLesson.id, video_url: activeLesson.video_url, duration: activeLesson.duration, order: 0 }]
+                      : [];
+                  const hasMultiple = lessonVideos.length > 1;
+                  const idx = Math.min(activeVideoIndex, Math.max(lessonVideos.length - 1, 0));
+                  const currentVideo = lessonVideos[idx] ?? null;
+                  const isLastVideo = idx >= lessonVideos.length - 1;
+                  const kind = classifyVideoUrl(currentVideo?.video_url);
+                  activeMediaKindRef.current = kind === "direct" || kind === "youtube" || kind === "vimeo" ? kind : null;
+                  activeVideoIdRef.current = activeLesson.videos?.length ? (currentVideo?.id ?? null) : null;
+
+                  const selector = hasMultiple ? (
+                    <div className="learn-video-parts">
+                      {lessonVideos.map((v, i) => (
+                        <button
+                          key={v.id}
+                          onClick={() => setActiveVideoIndex(i)}
+                          className={`learn-video-part-btn${i === idx ? " active" : ""}`}
+                        >
+                          Part {i + 1}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null;
+
                   if (kind === "youtube") return (
-                    <iframe
-                      src={buildYouTubeEmbed(activeLesson.video_url!)}
-                      title={activeLesson.title}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      className="learn-video"
-                    />
+                    <>
+                      {selector}
+                      <iframe
+                        ref={iframeElRef}
+                        key={currentVideo!.id}
+                        src={buildYouTubeEmbed(currentVideo!.video_url!)}
+                        title={activeLesson.title}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        onLoad={() => handleEmbedLoad("youtube")}
+                        className="learn-video"
+                      />
+                    </>
                   );
                   if (kind === "vimeo") return (
-                    <iframe
-                      src={buildVimeoEmbed(activeLesson.video_url!)}
-                      title={activeLesson.title}
-                      allow="autoplay; fullscreen; picture-in-picture"
-                      allowFullScreen
-                      className="learn-video"
-                    />
+                    <>
+                      {selector}
+                      <iframe
+                        ref={iframeElRef}
+                        key={currentVideo!.id}
+                        src={buildVimeoEmbed(currentVideo!.video_url!)}
+                        title={activeLesson.title}
+                        allow="autoplay; fullscreen; picture-in-picture"
+                        allowFullScreen
+                        onLoad={() => handleEmbedLoad("vimeo")}
+                        className="learn-video"
+                      />
+                    </>
                   );
                   if (kind === "direct") return (
-                    <video
-                      src={activeLesson.video_url!}
-                      controls
-                      controlsList="nodownload"
-                      onContextMenu={(e) => e.preventDefault()}
-                      onLoadedMetadata={(e) => handleVideoLoadedMetadata(activeLesson.id, e.currentTarget)}
-                      onTimeUpdate={(e) => handleVideoProgress(activeLesson.id, e.currentTarget)}
-                      onEnded={() => handleVideoEnded(activeLesson.id)}
-                      className="learn-video"
-                      style={{ background: "#000" }}
-                    />
+                    <>
+                      {selector}
+                      <video
+                        ref={videoElRef}
+                        key={currentVideo!.id}
+                        src={currentVideo!.video_url!}
+                        controls
+                        controlsList="nodownload"
+                        onContextMenu={(e) => e.preventDefault()}
+                        onLoadedMetadata={(e) => handleVideoLoadedMetadata(activeLesson.id, e.currentTarget, hasMultiple ? currentVideo!.id : undefined)}
+                        onTimeUpdate={(e) => handleVideoProgress(activeLesson.id, e.currentTarget, hasMultiple ? currentVideo!.id : undefined, isLastVideo)}
+                        onEnded={() => (isLastVideo ? handleVideoEnded(activeLesson.id) : setActiveVideoIndex(idx + 1))}
+                        className="learn-video"
+                        style={{ background: "#000" }}
+                      />
+                    </>
                   );
-                  if (activeLesson.video_url) return (
-                    <div className="learn-no-video">
-                      <span>🚫</span>
-                      <p>Invalid video URL.</p>
-                    </div>
+                  if (currentVideo?.video_url) return (
+                    <>
+                      {selector}
+                      <div className="learn-no-video">
+                        <span>🚫</span>
+                        <p>Invalid video URL.</p>
+                      </div>
+                    </>
                   );
                   if (course.access_expired && !activeLesson.is_preview) return (
                     <div className="learn-no-video">
@@ -325,21 +445,29 @@ export default function Learn() {
               </div>
             )}
 
-            {/* Lesson info */}
-            <div className="learn-lesson-info">
-              <div className="learn-lesson-info__main">
-                <h2 className="learn-lesson-title">{activeLesson.title}</h2>
-                <div className="learn-lesson-meta">
-                  <span className="learn-lesson-type">{activeLesson.type}</span>
-                  {activeLesson.duration > 0 && (
-                    <span className="learn-lesson-dur">{Math.floor(activeLesson.duration / 60)}m</span>
-                  )}
-                </div>
-                {activeLesson.description && (
-                  <p className="learn-lesson-desc">{activeLesson.description}</p>
-                )}
+            {/* Control bar */}
+            <div className="learn-control-bar">
+              <div className="learn-control-bar__nav">
+                <button
+                  className="learn-icon-btn"
+                  disabled={!prevLesson}
+                  onClick={() => prevLesson && handleSelectLesson(prevLesson)}
+                  title="Previous lesson"
+                  aria-label="Previous lesson"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <button
+                  className="learn-icon-btn"
+                  disabled={!nextLesson}
+                  onClick={() => nextLesson && handleSelectLesson(nextLesson)}
+                  title="Next lesson"
+                  aria-label="Next lesson"
+                >
+                  <ChevronRight size={18} />
+                </button>
               </div>
-              <div className="learn-complete-wrap">
+              <div className="learn-control-bar__actions">
                 {completeError && <span className="learn-complete-error">{completeError}</span>}
                 {!completedIds.has(activeLesson.id) ? (
                   <button
@@ -351,27 +479,109 @@ export default function Learn() {
                 ) : (
                   <span className="learn-completed-badge">✓ Completed</span>
                 )}
+                <button
+                  className="learn-icon-btn"
+                  onClick={() => setTab("comments")}
+                  title="Jump to comments"
+                  aria-label="Jump to comments"
+                >
+                  <MessageCircle size={18} />
+                </button>
               </div>
             </div>
 
-            {/* Resources */}
-            {!!activeLesson.attachments?.length && (
-              <div className="learn-resources">
-                <h3 className="learn-resources__title">Resources</h3>
-                <ul className="learn-resources__list">
-                  {activeLesson.attachments.map((r) => (
-                    <li key={r.id} className="learn-resource">
-                      <span className="learn-resource__icon">📎</span>
-                      <span className="learn-resource__title">{r.title}</span>
-                      <span className="learn-resource__type">{r.type}</span>
-                      <a href={r.file_url} target="_blank" rel="noopener noreferrer" className="learn-resource__download">
-                        Download
-                      </a>
-                    </li>
-                  ))}
-                </ul>
+            {/* Lesson info */}
+            <div className="learn-lesson-info">
+              <h2 className="learn-lesson-title">{activeLesson.title}</h2>
+              <div className="learn-lesson-meta">
+                {activeIndex >= 0 && (
+                  <span className="learn-meta-pill">Episode {activeIndex + 1}</span>
+                )}
+                <span className="learn-meta-pill learn-meta-pill--muted">{activeLesson.type}</span>
+                {activeLesson.duration > 0 && (
+                  <span className="learn-meta-pill learn-meta-pill--muted">
+                    {Math.floor(activeLesson.duration / 60)}m
+                  </span>
+                )}
+                {course.category?.name && (
+                  <span className="learn-meta-pill">{course.category.name}</span>
+                )}
               </div>
-            )}
+
+              {course.instructor?.name && (
+                <div className="learn-instructor">
+                  <div className="learn-instructor__avatar">
+                    {resolveUrl(course.instructor.avatar ?? course.instructor.avatar_url) ? (
+                      <img
+                        src={resolveUrl(course.instructor.avatar ?? course.instructor.avatar_url)!}
+                        alt={course.instructor.name}
+                      />
+                    ) : (
+                      <span>{course.instructor.name.charAt(0).toUpperCase()}</span>
+                    )}
+                  </div>
+                  <div>
+                    <p className="learn-instructor__label">Your Instructor</p>
+                    <p className="learn-instructor__name">{course.instructor.name}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Tabs */}
+            <div className="learn-tabs">
+              <button
+                className={`learn-tab${tab === "lesson" ? " learn-tab--active" : ""}`}
+                onClick={() => setTab("lesson")}
+              >
+                Lesson
+              </button>
+              <button
+                className={`learn-tab${tab === "comments" ? " learn-tab--active" : ""}`}
+                onClick={() => setTab("comments")}
+              >
+                Comments
+              </button>
+            </div>
+
+            <div className="learn-tab-panel">
+              {tab === "lesson" ? (
+                <>
+                  {activeLesson.description && (
+                    <p className="learn-lesson-desc">{activeLesson.description}</p>
+                  )}
+
+                  {!!activeLesson.attachments?.length && (
+                    <div className="learn-resources">
+                      <h3 className="learn-resources__title">Resources</h3>
+                      <ul className="learn-resources__list">
+                        {activeLesson.attachments.map((r) => (
+                          <li key={r.id} className="learn-resource">
+                            <span className="learn-resource__icon">📎</span>
+                            <span className="learn-resource__title">{r.title}</span>
+                            <span className="learn-resource__type">{r.type}</span>
+                            <a href={r.file_url} target="_blank" rel="noopener noreferrer" className="learn-resource__download">
+                              Download
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {!activeLesson.description && !activeLesson.attachments?.length && (
+                    <p className="learn-empty">No additional details for this lesson.</p>
+                  )}
+                </>
+              ) : (
+                <LessonComments
+                  lessonId={activeLesson.id}
+                  getCurrentTime={activeLesson.type === "video" ? getVideoCurrentTime : undefined}
+                  getVideoId={activeLesson.type === "video" ? getActiveVideoId : undefined}
+                  onSeek={activeLesson.type === "video" ? seekActiveVideo : undefined}
+                />
+              )}
+            </div>
 
             {/* Previous / Next lesson navigation */}
             <div className="learn-nav-bar">

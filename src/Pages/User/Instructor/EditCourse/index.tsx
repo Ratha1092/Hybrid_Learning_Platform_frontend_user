@@ -472,7 +472,7 @@ export default function EditCourse() {
 
       {/* Curriculum tab */}
       {tab === "curriculum" && (
-        <Curriculum courseId={course.id} />
+        <Curriculum courseId={course.id} isPublished={course.status === "published"} />
       )}
     </div>
   );
