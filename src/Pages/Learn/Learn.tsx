@@ -5,6 +5,8 @@ import api from "../../api/axios";
 import { classifyVideoUrl, buildYouTubeEmbed, buildVimeoEmbed, seekEmbeddedVideo } from "../../utils/videoUrl";
 import { resolveUrl } from "../../utils/format";
 import LessonComments from "../../Components/LessonComments/LessonComments";
+import { useAuth } from "../../context/AuthContext";
+import { useAuthModal } from "../../context/AuthModalContext";
 import "./Learn.css";
 
 // Fraction of the video that must actually be played (not just seeked past)
@@ -70,6 +72,7 @@ interface CourseData {
   id: number;
   title: string;
   slug: string;
+  price: string | number;
   sections: SectionItem[];
   access_expired?: boolean;
   access_expires_at?: string | null;
@@ -82,6 +85,8 @@ type LessonTab = "lesson" | "comments";
 export default function Learn() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const { openLogin } = useAuthModal();
 
   const [course, setCourse] = useState<CourseData | null>(null);
   const [activeLesson, setActiveLesson] = useState<LessonItem | null>(null);
@@ -143,6 +148,10 @@ export default function Learn() {
         const first = courseData.sections?.[0]?.lessons?.[0];
         if (first) setActiveLesson(first);
 
+        // Guests aren't signed in, so there's no progress to load — and the
+        // per-lesson requests would just 401.
+        if (!isAuthenticated) return;
+
         // Load saved progress for all lessons in parallel
         const allLessons = courseData.sections?.flatMap(s => s.lessons) ?? [];
         const results = await Promise.allSettled(
@@ -158,7 +167,7 @@ export default function Learn() {
       })
       .catch(() => setError("Failed to load course."))
       .finally(() => setLoading(false));
-  }, [slug, navigate]);
+  }, [slug, navigate, isAuthenticated]);
 
   const handleSelectLesson = (lesson: LessonItem) => {
     setActiveLesson(lesson);
@@ -168,6 +177,12 @@ export default function Learn() {
   };
 
   const handleComplete = async (lessonId: number) => {
+    // Guests have nowhere to save progress to — send them to log in instead
+    // of silently failing the request.
+    if (!isAuthenticated) {
+      openLogin();
+      return;
+    }
     // Optimistic update — mark immediately so the UI responds
     setCompletedIds((prev) => new Set([...prev, lessonId]));
     setCompleteError(null);
@@ -194,7 +209,7 @@ export default function Learn() {
       }
     }
 
-    if (!isLastVideo) return;
+    if (!isLastVideo || !isAuthenticated) return;
     if (completedIds.has(lessonId) || autoCompletingRef.current.has(lessonId)) return;
     if (playedCoverage(video) >= AUTO_COMPLETE_THRESHOLD) {
       autoCompletingRef.current.add(lessonId);
@@ -203,6 +218,7 @@ export default function Learn() {
   };
 
   const handleVideoEnded = (lessonId: number) => {
+    if (!isAuthenticated) return;
     if (completedIds.has(lessonId) || autoCompletingRef.current.has(lessonId)) return;
     autoCompletingRef.current.add(lessonId);
     handleComplete(lessonId);
@@ -260,6 +276,17 @@ export default function Learn() {
       <div className="learn-state learn-state--error">
         <p>⚠ {error ?? "Course not found."}</p>
         <button onClick={() => navigate("/courses")}>← Back to Courses</button>
+      </div>
+    );
+  }
+
+  // Free courses are watchable as a guest; paid ones still need an account
+  // so enrollment/access can be checked.
+  if (!isAuthenticated && Number(course.price) !== 0) {
+    return (
+      <div className="learn-state">
+        <p>Please log in to access this course.</p>
+        <button onClick={openLogin}>Log in</button>
       </div>
     );
   }
@@ -469,7 +496,11 @@ export default function Learn() {
               </div>
               <div className="learn-control-bar__actions">
                 {completeError && <span className="learn-complete-error">{completeError}</span>}
-                {!completedIds.has(activeLesson.id) ? (
+                {!isAuthenticated ? (
+                  <button className="learn-complete-btn" onClick={openLogin}>
+                    Log in to save progress
+                  </button>
+                ) : !completedIds.has(activeLesson.id) ? (
                   <button
                     className="learn-complete-btn"
                     onClick={() => handleComplete(activeLesson.id)}

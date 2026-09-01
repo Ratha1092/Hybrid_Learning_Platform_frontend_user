@@ -1,4 +1,6 @@
-import { createContext, useCallback, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import api from "../api/axios";
+import { useAuth } from "./AuthContext";
 
 export interface WishlistedCourse {
   id: number;
@@ -26,27 +28,33 @@ const WishlistContext = createContext<WishlistCtx>({
   count: 0,
 });
 
-const STORAGE_KEY = "hl_wishlist";
-
-function load(): WishlistedCourse[] {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]"); }
-  catch { return []; }
-}
-
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<WishlistedCourse[]>(load);
+  const { isAuthenticated, user } = useAuth();
+  const [items, setItems] = useState<WishlistedCourse[]>([]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setItems([]);
+      return;
+    }
+    api.get<{ data: WishlistedCourse[] }>("/users/wishlist")
+      .then(({ data }) => setItems(data.data))
+      .catch(() => setItems([]));
+  }, [isAuthenticated, user?.id]);
 
   const toggle = useCallback((course: WishlistedCourse) => {
-    setItems(prev => {
-      const next = prev.some(c => c.id === course.id)
-        ? prev.filter(c => c.id !== course.id)
-        : [...prev, course];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      return next;
+    // Optimistic update, rolled back if the request fails.
+    setItems((prev) =>
+      prev.some((c) => c.id === course.id) ? prev.filter((c) => c.id !== course.id) : [...prev, course]
+    );
+    api.post(`/courses/${course.id}/wishlist/toggle`).catch(() => {
+      setItems((prev) =>
+        prev.some((c) => c.id === course.id) ? prev.filter((c) => c.id !== course.id) : [...prev, course]
+      );
     });
   }, []);
 
-  const isWishlisted = useCallback((id: number) => items.some(c => c.id === id), [items]);
+  const isWishlisted = useCallback((id: number) => items.some((c) => c.id === id), [items]);
 
   return (
     <WishlistContext.Provider value={{ items, toggle, isWishlisted, count: items.length }}>

@@ -140,10 +140,6 @@ function PageTransition({ children }: { children: React.ReactNode }) {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [location.pathname]);
 
-  // Instructor dashboard routes share a persistent sidebar layout (see
-  // InstructorLayout), which handles its own inner content transition —
-  // collapse them to one key here so the outer shell doesn't refade every
-  // time the sidebar navigates to a sibling route.
   const transitionKey = location.pathname.startsWith("/instructor")
     ? "/instructor"
     : location.pathname;
@@ -200,7 +196,8 @@ function App() {
           <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
           <Route path="/profile/edit" element={<Navigate to="/profile?view=edit" replace />} />
           <Route path="/library" element={<RequireAuth><WithFooter><Library /></WithFooter></RequireAuth>} />
-          <Route path="/learn/:slug" element={<RequireAuth><Learn /></RequireAuth>} />
+          {/* Learn gates paid courses itself so guests can still watch free ones */}
+          <Route path="/learn/:slug" element={<Learn />} />
 
           {/* Instructor auth (no sidebar) */}
           <Route path="/instructor/register" element={<RequireAuth><WithFooter><InstructorRegister /></WithFooter></RequireAuth>} />
