@@ -1,4 +1,5 @@
-import { ArrowRight, Globe2, ShieldCheck, Sparkles, Users2, Star, Mail } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, Globe2, ShieldCheck, Sparkles, Users2, Star, Mail, Copy, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Reveal } from "../../utils/anim";
 import { useSettings } from "../../context/SettingsContext";
@@ -96,6 +97,14 @@ function PersonCard({ name, role, image, delay = 0 }: { name: string; role: stri
 export default function About() {
   const { settings } = useSettings();
   const siteName = settings.site_name || "Hybrid Learning";
+  const [emailCopied, setEmailCopied] = useState(false);
+
+  const copyAdvisorEmail = () => {
+    navigator.clipboard.writeText(ADVISOR.email).then(() => {
+      setEmailCopied(true);
+      setTimeout(() => setEmailCopied(false), 2000);
+    });
+  };
 
   return (
     <>
@@ -216,18 +225,27 @@ export default function About() {
                   <p className="mt-4 text-[14.5px] leading-relaxed muted2">{ADVISOR.about}</p>
                 )}
 
-                <div className="mt-6 flex items-center justify-between border-t border-slate-200/70 pt-5 dark:border-white/10">
-                  <div className="flex items-center gap-2">
-                    {ADVISOR.email && (
-                      <a
-                        href={`mailto:${ADVISOR.email}`}
-                        aria-label={`Email ${ADVISOR.name}`}
-                        className="grid h-9 w-9 place-items-center rounded-full bg-slate-100 text-slate-600 transition-colors hover:text-blue-600 dark:bg-white/10 dark:text-slate-300 dark:hover:text-blue-400"
+                <div className="mt-6 flex items-center justify-between gap-3 border-t border-slate-200/70 pt-5 dark:border-white/10">
+                  {ADVISOR.email && (
+                    <div className="flex min-w-0 items-center gap-2 rounded-full bg-slate-100 py-1.5 pl-3 pr-1.5 dark:bg-white/10">
+                      <Mail className="h-3.5 w-3.5 shrink-0 text-slate-500 dark:text-slate-400" />
+                      <span className="truncate text-[13px] font-medium text-slate-600 dark:text-slate-300">
+                        {ADVISOR.email}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={copyAdvisorEmail}
+                        aria-label={`Copy ${ADVISOR.name}'s email`}
+                        className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-slate-500 transition-colors hover:bg-slate-200 hover:text-blue-600 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-blue-400"
                       >
-                        <Mail className="h-4 w-4" />
-                      </a>
-                    )}
-                  </div>
+                        {emailCopied ? (
+                          <Check className="h-3.5 w-3.5 text-emerald-500" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  )}
                   {ADVISOR.years > 0 && (
                     <div className="text-right">
                       <p className="font-display text-xl font-extrabold ink">{ADVISOR.years}+</p>

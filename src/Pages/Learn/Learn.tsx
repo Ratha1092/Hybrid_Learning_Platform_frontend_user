@@ -329,7 +329,7 @@ export default function Learn() {
           </div>
         )}
         {activeLesson ? (
-          <>
+          <div className="learn-main__inner">
             {/* Video */}
             {activeLesson.type === "video" && (
               <div className="learn-video-wrap">
@@ -511,14 +511,17 @@ export default function Learn() {
               {course.instructor?.name && (
                 <div className="learn-instructor">
                   <div className="learn-instructor__avatar">
-                    {resolveUrl(course.instructor.avatar ?? course.instructor.avatar_url) ? (
-                      <img
-                        src={resolveUrl(course.instructor.avatar ?? course.instructor.avatar_url)!}
-                        alt={course.instructor.name}
-                      />
-                    ) : (
-                      <span>{course.instructor.name.charAt(0).toUpperCase()}</span>
-                    )}
+                    {(() => {
+                      // avatar_url is the backend's already-resolved absolute
+                      // URL; the raw avatar column is just a storage path
+                      // resolveUrl can only guess at, so avatar_url wins.
+                      const instructorAvatarUrl = course.instructor!.avatar_url ?? resolveUrl(course.instructor!.avatar);
+                      return instructorAvatarUrl ? (
+                        <img src={instructorAvatarUrl} alt={course.instructor!.name} />
+                      ) : (
+                        <span>{course.instructor!.name.charAt(0).toUpperCase()}</span>
+                      );
+                    })()}
                   </div>
                   <div>
                     <p className="learn-instructor__label">Your Instructor</p>
@@ -544,43 +547,44 @@ export default function Learn() {
               </button>
             </div>
 
-            <div className="learn-tab-panel">
-              {tab === "lesson" ? (
-                <>
-                  {activeLesson.description && (
-                    <p className="learn-lesson-desc">{activeLesson.description}</p>
-                  )}
-
-                  {!!activeLesson.attachments?.length && (
-                    <div className="learn-resources">
-                      <h3 className="learn-resources__title">Resources</h3>
-                      <ul className="learn-resources__list">
-                        {activeLesson.attachments.map((r) => (
-                          <li key={r.id} className="learn-resource">
-                            <span className="learn-resource__icon">📎</span>
-                            <span className="learn-resource__title">{r.title}</span>
-                            <span className="learn-resource__type">{r.type}</span>
-                            <a href={r.file_url} target="_blank" rel="noopener noreferrer" className="learn-resource__download">
-                              Download
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {!activeLesson.description && !activeLesson.attachments?.length && (
-                    <p className="learn-empty">No additional details for this lesson.</p>
-                  )}
-                </>
-              ) : (
-                <LessonComments
-                  lessonId={activeLesson.id}
-                  getCurrentTime={activeLesson.type === "video" ? getVideoCurrentTime : undefined}
-                  getVideoId={activeLesson.type === "video" ? getActiveVideoId : undefined}
-                  onSeek={activeLesson.type === "video" ? seekActiveVideo : undefined}
-                />
+            <div className="learn-tab-panel" hidden={tab !== "lesson"}>
+              {activeLesson.description && (
+                <p className="learn-lesson-desc">{activeLesson.description}</p>
               )}
+
+              {!!activeLesson.attachments?.length && (
+                <div className="learn-resources">
+                  <h3 className="learn-resources__title">Resources</h3>
+                  <ul className="learn-resources__list">
+                    {activeLesson.attachments.map((r) => (
+                      <li key={r.id} className="learn-resource">
+                        <span className="learn-resource__icon">📎</span>
+                        <span className="learn-resource__title">{r.title}</span>
+                        <span className="learn-resource__type">{r.type}</span>
+                        <a href={r.file_url} target="_blank" rel="noopener noreferrer" className="learn-resource__download">
+                          Download
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {!activeLesson.description && !activeLesson.attachments?.length && (
+                <p className="learn-empty">No additional details for this lesson.</p>
+              )}
+            </div>
+
+            {/* Kept mounted (just hidden) rather than conditionally rendered —
+                switching tabs otherwise unmounted this and threw away its
+                fetched comments, forcing a fresh load + spinner every time. */}
+            <div className="learn-tab-panel" hidden={tab !== "comments"}>
+              <LessonComments
+                lessonId={activeLesson.id}
+                getCurrentTime={activeLesson.type === "video" ? getVideoCurrentTime : undefined}
+                getVideoId={activeLesson.type === "video" ? getActiveVideoId : undefined}
+                onSeek={activeLesson.type === "video" ? seekActiveVideo : undefined}
+              />
             </div>
 
             {/* Previous / Next lesson navigation */}
@@ -600,7 +604,7 @@ export default function Learn() {
                 Next →
               </button>
             </div>
-          </>
+          </div>
         ) : (
           <div className="learn-state">
             <p>Select a lesson from the sidebar to start learning.</p>

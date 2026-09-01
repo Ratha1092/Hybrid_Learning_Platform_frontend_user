@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Star, Clock, BookOpen, BarChart3, Globe, Heart } from "lucide-react";
-import { type Course } from "../services/courseService";
+import { ArrowRight, Star, Clock, BookOpen, BarChart3, Globe, Heart, CheckCircle2 } from "lucide-react";
+import { courseService, normalizeEnrolledCourses, type Course, type EnrolledCourse } from "../services/courseService";
 import { Reveal } from "../utils/anim";
 import { useProtectedWishlist } from "../hooks/useProtectedWishlist";
+import { useAuth } from "../context/AuthContext";
 
 const API_BASE = import.meta.env.VITE_API_URL ?? "";
 
@@ -41,9 +42,22 @@ function SkeletonCard() {
 export default function FeaturedCourses({ courses: coursesProp }: { courses?: Course[] }) {
   const navigate = useNavigate();
   const { toggle, isWishlisted } = useProtectedWishlist();
+  const { isAuthenticated } = useAuth();
   const loading = coursesProp === undefined;
   const courses = coursesProp ?? [];
   const [activeTab, setActiveTab] = useState("All");
+  const [enrolledById, setEnrolledById] = useState<Record<number, EnrolledCourse>>({});
+
+  useEffect(() => {
+    if (!isAuthenticated) { setEnrolledById({}); return; }
+    courseService.getEnrolled()
+      .then(({ data }) => {
+        const byId: Record<number, EnrolledCourse> = {};
+        normalizeEnrolledCourses(data.data).forEach((e) => { byId[e.course_id] = e; });
+        setEnrolledById(byId);
+      })
+      .catch(() => {});
+  }, [isAuthenticated]);
 
   // Build tabs from unique categories
   const tabs = ["All", ...Array.from(new Set(courses.map((c) => c.category?.name).filter(Boolean)))].slice(0, 6) as string[];
@@ -97,12 +111,14 @@ export default function FeaturedCourses({ courses: coursesProp }: { courses?: Co
               const isFree = Number(course.price) === 0;
               const slug = course.slug ?? String(course.id);
               const duration = formatDuration(course.total_duration_seconds);
+              const enrollment = enrolledById[course.id];
+              const isCompleted = !!enrollment && (enrollment.progress_percentage >= 100 || !!enrollment.completed_at);
 
               return (
                 <Reveal as="article" key={course.id} delay={(i % 3) * 90}>
                   <div
                     className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-e1 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-card dark:border-slate-700 dark:bg-slate-800"
-                    onClick={() => navigate(`/courses/${slug}`)}
+                    onClick={() => navigate(enrollment ? `/learn/${slug}` : `/courses/${slug}`)}
                   >
                     {/* Thumbnail */}
                     <div className="relative overflow-hidden">
@@ -162,16 +178,32 @@ export default function FeaturedCourses({ courses: coursesProp }: { courses?: Co
                         {course.language && <span className="flex items-center gap-1.5"><Globe className="h-3.5 w-3.5 brand-blue" /> {course.language}</span>}
                       </div>
 
-                      <div className="mt-5 flex items-center justify-between border-t border-slate-200 pt-4 dark:border-slate-700">
+                      <div className="mt-auto flex items-center justify-between border-t border-slate-200 pt-4 dark:border-slate-700">
                         <span className="font-display text-xl font-extrabold ink">
                           {isFree ? "Free" : `$${course.price}`}
                         </span>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); navigate(`/courses/${slug}`); }}
-                          className="inline-flex items-center gap-1 rounded-lg bg-brand px-4 py-2 text-[13px] font-semibold text-white transition-all hover:gap-2 hover:bg-blue-700"
-                        >
-                          Enroll <ArrowRight className="h-3.5 w-3.5" />
-                        </button>
+                        {isCompleted ? (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); navigate(`/learn/${slug}`); }}
+                            className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-4 py-2 text-[13px] font-semibold text-white transition-all hover:gap-2 hover:bg-emerald-700"
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" /> Completed
+                          </button>
+                        ) : enrollment ? (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); navigate(`/learn/${slug}`); }}
+                            className="inline-flex items-center gap-1 rounded-lg bg-brand px-4 py-2 text-[13px] font-semibold text-white transition-all hover:gap-2 hover:bg-blue-700"
+                          >
+                            Continue Learning <ArrowRight className="h-3.5 w-3.5" />
+                          </button>
+                        ) : (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); navigate(`/courses/${slug}`); }}
+                            className="inline-flex items-center gap-1 rounded-lg bg-brand px-4 py-2 text-[13px] font-semibold text-white transition-all hover:gap-2 hover:bg-blue-700"
+                          >
+                            Enroll <ArrowRight className="h-3.5 w-3.5" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

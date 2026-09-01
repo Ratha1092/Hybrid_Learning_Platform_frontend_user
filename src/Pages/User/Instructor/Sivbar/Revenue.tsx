@@ -468,7 +468,8 @@ export default function Revenue() {
                     return (
                       <tr
                         key={p.id}
-                        className="border-b border-slate-50 transition-colors last:border-0 hover:bg-slate-50 dark:border-slate-700/50 dark:hover:bg-slate-700/30"
+                        onClick={() => navigate(`/instructor/finance/payouts/${p.id}`)}
+                        className="cursor-pointer border-b border-slate-50 transition-colors last:border-0 hover:bg-slate-50 dark:border-slate-700/50 dark:hover:bg-slate-700/30"
                       >
                         <td className="px-6 py-4 text-slate-700 dark:text-slate-300">
                           {new Date(p.created_at).toLocaleDateString("en-US", {
@@ -499,7 +500,7 @@ export default function Revenue() {
                         <td className="px-6 py-4 text-right">
                           {p.status === "approved" && p.receipt_id ? (
                             <button
-                              onClick={() => handleDownloadReceipt(p)}
+                              onClick={(e) => { e.stopPropagation(); handleDownloadReceipt(p); }}
                               disabled={downloadingId === p.id}
                               className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-[12px] font-semibold text-blue-600 hover:bg-blue-100 disabled:opacity-50 dark:border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400"
                             >

@@ -488,7 +488,9 @@ export default function EnrollButton({ course }: Props) {
           <div className="enroll-success__icon">✅</div>
           <h3 className="enroll-success__title">You're Enrolled!</h3>
           <p className="enroll-success__sub">You have access to all course content.</p>
-          {course.access_expires_at && (
+          {Number(course.price) === 0 ? (
+            <p className="enroll-success__expiry">Free courses never expire.</p>
+          ) : course.access_expires_at && (
             <p className="enroll-success__expiry">
               Access expires on{" "}
               {new Date(course.access_expires_at).toLocaleDateString("en-US", {
@@ -530,7 +532,7 @@ export default function EnrollButton({ course }: Props) {
           {step === "loading"
             ? "Processing..."
             : Number(course.price) === 0
-            ? "Enroll for Free"
+            ? "Start"
             : `Buy Now — $${course.price}`}
         </button>
       )}

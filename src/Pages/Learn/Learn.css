@@ -1,7 +1,9 @@
-/* Learn Page */
+/* Learn Page — the site navbar is hidden on this route (see App.tsx's
+   hideNavbar), so this owns the full viewport height rather than
+   leaving a reserved-but-empty 64px gap at the top. */
 .learn-wrap {
   display: flex;
-  height: calc(100vh - 64px);
+  height: 100vh;
   font-family: "Nunito", system-ui, sans-serif;
   background: #f9fafb;
   overflow: hidden;
@@ -11,7 +13,7 @@
 .learn-state {
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  min-height: calc(100vh - 64px);
+  min-height: 100vh;
   gap: 14px; font-size: 15px; color: #6b7280;
 }
 .learn-state--error { color: #ef4444; }
@@ -127,6 +129,11 @@
   display: flex; flex-direction: column;
 }
 
+.learn-main__inner {
+  max-width: 1040px; width: 100%; margin: 0 auto;
+  display: flex; flex-direction: column; flex: 1;
+}
+
 .learn-expired-banner {
   display: flex;
   align-items: center;
@@ -156,6 +163,9 @@
 .learn-video-wrap {
   width: 100%; background: #000;
   flex-shrink: 0;
+  margin-top: 20px;
+  border-radius: 12px;
+  overflow: hidden;
 }
 .learn-video {
   width: 100%; aspect-ratio: 16/9; border: none; display: block;
@@ -219,7 +229,7 @@
   border-top: 1px solid #e5e7eb;
   background: #fff; flex-shrink: 0;
 }
-.learn-lesson-title { font-size: 18px; font-weight: 800; color: #111827; margin: 0 0 10px; }
+.learn-lesson-title { font-size: 21px; font-weight: 800; color: #111827; letter-spacing: -0.01em; line-height: 1.25; margin: 0 0 10px; }
 .learn-lesson-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
 .learn-meta-pill {
   font-size: 11.5px; font-weight: 700; color: #0f766e;
@@ -351,57 +361,57 @@
   .learn-sections { max-height: 240px; }
 }
 
-/* Dark mode */
-html.dark .learn-wrap { background: #0f172a; }
-html.dark .learn-state { color: #94a3b8; }
-html.dark .learn-spinner { border-color: #334155; border-top-color: #2ec4b6; }
-html.dark .learn-sidebar { background: #1e293b; border-right-color: #334155; }
-html.dark .learn-sidebar__head { border-bottom-color: #334155; }
-html.dark .learn-back { background: #273548; border-color: #334155; color: #e2e8f0; }
-html.dark .learn-back:hover { background: #334155; border-color: #475569; color: #f1f5f9; }
+/* Dark mode — a deeper, richer */
+html.dark .learn-wrap { background: #090e1a; }
+html.dark .learn-state { color: #8b96ab; }
+html.dark .learn-spinner { border-color: #1b2740; border-top-color: #2ec4b6; }
+html.dark .learn-sidebar { background: #0c1322; border-right-color: #16213a; }
+html.dark .learn-sidebar__head { border-bottom-color: #16213a; }
+html.dark .learn-back { background: #121b30; border-color: #1b2740; color: #dbe4f3; }
+html.dark .learn-back:hover { background: #1b2740; border-color: #253352; color: #f1f5f9; }
 html.dark .learn-sidebar__title { color: #f1f5f9; }
-html.dark .learn-sidebar__progress { color: #94a3b8; }
-html.dark .learn-progressbar { background: #334155; }
-html.dark .learn-sections { background: #1e293b; }
-html.dark .learn-section { border-bottom-color: #334155; }
-html.dark .learn-section__head:hover { background: #273548; }
-html.dark .learn-section__chevron { color: #94a3b8; }
-html.dark .learn-section__title { color: #e2e8f0; }
-html.dark .learn-section__count { background: #334155; color: #cbd5e1; }
-html.dark .learn-lesson { border-bottom-color: #273548; color: #94a3b8; }
-html.dark .learn-lesson:hover { background: #273548; color: #e2e8f0; }
-html.dark .learn-lesson--active { background: rgba(37,99,235,0.18) !important; color: #60a5fa; }
-html.dark .learn-lesson--active .learn-lesson__icon { color: #60a5fa; }
-html.dark .learn-lesson--active .learn-lesson__title { color: #93c5fd; }
-html.dark .learn-lesson__icon { color: #94a3b8; }
-html.dark .learn-lesson__dur { color: #94a3b8; }
-html.dark .learn-main { background: #0f172a; }
+html.dark .learn-sidebar__progress { color: #8b96ab; }
+html.dark .learn-progressbar { background: #16213a; }
+html.dark .learn-sections { background: #0c1322; }
+html.dark .learn-section { border-bottom-color: #16213a; }
+html.dark .learn-section__head:hover { background: #101828; }
+html.dark .learn-section__chevron { color: #8b96ab; }
+html.dark .learn-section__title { color: #dbe4f3; }
+html.dark .learn-section__count { background: #16213a; color: #aab6c9; }
+html.dark .learn-lesson { border-bottom-color: #101828; color: #8b96ab; }
+html.dark .learn-lesson:hover { background: #101828; color: #dbe4f3; }
+html.dark .learn-lesson--active { background: rgba(46,196,182,0.14) !important; }
+html.dark .learn-lesson--active .learn-lesson__icon { color: #5eead4; }
+html.dark .learn-lesson--active .learn-lesson__title { color: #5eead4; }
+html.dark .learn-lesson__icon { color: #8b96ab; }
+html.dark .learn-lesson__dur { color: #8b96ab; }
+html.dark .learn-main { background: #090e1a; }
 html.dark .learn-video-wrap { background: #000; }
-html.dark .learn-content { color: #cbd5e1; }
-html.dark .learn-empty { color: #94a3b8; }
-html.dark .learn-nav-bar { background: #1e293b; border-top-color: #334155; }
-html.dark .learn-nav-btn { background: #273548; color: #94a3b8; border-color: #334155; }
-html.dark .learn-nav-btn:hover:not(:disabled) { background: #334155; color: #e2e8f0; }
+html.dark .learn-content { color: #b9c2d4; }
+html.dark .learn-empty { color: #8b96ab; }
+html.dark .learn-nav-bar { background: #090e1a; border-top-color: #16213a; }
+html.dark .learn-nav-btn { background: #121b30; color: #aab6c9; border-color: #1b2740; }
+html.dark .learn-nav-btn:hover:not(:disabled) { background: #1b2740; color: #f1f5f9; }
 html.dark .learn-nav-btn:disabled { opacity: 0.35; }
-html.dark .learn-nav-btn--next { background: #2ec4b6; color: #fff; border-color: #2ec4b6; }
-html.dark .learn-nav-btn--next:hover:not(:disabled) { background: #1da89c; }
-html.dark .learn-control-bar { background: #1e293b; border-top-color: #334155; }
-html.dark .learn-icon-btn { background: #273548; color: #cbd5e1; border-color: #334155; }
-html.dark .learn-icon-btn:hover:not(:disabled) { background: #334155; }
-html.dark .learn-lesson-info { background: #1e293b; border-top-color: #334155; }
-html.dark .learn-lesson-title { color: #f1f5f9; }
-html.dark .learn-meta-pill { background: rgba(46,196,182,0.15); color: #5eead4; }
-html.dark .learn-meta-pill--muted { background: #334155; color: #94a3b8; }
-html.dark .learn-lesson-desc { color: #94a3b8; }
-html.dark .learn-instructor__label { color: #64748b; }
+html.dark .learn-nav-btn--next { background: #2ec4b6; color: #04241f; border-color: #2ec4b6; }
+html.dark .learn-nav-btn--next:hover:not(:disabled) { background: #45d3c5; }
+html.dark .learn-control-bar { background: #090e1a; border-top-color: #16213a; }
+html.dark .learn-icon-btn { background: #121b30; color: #dbe4f3; border-color: #1b2740; }
+html.dark .learn-icon-btn:hover:not(:disabled) { background: #1b2740; }
+html.dark .learn-lesson-info { background: #090e1a; border-top-color: #16213a; }
+html.dark .learn-lesson-title { color: #f6f8fb; }
+html.dark .learn-meta-pill { background: rgba(46,196,182,0.14); color: #5eead4; }
+html.dark .learn-meta-pill--muted { background: #121b30; color: #aab6c9; }
+html.dark .learn-lesson-desc { color: #aab6c9; }
+html.dark .learn-instructor__label { color: #6b7690; }
 html.dark .learn-instructor__name { color: #f1f5f9; }
-html.dark .learn-tabs { background: #1e293b; border-top-color: #334155; }
-html.dark .learn-tab { color: #64748b; }
-html.dark .learn-tab:hover { color: #cbd5e1; }
+html.dark .learn-tabs { background: #090e1a; border-top-color: #16213a; }
+html.dark .learn-tab { color: #6b7690; }
+html.dark .learn-tab:hover { color: #dbe4f3; }
 html.dark .learn-tab--active { color: #5eead4; border-bottom-color: #2ec4b6; }
-html.dark .learn-tab-panel { background: #1e293b; }
-html.dark .learn-resources__title { color: #94a3b8; }
-html.dark .learn-resource { border-color: #334155; }
-html.dark .learn-resource__title { color: #e2e8f0; }
-html.dark .learn-resource__type { background: #334155; color: #cbd5e1; }
-html.dark .learn-completed-badge { background: rgba(22,163,74,0.15); border-color: #16a34a; color: #4ade80; }
+html.dark .learn-tab-panel { background: #090e1a; }
+html.dark .learn-resources__title { color: #8b96ab; }
+html.dark .learn-resource { border-color: #1b2740; }
+html.dark .learn-resource__title { color: #dbe4f3; }
+html.dark .learn-resource__type { background: #121b30; color: #aab6c9; }
+html.dark .learn-completed-badge { background: rgba(22,163,74,0.14); border-color: #16a34a; color: #4ade80; }
