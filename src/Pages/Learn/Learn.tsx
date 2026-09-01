@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, MessageCircle, Check, Hash, FileText, Clock, Tag, File as FileIcon } from "lucide-react";
 import api from "../../api/axios";
 import { classifyVideoUrl, buildYouTubeEmbed, buildVimeoEmbed, seekEmbeddedVideo } from "../../utils/videoUrl";
 import { resolveUrl } from "../../utils/format";
 import LessonComments from "../../Components/LessonComments/LessonComments";
 import { useAuth } from "../../context/AuthContext";
 import { useAuthModal } from "../../context/AuthModalContext";
+import TopNavBar from "./TopNavBar";
+import CourseProgressCard from "./CourseProgressCard";
 import "./Learn.css";
 
 // Fraction of the video that must actually be played (not just seeked past)
@@ -78,6 +80,7 @@ interface CourseData {
   access_expires_at?: string | null;
   category?: { id: number; name: string; slug: string } | null;
   instructor?: { id: number; name: string; avatar?: string | null; avatar_url?: string | null } | null;
+  thumbnail_url?: string | null;
 }
 
 type LessonTab = "lesson" | "comments";
@@ -97,6 +100,7 @@ export default function Learn() {
   const [openSections, setOpenSections] = useState<Set<number>>(new Set([0]));
   const [completeError, setCompleteError] = useState<string | null>(null);
   const [tab, setTab] = useState<LessonTab>("lesson");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const lastResumeSaveRef = useRef(0);
   const autoCompletingRef = useRef<Set<number>>(new Set());
   const videoElRef = useRef<HTMLVideoElement>(null);
@@ -292,23 +296,17 @@ export default function Learn() {
   }
 
   return (
-    <div className="learn-wrap">
+    <div className="learn-page">
+      <TopNavBar
+        courseTitle={course.title}
+        courseSlug={course.slug}
+        lessonTitle={activeLesson?.title ?? ""}
+        sidebarCollapsed={sidebarCollapsed}
+        onToggleSidebar={() => setSidebarCollapsed((v) => !v)}
+      />
+      <div className="learn-wrap">
       {/* Sidebar */}
-      <aside className="learn-sidebar">
-        <div className="learn-sidebar__head">
-          <button className="learn-back" onClick={() => navigate("/courses")}>← Exit</button>
-          <h3 className="learn-sidebar__title">{course.title}</h3>
-          <p className="learn-sidebar__progress">
-            {completedIds.size} / {totalLessons} lessons · {completionPct}% complete
-          </p>
-          <div className="learn-progressbar">
-            <div
-              className="learn-progressbar__fill"
-              style={{ width: totalLessons > 0 ? `${(completedIds.size / totalLessons) * 100}%` : "0%" }}
-            />
-          </div>
-        </div>
-
+      <aside className={`learn-sidebar${sidebarCollapsed ? " learn-sidebar--collapsed" : ""}`}>
         <div className="learn-sections">
           {course.sections?.map((section, si) => (
             <div key={section.id} className="learn-section">
@@ -338,6 +336,7 @@ export default function Learn() {
                           {Math.floor(lesson.duration / 60)}m
                         </span>
                       )}
+                      <FileIcon size={12} className="learn-lesson__trailing-icon" />
                     </button>
                   ))}
                 </div>
@@ -345,6 +344,13 @@ export default function Learn() {
             </div>
           ))}
         </div>
+
+        <CourseProgressCard
+          thumbnailUrl={resolveUrl(course.thumbnail_url)}
+          courseTitle={course.title}
+          instructorName={course.instructor?.name}
+          progressPercent={completionPct}
+        />
       </aside>
 
       {/* Main content */}
@@ -474,41 +480,31 @@ export default function Learn() {
 
             {/* Control bar */}
             <div className="learn-control-bar">
-              <div className="learn-control-bar__nav">
-                <button
-                  className="learn-icon-btn"
-                  disabled={!prevLesson}
-                  onClick={() => prevLesson && handleSelectLesson(prevLesson)}
-                  title="Previous lesson"
-                  aria-label="Previous lesson"
-                >
-                  <ChevronLeft size={18} />
-                </button>
-                <button
-                  className="learn-icon-btn"
-                  disabled={!nextLesson}
-                  onClick={() => nextLesson && handleSelectLesson(nextLesson)}
-                  title="Next lesson"
-                  aria-label="Next lesson"
-                >
-                  <ChevronRight size={18} />
-                </button>
-              </div>
-              <div className="learn-control-bar__actions">
+              <button
+                className="learn-icon-btn"
+                disabled={!prevLesson}
+                onClick={() => prevLesson && handleSelectLesson(prevLesson)}
+                title="Previous lesson"
+                aria-label="Previous lesson"
+              >
+                <ChevronLeft size={18} />
+              </button>
+
+              <div className="learn-control-bar__center">
                 {completeError && <span className="learn-complete-error">{completeError}</span>}
                 {!isAuthenticated ? (
                   <button className="learn-complete-btn" onClick={openLogin}>
-                    Log in to save progress
+                    <Check size={15} /> Log in to save progress
                   </button>
                 ) : !completedIds.has(activeLesson.id) ? (
                   <button
                     className="learn-complete-btn"
                     onClick={() => handleComplete(activeLesson.id)}
                   >
-                    ✓ Mark as Complete
+                    <Check size={15} /> Mark as Complete
                   </button>
                 ) : (
-                  <span className="learn-completed-badge">✓ Completed</span>
+                  <span className="learn-completed-badge"><Check size={14} /> Completed</span>
                 )}
                 <button
                   className="learn-icon-btn"
@@ -519,103 +515,127 @@ export default function Learn() {
                   <MessageCircle size={18} />
                 </button>
               </div>
+
+              <button
+                className="learn-icon-btn"
+                disabled={!nextLesson}
+                onClick={() => nextLesson && handleSelectLesson(nextLesson)}
+                title="Next lesson"
+                aria-label="Next lesson"
+              >
+                <ChevronRight size={18} />
+              </button>
             </div>
 
-            {/* Lesson info */}
-            <div className="learn-lesson-info">
-              <h2 className="learn-lesson-title">{activeLesson.title}</h2>
-              <div className="learn-lesson-meta">
-                {activeIndex >= 0 && (
-                  <span className="learn-meta-pill">Episode {activeIndex + 1}</span>
-                )}
-                <span className="learn-meta-pill learn-meta-pill--muted">{activeLesson.type}</span>
-                {activeLesson.duration > 0 && (
-                  <span className="learn-meta-pill learn-meta-pill--muted">
-                    {Math.floor(activeLesson.duration / 60)}m
-                  </span>
-                )}
-                {course.category?.name && (
-                  <span className="learn-meta-pill">{course.category.name}</span>
+            {/* Lesson meta + tabs, two columns */}
+            <div className="learn-content-grid">
+              <div className="learn-content-left">
+                <h2 className="learn-lesson-title">{activeLesson.title}</h2>
+
+                <ul className="learn-meta-list">
+                  {activeIndex >= 0 && (
+                    <li>
+                      <span className="learn-meta-list__label"><Hash size={14} /> Episode</span>
+                      <strong>{activeIndex + 1}</strong>
+                    </li>
+                  )}
+                  <li>
+                    <span className="learn-meta-list__label"><FileText size={14} /> Type</span>
+                    <strong className="learn-meta-list__capitalize">{activeLesson.type}</strong>
+                  </li>
+                  {activeLesson.duration > 0 && (
+                    <li>
+                      <span className="learn-meta-list__label"><Clock size={14} /> Duration</span>
+                      <strong>{Math.floor(activeLesson.duration / 60)}m</strong>
+                    </li>
+                  )}
+                  {course.category?.name && (
+                    <li>
+                      <span className="learn-meta-list__label"><Tag size={14} /> Category</span>
+                      <strong>{course.category.name}</strong>
+                    </li>
+                  )}
+                </ul>
+
+                {course.instructor?.name && (
+                  <div className="learn-instructor">
+                    <div className="learn-instructor__avatar">
+                      {(() => {
+                        // avatar_url is the backend's already-resolved absolute
+                        // URL; the raw avatar column is just a storage path
+                        // resolveUrl can only guess at, so avatar_url wins.
+                        const instructorAvatarUrl = course.instructor!.avatar_url ?? resolveUrl(course.instructor!.avatar);
+                        return instructorAvatarUrl ? (
+                          <img src={instructorAvatarUrl} alt={course.instructor!.name} />
+                        ) : (
+                          <span>{course.instructor!.name.charAt(0).toUpperCase()}</span>
+                        );
+                      })()}
+                    </div>
+                    <div>
+                      <p className="learn-instructor__label">Your Instructor</p>
+                      <p className="learn-instructor__name">{course.instructor.name}</p>
+                    </div>
+                  </div>
                 )}
               </div>
 
-              {course.instructor?.name && (
-                <div className="learn-instructor">
-                  <div className="learn-instructor__avatar">
-                    {(() => {
-                      // avatar_url is the backend's already-resolved absolute
-                      // URL; the raw avatar column is just a storage path
-                      // resolveUrl can only guess at, so avatar_url wins.
-                      const instructorAvatarUrl = course.instructor!.avatar_url ?? resolveUrl(course.instructor!.avatar);
-                      return instructorAvatarUrl ? (
-                        <img src={instructorAvatarUrl} alt={course.instructor!.name} />
-                      ) : (
-                        <span>{course.instructor!.name.charAt(0).toUpperCase()}</span>
-                      );
-                    })()}
-                  </div>
-                  <div>
-                    <p className="learn-instructor__label">Your Instructor</p>
-                    <p className="learn-instructor__name">{course.instructor.name}</p>
-                  </div>
+              <div className="learn-content-right">
+                <div className="learn-tabs">
+                  <button
+                    className={`learn-tab${tab === "lesson" ? " learn-tab--active" : ""}`}
+                    onClick={() => setTab("lesson")}
+                  >
+                    Lesson
+                  </button>
+                  <button
+                    className={`learn-tab${tab === "comments" ? " learn-tab--active" : ""}`}
+                    onClick={() => setTab("comments")}
+                  >
+                    Comments
+                  </button>
                 </div>
-              )}
-            </div>
 
-            {/* Tabs */}
-            <div className="learn-tabs">
-              <button
-                className={`learn-tab${tab === "lesson" ? " learn-tab--active" : ""}`}
-                onClick={() => setTab("lesson")}
-              >
-                Lesson
-              </button>
-              <button
-                className={`learn-tab${tab === "comments" ? " learn-tab--active" : ""}`}
-                onClick={() => setTab("comments")}
-              >
-                Comments
-              </button>
-            </div>
+                <div className="learn-tab-panel" hidden={tab !== "lesson"}>
+                  {activeLesson.description && (
+                    <p className="learn-lesson-desc">{activeLesson.description}</p>
+                  )}
 
-            <div className="learn-tab-panel" hidden={tab !== "lesson"}>
-              {activeLesson.description && (
-                <p className="learn-lesson-desc">{activeLesson.description}</p>
-              )}
+                  {!!activeLesson.attachments?.length && (
+                    <div className="learn-resources">
+                      <h3 className="learn-resources__title">Resources</h3>
+                      <ul className="learn-resources__list">
+                        {activeLesson.attachments.map((r) => (
+                          <li key={r.id} className="learn-resource">
+                            <span className="learn-resource__icon">📎</span>
+                            <span className="learn-resource__title">{r.title}</span>
+                            <span className="learn-resource__type">{r.type}</span>
+                            <a href={r.file_url} target="_blank" rel="noopener noreferrer" className="learn-resource__download">
+                              Download
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
-              {!!activeLesson.attachments?.length && (
-                <div className="learn-resources">
-                  <h3 className="learn-resources__title">Resources</h3>
-                  <ul className="learn-resources__list">
-                    {activeLesson.attachments.map((r) => (
-                      <li key={r.id} className="learn-resource">
-                        <span className="learn-resource__icon">📎</span>
-                        <span className="learn-resource__title">{r.title}</span>
-                        <span className="learn-resource__type">{r.type}</span>
-                        <a href={r.file_url} target="_blank" rel="noopener noreferrer" className="learn-resource__download">
-                          Download
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
+                  {!activeLesson.description && !activeLesson.attachments?.length && (
+                    <p className="learn-empty">No additional details for this lesson.</p>
+                  )}
                 </div>
-              )}
 
-              {!activeLesson.description && !activeLesson.attachments?.length && (
-                <p className="learn-empty">No additional details for this lesson.</p>
-              )}
-            </div>
-
-            {/* Kept mounted (just hidden) rather than conditionally rendered —
-                switching tabs otherwise unmounted this and threw away its
-                fetched comments, forcing a fresh load + spinner every time. */}
-            <div className="learn-tab-panel" hidden={tab !== "comments"}>
-              <LessonComments
-                lessonId={activeLesson.id}
-                getCurrentTime={activeLesson.type === "video" ? getVideoCurrentTime : undefined}
-                getVideoId={activeLesson.type === "video" ? getActiveVideoId : undefined}
-                onSeek={activeLesson.type === "video" ? seekActiveVideo : undefined}
-              />
+                {/* Kept mounted (just hidden) rather than conditionally rendered —
+                    switching tabs otherwise unmounted this and threw away its
+                    fetched comments, forcing a fresh load + spinner every time. */}
+                <div className="learn-tab-panel learn-tab-panel--comments" hidden={tab !== "comments"}>
+                  <LessonComments
+                    lessonId={activeLesson.id}
+                    getCurrentTime={activeLesson.type === "video" ? getVideoCurrentTime : undefined}
+                    getVideoId={activeLesson.type === "video" ? getActiveVideoId : undefined}
+                    onSeek={activeLesson.type === "video" ? seekActiveVideo : undefined}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Previous / Next lesson navigation */}
@@ -642,6 +662,7 @@ export default function Learn() {
           </div>
         )}
       </main>
+      </div>
     </div>
   );
 }
