@@ -14,8 +14,6 @@ export interface WalletData {
   balance: number;
   pending_balance: number;
   currency: string;
-  // Admin-configurable payout hold period (default 14 days) and when the
-  // oldest pending amount clears into `balance`, if anything is pending.
   hold_period_days?: number;
   next_release_at?: string | null;
 }
@@ -64,13 +62,20 @@ export interface InstructorPayoutAccount {
 export interface PayoutRequest {
   id: number;
   amount: number;
+  currency?: string;
   payment_method: string;
   source: "manual" | "monthly_auto";
   status: "pending" | "approved" | "rejected";
   notes?: string | null;
+  rejection_reason?: string | null;
+  transaction_reference?: string | null;
+  requested_at?: string | null;
+  processed_at?: string | null;
   created_at: string;
   updated_at: string;
   receipt_id?: number | null;
+  receipt?: PayoutReceipt | null;
+  payout_account?: InstructorPayoutAccount | null;
 }
 
 export interface PayoutReceipt {
@@ -613,6 +618,10 @@ export const instructorService = {
     api.get<{ data: { data: PayoutRequest[]; current_page: number; last_page: number } }>(
       `/finance/payout-requests?page=${page}`
     ),
+
+  // Fetch a single payout request by id.
+  getPayoutById: (id: number | string) =>
+    api.get<{ data: PayoutRequest }>(`/finance/payout-requests/${id}`),
 
   // List payout receipts.
   getPayoutReceipts: () =>

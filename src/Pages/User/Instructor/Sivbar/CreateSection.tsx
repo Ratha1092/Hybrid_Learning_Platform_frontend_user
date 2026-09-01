@@ -603,13 +603,21 @@ export default function SectionLibrary() {
                   />
                 </div>
                 {wizardError && <p className="text-[12.5px] font-medium text-rose-600 dark:text-rose-400">⚠ {wizardError}</p>}
-                <button
-                  onClick={handleWizardContinue}
-                  disabled={wizardSaving || !wizardTitle.trim()}
-                  className="mt-1 self-start rounded-xl bg-teal-600 px-5 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-teal-700 disabled:opacity-50"
-                >
-                  {wizardSaving ? "Saving…" : "Continue"}
-                </button>
+                <div className="mt-1 flex gap-2">
+                  <button
+                    onClick={closeWizard}
+                    className="rounded-xl border border-slate-200 px-5 py-2.5 text-[13px] font-semibold text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleWizardContinue}
+                    disabled={wizardSaving || !wizardTitle.trim()}
+                    className="rounded-xl bg-teal-600 px-5 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-teal-700 disabled:opacity-50"
+                  >
+                    {wizardSaving ? "Saving…" : "Continue"}
+                  </button>
+                </div>
               </div>
             )}
 
@@ -781,6 +789,12 @@ export default function SectionLibrary() {
                     className="rounded-xl border border-slate-200 px-4 py-2.5 text-[13px] font-semibold text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700"
                   >
                     ← Section Info
+                  </button>
+                  <button
+                    onClick={closeWizard}
+                    className="rounded-xl border border-slate-200 px-4 py-2.5 text-[13px] font-semibold text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700"
+                  >
+                    Cancel
                   </button>
                   <button
                     onClick={closeWizard}

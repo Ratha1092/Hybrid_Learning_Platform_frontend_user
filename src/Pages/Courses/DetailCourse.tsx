@@ -288,7 +288,7 @@ function ReviewsSection({ courseId, isEnrolled }: { courseId: number; isEnrolled
       });
       const saved: Review = {
         ...data.data,
-        user: data.data.user ?? (user ? { id: user.id, name: user.name, avatar: user.avatar ?? null } : null),
+        user: data.data.user ?? (user ? { id: user.id, name: user.name, avatar: user.avatar ?? null, avatar_url: user.avatar_url ?? null } : null),
       };
       setMyReview(saved);
       setReviews((prev) => [saved, ...prev.filter((r) => r.user_id !== saved.user_id)]);
@@ -363,7 +363,7 @@ function ReviewsSection({ courseId, isEnrolled }: { courseId: number; isEnrolled
       ) : (
         <div className="review-list">
           {reviews.map((r) => {
-            const avatar = resolveUrl(r.user?.avatar ?? null);
+            const avatar = r.user?.avatar_url ?? resolveUrl(r.user?.avatar ?? null);
             return (
               <div key={r.id} className="review-card">
                 <div className="review-card__head">

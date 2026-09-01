@@ -403,7 +403,7 @@ function Courses() {
                     {course.language && <span className="flex items-center gap-1.5"><Globe className="h-3.5 w-3.5 brand-blue" /> {course.language}</span>}
                   </div>
 
-                  <div className="mt-5 flex items-center justify-between border-t border-slate-200 pt-4 dark:border-slate-700">
+                  <div className="mt-auto flex items-center justify-between border-t border-slate-200 pt-4 dark:border-slate-700">
                     <span className="font-display text-xl font-extrabold ink">
                       {isFree ? "Free" : `$${course.price}`}
                     </span>

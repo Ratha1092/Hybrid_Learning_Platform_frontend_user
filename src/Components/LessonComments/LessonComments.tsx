@@ -12,7 +12,6 @@ function formatTimestamp(seconds: number): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
-// Accepts "3:24", "1:03:05", or a bare number of seconds.
 function parseTimestamp(text: string): number | null {
   const trimmed = text.trim();
   if (!trimmed) return null;
@@ -21,20 +20,11 @@ function parseTimestamp(text: string): number | null {
   if (parts.some((p) => Number.isNaN(p))) return null;
   return parts.reduceRight((acc, p, i, arr) => acc + p * Math.pow(60, arr.length - 1 - i), 0);
 }
-
-// A timestamp is meaningless on its own for a lesson split into several
-// video parts — "3:24" could be in part 1 or part 3. videoId pins it to the
-// specific part (the id of the lesson's LessonVideo row) so a click always
-// jumps to the right one; it's null for a single-video lesson, where there's
-// only one part to begin with.
 export interface TimestampValue {
   seconds: number;
   videoId: number | null;
 }
 
-// Lets a commenter anchor their comment to a moment in the video: captured
-// automatically when the current time is readable (self-hosted video), or
-// typed in manually when it isn't (YouTube/Vimeo embeds).
 function TimestampControl({
   value, onChange, getCurrentTime, getVideoId,
 }: {
@@ -59,9 +49,6 @@ function TimestampControl({
   }
 
   if (manualOpen) {
-    // A plain div, not a <form> — this renders inside the composer/reply
-    // <form>, and nested <form> elements are invalid HTML that browsers
-    // silently mangle (breaking the outer form's submit instead).
     const commit = () => {
       const parsed = parseTimestamp(manualText);
       if (parsed != null) onChange({ seconds: parsed, videoId: getVideoId?.() ?? null });
@@ -114,8 +101,8 @@ function applyToTree(
   });
 }
 
-function Avatar({ name, avatar }: { name: string; avatar?: string | null }) {
-  const url = resolveUrl(avatar);
+function Avatar({ name, avatar, avatarUrl }: { name: string; avatar?: string | null; avatarUrl?: string | null }) {
+  const url = avatarUrl ?? resolveUrl(avatar);
   return (
     <div className="lc-avatar">
       {url ? <img src={url} alt={name} /> : <span>{name.charAt(0).toUpperCase()}</span>}
@@ -152,7 +139,7 @@ function CommentItem({
 
   return (
     <div className={`lc-item${isReply ? " lc-item--reply" : ""}`}>
-      <Avatar name={name} avatar={comment.user?.avatar ?? comment.user?.avatar_url} />
+      <Avatar name={name} avatar={comment.user?.avatar} avatarUrl={comment.user?.avatar_url} />
       <div className="lc-item__body">
         <div className="lc-item__head">
           <span className="lc-item__name">{name}</span>
@@ -247,11 +234,8 @@ function CommentItem({
 
 export default function LessonComments({ lessonId, getCurrentTime, getVideoId, onSeek }: {
   lessonId: number;
-  /** Returns the video's current playback position in seconds, or null when it can't be read (e.g. an embedded YouTube/Vimeo player). */
   getCurrentTime?: () => number | null;
-  /** Returns the id of the specific video part currently playing, or null for a single-video lesson. */
   getVideoId?: () => number | null;
-  /** Seeks to the given second, switching to the given video part first if it isn't the one currently active. */
   onSeek?: (seconds: number, videoId: number | null) => void;
 }) {
   const { user, isAuthenticated } = useAuth();
@@ -318,7 +302,7 @@ export default function LessonComments({ lessonId, getCurrentTime, getVideoId, o
       .then(({ data }) => {
         const saved: LessonComment = {
           ...data.data,
-          user: data.data.user ?? (user ? { id: user.id, name: user.name, avatar: user.avatar ?? null } : null),
+          user: data.data.user ?? (user ? { id: user.id, name: user.name, avatar: user.avatar ?? null, avatar_url: user.avatar_url ?? null } : null),
         };
         setComments((prev) => [saved, ...prev]);
         setTotal((t) => t + 1);
@@ -343,7 +327,7 @@ export default function LessonComments({ lessonId, getCurrentTime, getVideoId, o
       .then(({ data }) => {
         const saved: LessonComment = {
           ...data.data,
-          user: data.data.user ?? (user ? { id: user.id, name: user.name, avatar: user.avatar ?? null } : null),
+          user: data.data.user ?? (user ? { id: user.id, name: user.name, avatar: user.avatar ?? null, avatar_url: user.avatar_url ?? null } : null),
         };
         setComments((prev) =>
           prev.map((c) => (c.id === parentId ? { ...c, replies: [...(c.replies ?? []), saved] } : c))
@@ -434,7 +418,7 @@ export default function LessonComments({ lessonId, getCurrentTime, getVideoId, o
               <button className="lc-btn" onClick={openLogin}>Log in to join the discussion</button>
             ) : (
               <form onSubmit={handleSubmitComment} className="lc-composer__form">
-                <Avatar name={user?.name ?? "You"} avatar={user?.avatar} />
+                <Avatar name={user?.name ?? "You"} avatar={user?.avatar} avatarUrl={user?.avatar_url} />
                 <div className="lc-composer__input-wrap">
                   <textarea
                     className="lc-composer__input"

@@ -119,25 +119,25 @@
 }
 .lc-composer__actions { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 10px; }
 
-/* Dark mode */
-html.dark .lc-head { color: #94a3b8; }
-html.dark .lc-head h3 { color: #f1f5f9; }
-html.dark .lc-empty { color: #64748b; }
+/* Dark mode — matches Learn.css's deeper navy palette */
+html.dark .lc-head { color: #8b96ab; }
+html.dark .lc-head h3 { color: #f6f8fb; }
+html.dark .lc-empty { color: #6b7690; }
 html.dark .lc-item__name { color: #f1f5f9; }
-html.dark .lc-item__date { color: #64748b; }
-html.dark .lc-item__text { color: #cbd5e1; }
-html.dark .lc-action { color: #64748b; }
-html.dark .lc-action:hover { color: #e2e8f0; }
-html.dark .lc-replies { border-left-color: #334155; }
+html.dark .lc-item__date { color: #6b7690; }
+html.dark .lc-item__text { color: #b9c2d4; }
+html.dark .lc-action { color: #6b7690; }
+html.dark .lc-action:hover { color: #dbe4f3; }
+html.dark .lc-replies { border-left-color: #16213a; }
 html.dark .lc-reply-form__input,
 html.dark .lc-composer__input {
-  background: #273548; border-color: #334155; color: #f1f5f9;
+  background: #101828; border-color: #1b2740; color: #f1f5f9;
 }
-html.dark .lc-btn--ghost { background: #334155; color: #e2e8f0; }
-html.dark .lc-btn--ghost:hover:not(:disabled) { background: #475569; }
-html.dark .lc-pagination button { background: #1e293b; border-color: #334155; color: #cbd5e1; }
-html.dark .lc-pagination button:hover:not(:disabled) { background: #273548; }
-html.dark .lc-composer { border-top-color: #334155; }
-html.dark .lc-timestamp-chip { background: rgba(46,196,182,0.15); color: #5eead4; }
-html.dark .lc-timestamp-chip--link:hover { background: rgba(46,196,182,0.28); }
-html.dark .lc-timestamp-manual__input { background: #273548; border-color: #334155; color: #f1f5f9; }
+html.dark .lc-btn--ghost { background: #1b2740; color: #dbe4f3; }
+html.dark .lc-btn--ghost:hover:not(:disabled) { background: #253352; }
+html.dark .lc-pagination button { background: #0c1322; border-color: #1b2740; color: #aab6c9; }
+html.dark .lc-pagination button:hover:not(:disabled) { background: #101828; }
+html.dark .lc-composer { border-top-color: #16213a; }
+html.dark .lc-timestamp-chip { background: rgba(46,196,182,0.14); color: #5eead4; }
+html.dark .lc-timestamp-chip--link:hover { background: rgba(46,196,182,0.26); }
+html.dark .lc-timestamp-manual__input { background: #101828; border-color: #1b2740; color: #f1f5f9; }

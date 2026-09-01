@@ -38,6 +38,7 @@ const MyCourses = lazy(() => import("./Pages/User/Instructor/Sivbar/MyCourses"))
 const CreateCourse = lazy(() => import("./Pages/User/Instructor/Sivbar/CreateCourse"));
 const EditCourse = lazy(() => import("./Pages/User/Instructor/EditCourse/index"));
 const Revenue = lazy(() => import("./Pages/User/Instructor/Sivbar/Revenue"));
+const PayoutDetail = lazy(() => import("./Pages/User/Instructor/Sivbar/PayoutDetail"));
 const PayoutAccount = lazy(() => import("./Pages/User/Instructor/Sivbar/PayoutAccount"));
 const Students = lazy(() => import("./Pages/User/Instructor/Sivbar/Students"));
 const InstructorProfile = lazy(() => import("./Pages/User/Instructor/Sivbar/InstructorProfile"));
@@ -52,8 +53,6 @@ import About from "./Pages/About/About";
 import GitHubCallback from "./Pages/Auth/GitHub/GitHubCallback";
 import Login from "./Pages/Auth/Login/Login";
 import Register from "./Pages/Auth/Register/Register";
-
-const AUTH_REDIRECT_KEY = "authRedirectTo";
 
 function AuthRequiredNotice() {
   const { openLogin } = useAuthModal();
@@ -74,13 +73,12 @@ function AuthRequiredNotice() {
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
   const { openLogin } = useAuthModal();
-  const location = useLocation();
   const opened = useRef(false);
 
   useEffect(() => {
+    // openLogin() itself remembers the current location — see AuthModalContext.
     if (!isAuthenticated && !opened.current) {
       opened.current = true;
-      sessionStorage.setItem(AUTH_REDIRECT_KEY, location.pathname);
       openLogin();
     }
   }, []);
@@ -170,6 +168,9 @@ function PageLoader() {
 }
 
 function App() {
+  const location = useLocation();
+  const hideNavbar = location.pathname.startsWith("/learn/");
+
   return (
     <ThemeProvider>
     <WishlistProvider>
@@ -177,7 +178,7 @@ function App() {
       <MaintenanceOverlay />
       <SuspendedOverlay />
       <SessionExpiredOverlay />
-      <Navbar />
+      {!hideNavbar && <Navbar />}
       <AuthModal />
       <PageTransition>
         <Routes>
@@ -221,6 +222,7 @@ function App() {
             <Route path="courses/create" element={<CreateCourse />} />
             <Route path="courses/:id/edit" element={<EditCourse />} />
             <Route path="revenue" element={<Revenue />} />
+            <Route path="finance/payouts/:id" element={<PayoutDetail />} />
             <Route path="payout-account" element={<PayoutAccount />} />
             <Route path="students" element={<Students />} />
             <Route path="profile" element={<InstructorProfile />} />
