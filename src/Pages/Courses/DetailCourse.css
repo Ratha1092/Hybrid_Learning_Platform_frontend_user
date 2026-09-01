@@ -439,6 +439,24 @@
   color: #94a3b8;
   text-align: center;
 }
+.lesson-preview__parts {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 10px 0;
+}
+.lesson-preview__part-btn {
+  padding: 5px 12px; border-radius: 999px; border: 1px solid #e2e8f0;
+  background: #fff; color: #64748b; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all .15s;
+}
+.lesson-preview__part-btn:hover { border-color: #cbd5e1; color: #334155; }
+.lesson-preview__part-btn.active { background: #2563eb; border-color: #2563eb; color: #fff; }
+.lesson-preview__article {
+  padding: 14px 0;
+  font-size: 13.5px;
+  line-height: 1.75;
+  color: #334155;
+  white-space: pre-wrap;
+}
 
 .lesson-row__icon {
   font-size: 12px;
@@ -1240,6 +1258,10 @@ html.dark .lesson-row__preview { color: #60a5fa; background: rgba(37,99,235,0.12
 html.dark .lesson-row__dur { color: #64748b; }
 html.dark .lesson-preview { background: #1e293b; }
 html.dark .lesson-preview__unavailable { color: #64748b; }
+html.dark .lesson-preview__article { color: #cbd5e1; }
+html.dark .lesson-preview__part-btn { background: #273548; border-color: #334155; color: #94a3b8; }
+html.dark .lesson-preview__part-btn:hover { border-color: #475569; color: #e2e8f0; }
+html.dark .lesson-preview__part-btn.active { background: #2563eb; border-color: #2563eb; color: #fff; }
 
 /* Enroll card */
 html.dark .detail-card { background: #1e293b; border-color: #334155; }

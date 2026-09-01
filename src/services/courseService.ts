@@ -28,12 +28,21 @@ export interface Course {
   preview_video_url?: string | null;
 }
 
+// A lesson can hold several videos (e.g. a lecture split into parts).
+export interface LessonVideo {
+  id: number;
+  video_url?: string | null;
+  duration?: number | null;
+  order: number;
+}
+
 export interface Lesson {
   id: number;
   title: string;
   type: string;
   is_preview: boolean;
   video_url?: string;
+  videos?: LessonVideo[];
   content?: string;
   order: number;
   duration: number;

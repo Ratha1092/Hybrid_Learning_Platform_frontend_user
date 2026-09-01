@@ -1,0 +1,461 @@
+import { useEffect, useState } from "react";
+import { Clock, Heart, MessageCircle, X } from "lucide-react";
+import { lessonCommentService, type LessonComment } from "../../services/lessonCommentService";
+import { useAuth } from "../../context/AuthContext";
+import { useAuthModal } from "../../context/AuthModalContext";
+import { resolveUrl, timeAgo } from "../../utils/format";
+import "./LessonComments.css";
+
+function formatTimestamp(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+// Accepts "3:24", "1:03:05", or a bare number of seconds.
+function parseTimestamp(text: string): number | null {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+  if (/^\d+$/.test(trimmed)) return parseInt(trimmed, 10);
+  const parts = trimmed.split(":").map((p) => parseInt(p, 10));
+  if (parts.some((p) => Number.isNaN(p))) return null;
+  return parts.reduceRight((acc, p, i, arr) => acc + p * Math.pow(60, arr.length - 1 - i), 0);
+}
+
+// A timestamp is meaningless on its own for a lesson split into several
+// video parts — "3:24" could be in part 1 or part 3. videoId pins it to the
+// specific part (the id of the lesson's LessonVideo row) so a click always
+// jumps to the right one; it's null for a single-video lesson, where there's
+// only one part to begin with.
+export interface TimestampValue {
+  seconds: number;
+  videoId: number | null;
+}
+
+// Lets a commenter anchor their comment to a moment in the video: captured
+// automatically when the current time is readable (self-hosted video), or
+// typed in manually when it isn't (YouTube/Vimeo embeds).
+function TimestampControl({
+  value, onChange, getCurrentTime, getVideoId,
+}: {
+  value: TimestampValue | null;
+  onChange: (v: TimestampValue | null) => void;
+  getCurrentTime?: () => number | null;
+  getVideoId?: () => number | null;
+}) {
+  const [manualOpen, setManualOpen] = useState(false);
+  const [manualText, setManualText] = useState("");
+
+  if (value != null) {
+    return (
+      <span className="lc-timestamp-chip">
+        <Clock size={12} />
+        {formatTimestamp(value.seconds)}
+        <button type="button" onClick={() => onChange(null)} aria-label="Remove timestamp">
+          <X size={12} />
+        </button>
+      </span>
+    );
+  }
+
+  if (manualOpen) {
+    // A plain div, not a <form> — this renders inside the composer/reply
+    // <form>, and nested <form> elements are invalid HTML that browsers
+    // silently mangle (breaking the outer form's submit instead).
+    const commit = () => {
+      const parsed = parseTimestamp(manualText);
+      if (parsed != null) onChange({ seconds: parsed, videoId: getVideoId?.() ?? null });
+      setManualOpen(false);
+      setManualText("");
+    };
+    return (
+      <div className="lc-timestamp-manual">
+        <input
+          className="lc-timestamp-manual__input"
+          placeholder="e.g. 3:24"
+          value={manualText}
+          onChange={(e) => setManualText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") { e.preventDefault(); commit(); }
+            if (e.key === "Escape") { e.preventDefault(); setManualOpen(false); }
+          }}
+          autoFocus
+        />
+        <button type="button" className="lc-action" onClick={commit}>Set</button>
+        <button type="button" className="lc-action" onClick={() => setManualOpen(false)}>Cancel</button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className="lc-action"
+      onClick={() => {
+        const current = getCurrentTime?.();
+        if (current != null) onChange({ seconds: Math.floor(current), videoId: getVideoId?.() ?? null });
+        else setManualOpen(true);
+      }}
+    >
+      <Clock size={13} /> Add timestamp
+    </button>
+  );
+}
+
+function applyToTree(
+  list: LessonComment[],
+  id: number,
+  patch: Partial<LessonComment>
+): LessonComment[] {
+  return list.map((c) => {
+    if (c.id === id) return { ...c, ...patch };
+    if (c.replies?.length) return { ...c, replies: applyToTree(c.replies, id, patch) };
+    return c;
+  });
+}
+
+function Avatar({ name, avatar }: { name: string; avatar?: string | null }) {
+  const url = resolveUrl(avatar);
+  return (
+    <div className="lc-avatar">
+      {url ? <img src={url} alt={name} /> : <span>{name.charAt(0).toUpperCase()}</span>}
+    </div>
+  );
+}
+
+interface CommentItemProps {
+  comment: LessonComment;
+  isReply?: boolean;
+  isAuthenticated: boolean;
+  onLike: (comment: LessonComment) => void;
+  onOpenLogin: () => void;
+  onSeek?: (seconds: number, videoId: number | null) => void;
+  replyOpenId: number | null;
+  setReplyOpenId: (id: number | null) => void;
+  replyBody: string;
+  setReplyBody: (v: string) => void;
+  replyTimestamp: TimestampValue | null;
+  setReplyTimestamp: (v: TimestampValue | null) => void;
+  getCurrentTime?: () => number | null;
+  getVideoId?: () => number | null;
+  replySubmitting: boolean;
+  onSubmitReply: (parentId: number) => void;
+}
+
+function CommentItem({
+  comment, isReply, isAuthenticated, onLike, onOpenLogin, onSeek,
+  replyOpenId, setReplyOpenId, replyBody, setReplyBody,
+  replyTimestamp, setReplyTimestamp, getCurrentTime, getVideoId, replySubmitting, onSubmitReply,
+}: CommentItemProps) {
+  const name = comment.user?.name ?? "Student";
+  const replying = replyOpenId === comment.id;
+
+  return (
+    <div className={`lc-item${isReply ? " lc-item--reply" : ""}`}>
+      <Avatar name={name} avatar={comment.user?.avatar ?? comment.user?.avatar_url} />
+      <div className="lc-item__body">
+        <div className="lc-item__head">
+          <span className="lc-item__name">{name}</span>
+          <span className="lc-item__date">{timeAgo(comment.created_at)}</span>
+          {comment.video_timestamp != null && (
+            <button
+              type="button"
+              className="lc-timestamp-chip lc-timestamp-chip--link"
+              onClick={() => onSeek?.(comment.video_timestamp!, comment.video_id ?? null)}
+              title="Jump to this moment in the video"
+            >
+              <Clock size={12} />
+              {formatTimestamp(comment.video_timestamp)}
+            </button>
+          )}
+        </div>
+        <p className="lc-item__text">{comment.body}</p>
+        <div className="lc-item__actions">
+          <button
+            className={`lc-action${comment.liked_by_me ? " lc-action--liked" : ""}`}
+            onClick={() => (isAuthenticated ? onLike(comment) : onOpenLogin())}
+          >
+            <Heart size={14} fill={comment.liked_by_me ? "currentColor" : "none"} />
+            {comment.likes_count > 0 && comment.likes_count}
+          </button>
+          {!isReply && (
+            <button
+              className="lc-action"
+              onClick={() => (isAuthenticated ? setReplyOpenId(replying ? null : comment.id) : onOpenLogin())}
+            >
+              Reply
+            </button>
+          )}
+        </div>
+
+        {replying && (
+          <form
+            className="lc-reply-form"
+            onSubmit={(e) => { e.preventDefault(); onSubmitReply(comment.id); }}
+          >
+            <textarea
+              className="lc-reply-form__input"
+              rows={2}
+              placeholder={`Reply to ${name}...`}
+              value={replyBody}
+              onChange={(e) => setReplyBody(e.target.value)}
+              autoFocus
+            />
+            <div className="lc-reply-form__actions">
+              <TimestampControl value={replyTimestamp} onChange={setReplyTimestamp} getCurrentTime={getCurrentTime} getVideoId={getVideoId} />
+              <div className="lc-reply-form__buttons">
+                <button type="button" className="lc-btn lc-btn--ghost" onClick={() => setReplyOpenId(null)} disabled={replySubmitting}>
+                  Cancel
+                </button>
+                <button type="submit" className="lc-btn" disabled={replySubmitting || !replyBody.trim()}>
+                  {replySubmitting ? "Posting..." : "Post reply"}
+                </button>
+              </div>
+            </div>
+          </form>
+        )}
+
+        {!!comment.replies?.length && (
+          <div className="lc-replies">
+            {comment.replies.map((r) => (
+              <CommentItem
+                key={r.id}
+                comment={r}
+                isReply
+                isAuthenticated={isAuthenticated}
+                onLike={onLike}
+                onOpenLogin={onOpenLogin}
+                onSeek={onSeek}
+                replyOpenId={replyOpenId}
+                setReplyOpenId={setReplyOpenId}
+                replyBody={replyBody}
+                setReplyBody={setReplyBody}
+                replyTimestamp={replyTimestamp}
+                setReplyTimestamp={setReplyTimestamp}
+                getCurrentTime={getCurrentTime}
+                getVideoId={getVideoId}
+                replySubmitting={replySubmitting}
+                onSubmitReply={onSubmitReply}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function LessonComments({ lessonId, getCurrentTime, getVideoId, onSeek }: {
+  lessonId: number;
+  /** Returns the video's current playback position in seconds, or null when it can't be read (e.g. an embedded YouTube/Vimeo player). */
+  getCurrentTime?: () => number | null;
+  /** Returns the id of the specific video part currently playing, or null for a single-video lesson. */
+  getVideoId?: () => number | null;
+  /** Seeks to the given second, switching to the given video part first if it isn't the one currently active. */
+  onSeek?: (seconds: number, videoId: number | null) => void;
+}) {
+  const { user, isAuthenticated } = useAuth();
+  const { openLogin } = useAuthModal();
+
+  const [comments, setComments] = useState<LessonComment[]>([]);
+  const [page, setPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [unavailable, setUnavailable] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const [newBody, setNewBody] = useState("");
+  const [newTimestamp, setNewTimestamp] = useState<TimestampValue | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const [replyOpenId, setReplyOpenId] = useState<number | null>(null);
+  const [replyBody, setReplyBody] = useState("");
+  const [replyTimestamp, setReplyTimestamp] = useState<TimestampValue | null>(null);
+  const [replySubmitting, setReplySubmitting] = useState(false);
+
+  const fetchPage = (p: number) => {
+    setLoading(true);
+    setErrorMsg(null);
+    lessonCommentService.getByLesson(lessonId, p)
+      .then(({ data }) => {
+        const cp = data.data;
+        setComments(cp.data);
+        setPage(cp.current_page);
+        setLastPage(cp.last_page);
+        setTotal(cp.total);
+        setUnavailable(false);
+      })
+      .catch((err: unknown) => {
+        const status = (err as { response?: { status?: number } }).response?.status;
+        if (status === 404) setUnavailable(true);
+        else setErrorMsg("Couldn't load comments. Please try again.");
+      })
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    setReplyOpenId(null);
+    setNewTimestamp(null);
+    setReplyTimestamp(null);
+    fetchPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lessonId]);
+
+  const handleSubmitComment = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newBody.trim()) return;
+    setSubmitting(true);
+    setSubmitError(null);
+    lessonCommentService.create(lessonId, {
+      body: newBody.trim(),
+      ...(newTimestamp != null ? {
+        video_timestamp: newTimestamp.seconds,
+        ...(newTimestamp.videoId != null ? { video_id: newTimestamp.videoId } : {}),
+      } : {}),
+    })
+      .then(({ data }) => {
+        const saved: LessonComment = {
+          ...data.data,
+          user: data.data.user ?? (user ? { id: user.id, name: user.name, avatar: user.avatar ?? null } : null),
+        };
+        setComments((prev) => [saved, ...prev]);
+        setTotal((t) => t + 1);
+        setNewBody("");
+        setNewTimestamp(null);
+      })
+      .catch(() => setSubmitError("Failed to post comment. Please try again."))
+      .finally(() => setSubmitting(false));
+  };
+
+  const handleSubmitReply = (parentId: number) => {
+    if (!replyBody.trim()) return;
+    setReplySubmitting(true);
+    lessonCommentService.create(lessonId, {
+      body: replyBody.trim(),
+      parent_id: parentId,
+      ...(replyTimestamp != null ? {
+        video_timestamp: replyTimestamp.seconds,
+        ...(replyTimestamp.videoId != null ? { video_id: replyTimestamp.videoId } : {}),
+      } : {}),
+    })
+      .then(({ data }) => {
+        const saved: LessonComment = {
+          ...data.data,
+          user: data.data.user ?? (user ? { id: user.id, name: user.name, avatar: user.avatar ?? null } : null),
+        };
+        setComments((prev) =>
+          prev.map((c) => (c.id === parentId ? { ...c, replies: [...(c.replies ?? []), saved] } : c))
+        );
+        setReplyBody("");
+        setReplyTimestamp(null);
+        setReplyOpenId(null);
+      })
+      .catch(() => setErrorMsg("Failed to post reply. Please try again."))
+      .finally(() => setReplySubmitting(false));
+  };
+
+  const handleLike = (comment: LessonComment) => {
+    const liked_by_me = !comment.liked_by_me;
+    const likes_count = comment.likes_count + (liked_by_me ? 1 : -1);
+    setComments((prev) => applyToTree(prev, comment.id, { liked_by_me, likes_count }));
+    lessonCommentService.like(comment.id)
+      .then(({ data }) => {
+        setComments((prev) => applyToTree(prev, comment.id, data.data));
+      })
+      .catch(() => {
+        setComments((prev) =>
+          applyToTree(prev, comment.id, { liked_by_me: comment.liked_by_me, likes_count: comment.likes_count })
+        );
+      });
+  };
+
+  return (
+    <section className="lc-wrap">
+      <div className="lc-head">
+        <MessageCircle size={16} />
+        <h3>Discussion{total > 0 ? ` (${total})` : ""}</h3>
+      </div>
+
+      {loading ? (
+        <p className="lc-empty">Loading comments...</p>
+      ) : unavailable ? (
+        <p className="lc-empty">Comments aren't available yet for this lesson.</p>
+      ) : (
+        <>
+          {errorMsg && <p className="lc-error">{errorMsg}</p>}
+
+          {comments.length === 0 ? (
+            <p className="lc-empty">No comments yet. Start the discussion!</p>
+          ) : (
+            <div className="lc-list">
+              {comments.map((c) => (
+                <CommentItem
+                  key={c.id}
+                  comment={c}
+                  isAuthenticated={isAuthenticated}
+                  onLike={handleLike}
+                  onOpenLogin={openLogin}
+                  onSeek={onSeek}
+                  replyOpenId={replyOpenId}
+                  setReplyOpenId={setReplyOpenId}
+                  replyBody={replyBody}
+                  setReplyBody={setReplyBody}
+                  replyTimestamp={replyTimestamp}
+                  setReplyTimestamp={setReplyTimestamp}
+                  getCurrentTime={getCurrentTime}
+                  getVideoId={getVideoId}
+                  replySubmitting={replySubmitting}
+                  onSubmitReply={handleSubmitReply}
+                />
+              ))}
+            </div>
+          )}
+
+          {lastPage > 1 && (
+            <div className="lc-pagination">
+              <button disabled={page <= 1} onClick={() => fetchPage(page - 1)}>Previous</button>
+              {Array.from({ length: lastPage }, (_, i) => i + 1).map((p) => (
+                <button
+                  key={p}
+                  className={p === page ? "lc-pagination__page lc-pagination__page--active" : "lc-pagination__page"}
+                  onClick={() => fetchPage(p)}
+                >
+                  {p}
+                </button>
+              ))}
+              <button disabled={page >= lastPage} onClick={() => fetchPage(page + 1)}>Next</button>
+            </div>
+          )}
+
+          <div className="lc-composer">
+            {!isAuthenticated ? (
+              <button className="lc-btn" onClick={openLogin}>Log in to join the discussion</button>
+            ) : (
+              <form onSubmit={handleSubmitComment} className="lc-composer__form">
+                <Avatar name={user?.name ?? "You"} avatar={user?.avatar} />
+                <div className="lc-composer__input-wrap">
+                  <textarea
+                    className="lc-composer__input"
+                    rows={2}
+                    placeholder="Write a comment..."
+                    value={newBody}
+                    onChange={(e) => setNewBody(e.target.value)}
+                  />
+                  {submitError && <p className="lc-error">{submitError}</p>}
+                  <div className="lc-composer__actions">
+                    <TimestampControl value={newTimestamp} onChange={setNewTimestamp} getCurrentTime={getCurrentTime} getVideoId={getVideoId} />
+                    <button type="submit" className="lc-btn" disabled={submitting || !newBody.trim()}>
+                      {submitting ? "Posting..." : "Post comment"}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            )}
+          </div>
+        </>
+      )}
+    </section>
+  );
+}

@@ -29,6 +29,7 @@ export default function MyCourses() {
   const [enrollments, setEnrollments] = useState<StudentEnrollment[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmId, setConfirmId] = useState<number | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const load = () => {
     setLoading(true);
@@ -66,6 +67,8 @@ export default function MyCourses() {
   };
 
   const handleDelete = async (id: number) => {
+    const course = courses.find((c) => c.id === id);
+    if (course?.status === "published") return;
     setConfirmId(id);
   };
 
@@ -73,10 +76,14 @@ export default function MyCourses() {
     if (!confirmId) return;
     const id = confirmId;
     setConfirmId(null);
+    setDeleteError(null);
     try {
       await instructorService.deleteCourse(id);
       setCourses((prev) => prev.filter((c) => c.id !== id));
-    } catch { /* silent */ }
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } }; message?: string };
+      setDeleteError(err.response?.data?.message ?? "Failed to delete course.");
+    }
   };
 
 
@@ -97,6 +104,8 @@ export default function MyCourses() {
         </button>
       </div>
 
+      {deleteError && <p className="mc-error">{deleteError}</p>}
+
 
       {courses.length === 0 ? (
         <div className="mc-empty">
@@ -107,7 +116,7 @@ export default function MyCourses() {
         <div className="mc-list">
           {courses.map((course) => {
           const enrolledCount = enrollmentCountForCourse(course);
-          const deleteLocked = course.status === "published" && enrolledCount > 0;
+          const deleteLocked = course.status === "published";
           return (
             <div key={course.id} className="mc-row">
               <div className="mc-row__thumb">
@@ -150,7 +159,7 @@ export default function MyCourses() {
                   className="mc-btn mc-btn--delete"
                   onClick={() => handleDelete(course.id)}
                   disabled={deleteLocked}
-                  title={deleteLocked ? "This course is public and has enrolled students, so it can't be deleted." : undefined}
+                  title={deleteLocked ? "This course is public, so it can't be deleted." : undefined}
                 >
                   Delete
                 </button>

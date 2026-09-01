@@ -155,6 +155,7 @@ export interface InstructorLesson {
   order: number;
   video_url?: string;
   content?: string;
+  videos_count?: number;
 }
 
 // Represents a file attached to a lesson as a downloadable resource.
@@ -164,6 +165,17 @@ export interface LessonResource {
   title: string;
   type: string;
   file_path: string;
+}
+
+// Represents one of possibly several videos attached to a lesson.
+export interface InstructorLessonVideo {
+  id: number;
+  lesson_id: number;
+  video_url?: string | null;
+  video_path?: string | null;
+  video_source?: string | null;
+  duration?: number | null;
+  order: number;
 }
 
 // Represents a course section containing lessons.
@@ -282,6 +294,35 @@ export const instructorService = {
     resourceId: number | string
   ) =>
     api.delete(`/instructor/sections/${sectionId}/lessons/${lessonId}/resources/${resourceId}`),
+
+  // A lesson can hold several videos — these append a new one rather than
+  // overwriting, unlike uploadSectionLessonVideo above.
+  getSectionLessonVideos: (sectionId: number | string, lessonId: number | string) =>
+    api.get<{ data: InstructorLessonVideo[] }>(`/instructor/sections/${sectionId}/lessons/${lessonId}/videos`),
+
+  addSectionLessonVideo: (
+    sectionId: number | string,
+    lessonId: number | string,
+    formData: FormData,
+    onProgress?: (pct: number) => void
+  ) =>
+    api.post<{ data: InstructorLessonVideo }>(
+      `/instructor/sections/${sectionId}/lessons/${lessonId}/videos`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (e) => {
+          if (onProgress && e.total) onProgress(Math.round((e.loaded / e.total) * 100));
+        },
+      }
+    ),
+
+  deleteSectionLessonVideo: (
+    sectionId: number | string,
+    lessonId: number | string,
+    videoId: number | string
+  ) =>
+    api.delete(`/instructor/sections/${sectionId}/lessons/${lessonId}/videos/${videoId}`),
 
   // Submit application to become an instructor.
   apply: (formData: FormData) =>
@@ -496,6 +537,41 @@ export const instructorService = {
   ) =>
     api.delete(
       `/instructor/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}/resources/${resourceId}`
+    ),
+
+  // Lesson Videos── (a lesson can hold several; these append rather than overwrite)
+
+  getLessonVideos: (courseId: number | string, sectionId: number | string, lessonId: number | string) =>
+    api.get<{ data: InstructorLessonVideo[] }>(
+      `/instructor/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}/videos`
+    ),
+
+  addLessonVideo: (
+    courseId: number | string,
+    sectionId: number | string,
+    lessonId: number | string,
+    formData: FormData,
+    onProgress?: (pct: number) => void
+  ) =>
+    api.post<{ data: InstructorLessonVideo }>(
+      `/instructor/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}/videos`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (e) => {
+          if (onProgress && e.total) onProgress(Math.round((e.loaded / e.total) * 100));
+        },
+      }
+    ),
+
+  deleteLessonVideo: (
+    courseId: number | string,
+    sectionId: number | string,
+    lessonId: number | string,
+    videoId: number | string
+  ) =>
+    api.delete(
+      `/instructor/courses/${courseId}/sections/${sectionId}/lessons/${lessonId}/videos/${videoId}`
     ),
 
   // Students─

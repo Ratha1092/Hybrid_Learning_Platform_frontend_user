@@ -1,23 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronDown, ChevronRight, Trash2, Plus, Video, FileText, ListChecks, Paperclip, Pencil } from "lucide-react";
-import { instructorService, type InstructorSection, type InstructorLesson, type LessonResource } from "../../../../services/instructorService";
+import { instructorService, type InstructorSection, type InstructorLesson, type LessonResource, type InstructorLessonVideo } from "../../../../services/instructorService";
 import { getVideoDuration } from "../../../../utils/videoUrl";
 
-interface Props { courseId: number; }
+interface Props { courseId: number; isPublished?: boolean; }
 
 const EXT_ICON: Record<string, string> = {
   pdf: "📄", zip: "🗜️", doc: "📝", docx: "📝", ppt: "📊", pptx: "📊", mp4: "🎬", jpg: "🖼️", png: "🖼️",
 };
 
 //  Lesson Resources Panel 
-function ResourcesPanel({ courseId, sectionId, lessonId }: { courseId: number; sectionId: number; lessonId: number }) {
+function ResourcesPanel({ courseId, sectionId, lessonId, isPublished }: { courseId: number; sectionId: number; lessonId: number; isPublished: boolean }) {
   const [resources, setResources] = useState<LessonResource[]>([]);
   const [loading, setLoading]     = useState(true);
   const [title, setTitle]         = useState("");
-  const [file, setFile]           = useState<File | null>(null);
+  const [files, setFiles]         = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress]   = useState<number | null>(null);
+  const [uploadIndex, setUploadIndex] = useState<{ done: number; total: number } | null>(null);
   const [err, setErr]             = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -29,29 +30,41 @@ function ResourcesPanel({ courseId, sectionId, lessonId }: { courseId: number; s
   }, [courseId, sectionId, lessonId]);
 
   const handleUpload = async () => {
-    if (!title.trim()) { setErr("Title is required."); return; }
-    if (!file)         { setErr("Please select a file."); return; }
-    setErr(null); setUploading(true); setProgress(0);
-    try {
-      const fd = new FormData();
-      fd.append("title", title.trim());
-      fd.append("file", file);
-      const res = await instructorService.uploadLessonResource(courseId, sectionId, lessonId, fd, setProgress);
-      setResources((prev) => [...prev, res.data.data]);
-      setTitle(""); setFile(null); setProgress(null);
-      if (fileRef.current) fileRef.current.value = "";
-    } catch (e: unknown) {
-      const err = e as { response?: { data?: { message?: string } }; message?: string };
-      setErr(err.response?.data?.message ?? err.message ?? "Upload failed.");
+    if (files.length === 0)             { setErr("Please select at least one file."); return; }
+    if (files.length === 1 && !title.trim()) { setErr("Title is required."); return; }
+    setErr(null); setUploading(true);
+    const uploaded: LessonResource[] = [];
+    for (let i = 0; i < files.length; i++) {
+      setUploadIndex({ done: i, total: files.length }); setProgress(0);
+      const resourceTitle = files.length > 1 ? files[i].name.replace(/\.[^.]+$/, "") : title.trim();
+      try {
+        const fd = new FormData();
+        fd.append("title", resourceTitle);
+        fd.append("file", files[i]);
+        const res = await instructorService.uploadLessonResource(courseId, sectionId, lessonId, fd, setProgress);
+        uploaded.push(res.data.data);
+      } catch (e: unknown) {
+        const err = e as { response?: { data?: { message?: string } }; message?: string };
+        setErr(err.response?.data?.message ?? err.message ?? "Upload failed.");
+        break;
+      }
     }
-    setUploading(false); setProgress(null);
+    if (uploaded.length) setResources((prev) => [...prev, ...uploaded]);
+    setTitle(""); setFiles([]); setProgress(null); setUploadIndex(null);
+    if (fileRef.current) fileRef.current.value = "";
+    setUploading(false);
   };
 
   const handleDelete = async (rid: number) => {
+    if (isPublished) return;
+    setErr(null);
     try {
       await instructorService.deleteLessonResource(courseId, sectionId, lessonId, rid);
       setResources((prev) => prev.filter((r) => r.id !== rid));
-    } catch { /* silent */ }
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } }; message?: string };
+      setErr(err.response?.data?.message ?? err.message ?? "Failed to delete resource.");
+    }
   };
 
   return (
@@ -68,7 +81,12 @@ function ResourcesPanel({ courseId, sectionId, lessonId }: { courseId: number; s
               <span className="text-sm">{EXT_ICON[r.type] ?? "📎"}</span>
               <span className="flex-1 text-[12.5px] font-medium text-slate-700 dark:text-slate-200">{r.title}</span>
               <span className="text-[11px] text-slate-400">.{r.type}</span>
-              <button onClick={() => handleDelete(r.id)} className="text-slate-300 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400">
+              <button
+                onClick={() => handleDelete(r.id)}
+                disabled={isPublished}
+                title={isPublished ? "This course is public, so its content can't be deleted." : undefined}
+                className="text-slate-300 hover:text-rose-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-slate-300 dark:text-slate-500 dark:hover:text-rose-400"
+              >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             </div>
@@ -76,17 +94,21 @@ function ResourcesPanel({ courseId, sectionId, lessonId }: { courseId: number; s
 
           <div className="mt-3 flex flex-col gap-2">
             <input
-              placeholder="Resource title *"
+              placeholder={files.length > 1 ? "Title (ignored — each file uses its own name)" : "Resource title *"}
               value={title}
+              disabled={files.length > 1}
               onChange={(e) => setTitle(e.target.value)}
-              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[12.5px] outline-none focus:border-blue-400 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[12.5px] outline-none focus:border-blue-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
             />
             <label className="cursor-pointer rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2 text-[12px] text-slate-500 hover:border-blue-400 hover:bg-blue-50/50 dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-blue-500/5">
-              {file ? file.name : "Choose file (PDF, DOC, PPT, ZIP…)"}
-              <input ref={fileRef} type="file" accept=".pdf,.zip,.doc,.docx,.ppt,.pptx,.mp4,.jpg,.png" className="hidden"
-                onChange={(e) => { setFile(e.target.files?.[0] ?? null); setErr(null); }} />
+              {files.length > 0 ? `${files.length} file${files.length > 1 ? "s" : ""} selected` : "Choose file(s) (PDF, DOC, PPT, ZIP…)"}
+              <input ref={fileRef} type="file" multiple accept=".pdf,.zip,.doc,.docx,.ppt,.pptx,.mp4,.jpg,.png" className="hidden"
+                onChange={(e) => { setFiles(Array.from(e.target.files ?? [])); setErr(null); }} />
             </label>
             {err && <p className="text-[11.5px] text-rose-500">⚠ {err}</p>}
+            {uploadIndex && (
+              <p className="text-[11px] text-slate-400">Uploading file {uploadIndex.done + 1} of {uploadIndex.total}…</p>
+            )}
             {progress !== null && (
               <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
                 <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${progress}%` }} />
@@ -97,7 +119,139 @@ function ResourcesPanel({ courseId, sectionId, lessonId }: { courseId: number; s
               disabled={uploading}
               className="self-start rounded-lg bg-blue-600 px-4 py-1.5 text-[12px] font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
             >
-              {uploading ? "Uploading…" : "Upload"}
+              {uploading ? "Uploading…" : files.length > 1 ? `Upload ${files.length} files` : "Upload"}
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+//  Lesson Videos Panel — a lesson can hold several videos (e.g. split into parts)
+function VideosPanel({ courseId, sectionId, lessonId, isPublished }: { courseId: number; sectionId: number; lessonId: number; isPublished: boolean }) {
+  const [videos, setVideos]       = useState<InstructorLessonVideo[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [files, setFiles]         = useState<File[]>([]);
+  const [urlInput, setUrlInput]   = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress]   = useState<number | null>(null);
+  const [uploadIndex, setUploadIndex] = useState<{ done: number; total: number } | null>(null);
+  const [err, setErr]             = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    instructorService.getLessonVideos(courseId, sectionId, lessonId)
+      .then((r) => setVideos(r.data.data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [courseId, sectionId, lessonId]);
+
+  const handleUpload = async () => {
+    if (files.length === 0 && !urlInput.trim()) { setErr("Choose file(s) or paste a video URL."); return; }
+    setErr(null); setUploading(true);
+    const uploaded: InstructorLessonVideo[] = [];
+    if (files.length > 0) {
+      for (let i = 0; i < files.length; i++) {
+        setUploadIndex({ done: i, total: files.length }); setProgress(0);
+        try {
+          const fd = new FormData();
+          fd.append("video", files[i]);
+          const duration = await getVideoDuration(files[i]).catch(() => null);
+          if (duration != null) fd.append("duration", String(Math.round(duration)));
+          const res = await instructorService.addLessonVideo(courseId, sectionId, lessonId, fd, setProgress);
+          uploaded.push(res.data.data);
+        } catch (e: unknown) {
+          const err = e as { response?: { data?: { message?: string } }; message?: string };
+          setErr(err.response?.data?.message ?? err.message ?? "Upload failed.");
+          break;
+        }
+      }
+    } else if (urlInput.trim()) {
+      try {
+        const fd = new FormData();
+        fd.append("video_url", urlInput.trim());
+        const res = await instructorService.addLessonVideo(courseId, sectionId, lessonId, fd);
+        uploaded.push(res.data.data);
+      } catch (e: unknown) {
+        const err = e as { response?: { data?: { message?: string } }; message?: string };
+        setErr(err.response?.data?.message ?? err.message ?? "Failed to add video URL.");
+      }
+    }
+    if (uploaded.length) setVideos((prev) => [...prev, ...uploaded]);
+    setFiles([]); setUrlInput(""); setProgress(null); setUploadIndex(null);
+    if (fileRef.current) fileRef.current.value = "";
+    setUploading(false);
+  };
+
+  const handleDelete = async (vid: number) => {
+    if (isPublished) return;
+    setErr(null);
+    try {
+      await instructorService.deleteLessonVideo(courseId, sectionId, lessonId, vid);
+      setVideos((prev) => prev.filter((v) => v.id !== vid));
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } }; message?: string };
+      setErr(err.response?.data?.message ?? err.message ?? "Failed to delete video.");
+    }
+  };
+
+  return (
+    <div className="mx-6 mb-3 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 dark:border-slate-600 dark:bg-slate-700/30">
+      <p className="mb-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Lesson Videos</p>
+
+      {loading ? (
+        <p className="text-[12px] text-slate-400">Loading…</p>
+      ) : (
+        <>
+          {videos.length === 0 && <p className="mb-3 text-[12px] text-slate-400">No videos yet.</p>}
+          {videos.map((v, i) => (
+            <div key={v.id} className="mb-2 flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 dark:border-slate-600 dark:bg-slate-800">
+              <span className="text-sm">🎬</span>
+              <span className="flex-1 text-[12.5px] font-medium text-slate-700 dark:text-slate-200">
+                Video {i + 1}{v.video_path ? "" : " (URL)"}
+              </span>
+              {v.duration != null && <span className="text-[11px] text-slate-400">{Math.round(v.duration)}s</span>}
+              <button
+                onClick={() => handleDelete(v.id)}
+                disabled={isPublished}
+                title={isPublished ? "This course is public, so its content can't be deleted." : undefined}
+                className="text-slate-300 hover:text-rose-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:text-slate-300 dark:text-slate-500 dark:hover:text-rose-400"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))}
+
+          <div className="mt-3 flex flex-col gap-2">
+            <label className="cursor-pointer rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2 text-[12px] text-slate-500 hover:border-blue-400 hover:bg-blue-50/50 dark:border-slate-600 dark:bg-slate-800 dark:hover:bg-blue-500/5">
+              {files.length > 0 ? `${files.length} file${files.length > 1 ? "s" : ""} selected` : "Choose video file(s) (mp4, mov, webm…)"}
+              <input ref={fileRef} type="file" multiple accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm" className="hidden"
+                onChange={(e) => { setFiles(Array.from(e.target.files ?? [])); setUrlInput(""); setErr(null); }} />
+            </label>
+            {files.length === 0 && (
+              <input
+                placeholder="Or paste a YouTube / Vimeo URL"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[12.5px] outline-none focus:border-blue-400 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+              />
+            )}
+            {err && <p className="text-[11.5px] text-rose-500">⚠ {err}</p>}
+            {uploadIndex && (
+              <p className="text-[11px] text-slate-400">Uploading video {uploadIndex.done + 1} of {uploadIndex.total}…</p>
+            )}
+            {progress !== null && (
+              <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
+                <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${progress}%` }} />
+              </div>
+            )}
+            <button
+              onClick={handleUpload}
+              disabled={uploading}
+              className="self-start rounded-lg bg-blue-600 px-4 py-1.5 text-[12px] font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+            >
+              {uploading ? "Uploading…" : files.length > 1 ? `Upload ${files.length} videos` : "Add Video"}
             </button>
           </div>
         </>
@@ -107,17 +261,19 @@ function ResourcesPanel({ courseId, sectionId, lessonId }: { courseId: number; s
 }
 
 //  Curriculum
-export default function Curriculum({ courseId }: Props) {
+export default function Curriculum({ courseId, isPublished = false }: Props) {
   const [sections, setSections]           = useState<InstructorSection[]>([]);
   const [loading, setLoading]             = useState(true);
   const [openSections, setOpenSections]   = useState<Set<number>>(new Set([0]));
   const [expandedResources, setExpandedResources] = useState<Set<number>>(new Set());
+  const [expandedVideos, setExpandedVideos] = useState<Set<number>>(new Set());
   const [newSectionTitle, setNewSectionTitle] = useState("");
   const [addingSection, setAddingSection] = useState(false);
   const [addingLesson, setAddingLesson]   = useState<number | null>(null);
   const [confirmSection, setConfirmSection] = useState<number | null>(null);
-  const [newLesson, setNewLesson]         = useState<Record<number, { title: string; type: string; video_url: string; content?: string; is_preview: boolean; videoFile?: File | null; duration?: number | null; articleFile?: File | null }>>({});
+  const [newLesson, setNewLesson]         = useState<Record<number, { title: string; type: string; video_url: string; content?: string; is_preview: boolean; videoFiles?: File[]; duration?: number | null; articleFiles?: File[] }>>({});
   const [uploadProgress, setUploadProgress] = useState<Record<number, number>>({});
+  const [uploadFileIndex, setUploadFileIndex] = useState<Record<number, { done: number; total: number }>>({});
   const [error, setError]                 = useState<string | null>(null);
 
   const [editingLessonId, setEditingLessonId] = useState<number | null>(null);
@@ -142,6 +298,9 @@ export default function Curriculum({ courseId }: Props) {
   const toggleResources = (lId: number) =>
     setExpandedResources((prev) => { const n = new Set(prev); n.has(lId) ? n.delete(lId) : n.add(lId); return n; });
 
+  const toggleVideos = (lId: number) =>
+    setExpandedVideos((prev) => { const n = new Set(prev); n.has(lId) ? n.delete(lId) : n.add(lId); return n; });
+
   const handleAddSection = async () => {
     if (!newSectionTitle.trim()) return;
     setAddingSection(true); setError(null);
@@ -162,6 +321,7 @@ export default function Curriculum({ courseId }: Props) {
 
   const handleDeleteSection = async (sectionId: number) => {
     setConfirmSection(null); setError(null);
+    if (isPublished) { setError("This course is public, so its content can't be deleted."); return; }
     try {
       await instructorService.deleteSection(courseId, sectionId);
       setSections((prev) => prev.filter((s) => s.id !== sectionId));
@@ -176,12 +336,10 @@ export default function Curriculum({ courseId }: Props) {
     if (!lesson?.title?.trim()) return;
     setError(null);
     try {
-      const payload: { title: string; type: string; is_preview: boolean; video_url?: string; content?: string; duration?: number } = {
+      const payload: { title: string; type: string; is_preview: boolean; content?: string; duration?: number } = {
         title: lesson.title.trim(), type: lesson.type || "video", is_preview: lesson.is_preview ?? false,
       };
-      if (lesson.type === "video" && !lesson.videoFile && lesson.video_url?.trim())
-        payload.video_url = lesson.video_url.trim();
-      if (lesson.type === "video" && lesson.videoFile && lesson.duration != null)
+      if (lesson.type === "video" && lesson.videoFiles?.length && lesson.duration != null)
         payload.duration = lesson.duration;
       if (lesson.type === "article" && lesson.content?.trim())
         payload.content = lesson.content.trim();
@@ -189,25 +347,43 @@ export default function Curriculum({ courseId }: Props) {
       const { data } = await instructorService.createLesson(courseId, sectionId, payload);
       const lessonId = data.data.id;
 
-      if (lesson.type === "video" && lesson.videoFile) {
-        setUploadProgress((p) => ({ ...p, [sectionId]: 0 }));
-        await instructorService.uploadVideo(courseId, sectionId, lessonId, lesson.videoFile,
-          (pct) => setUploadProgress((p) => ({ ...p, [sectionId]: pct })));
+      if (lesson.type === "video" && lesson.videoFiles?.length) {
+        const videoFiles = lesson.videoFiles;
+        for (let i = 0; i < videoFiles.length; i++) {
+          setUploadFileIndex((p) => ({ ...p, [sectionId]: { done: i, total: videoFiles.length } }));
+          setUploadProgress((p) => ({ ...p, [sectionId]: 0 }));
+          const fd = new FormData();
+          fd.append("video", videoFiles[i]);
+          const duration = await getVideoDuration(videoFiles[i]).catch(() => null);
+          if (duration != null) fd.append("duration", String(Math.round(duration)));
+          await instructorService.addLessonVideo(courseId, sectionId, lessonId, fd,
+            (pct) => setUploadProgress((p) => ({ ...p, [sectionId]: pct })));
+        }
         setUploadProgress((p) => { const n = { ...p }; delete n[sectionId]; return n; });
+        setUploadFileIndex((p) => { const n = { ...p }; delete n[sectionId]; return n; });
+      } else if (lesson.type === "video" && lesson.video_url?.trim()) {
+        const fd = new FormData();
+        fd.append("video_url", lesson.video_url.trim());
+        await instructorService.addLessonVideo(courseId, sectionId, lessonId, fd);
       }
 
-      if (lesson.type === "article" && lesson.articleFile) {
-        setUploadProgress((p) => ({ ...p, [sectionId]: 0 }));
-        const fd = new FormData();
-        fd.append("title", lesson.articleFile.name);
-        fd.append("file", lesson.articleFile);
-        await instructorService.uploadLessonResource(courseId, sectionId, lessonId, fd,
-          (pct) => setUploadProgress((p) => ({ ...p, [sectionId]: pct })));
+      if (lesson.type === "article" && lesson.articleFiles?.length) {
+        const articleFiles = lesson.articleFiles;
+        for (let i = 0; i < articleFiles.length; i++) {
+          setUploadFileIndex((p) => ({ ...p, [sectionId]: { done: i, total: articleFiles.length } }));
+          setUploadProgress((p) => ({ ...p, [sectionId]: 0 }));
+          const fd = new FormData();
+          fd.append("title", articleFiles[i].name);
+          fd.append("file", articleFiles[i]);
+          await instructorService.uploadLessonResource(courseId, sectionId, lessonId, fd,
+            (pct) => setUploadProgress((p) => ({ ...p, [sectionId]: pct })));
+        }
         setUploadProgress((p) => { const n = { ...p }; delete n[sectionId]; return n; });
+        setUploadFileIndex((p) => { const n = { ...p }; delete n[sectionId]; return n; });
       }
 
       setSections((prev) => prev.map((s) => s.id === sectionId ? { ...s, lessons: [...(s.lessons ?? []), data.data] } : s));
-      setNewLesson((prev) => ({ ...prev, [sectionId]: { title: "", type: "video", video_url: "", content: "", is_preview: false, videoFile: null, duration: null, articleFile: null } }));
+      setNewLesson((prev) => ({ ...prev, [sectionId]: { title: "", type: "video", video_url: "", content: "", is_preview: false, videoFiles: [], duration: null, articleFiles: [] } }));
       setAddingLesson(null);
     } catch (e: unknown) {
       const err = e as { response?: { data?: { message?: string; errors?: Record<string, string[]> } }; message?: string };
@@ -217,6 +393,7 @@ export default function Curriculum({ courseId }: Props) {
 
   const handleDeleteLesson = async (sectionId: number, lessonId: number) => {
     setError(null);
+    if (isPublished) { setError("This course is public, so its content can't be deleted."); return; }
     try {
       await instructorService.deleteLesson(courseId, sectionId, lessonId);
       setSections((prev) => prev.map((s) => s.id === sectionId ? { ...s, lessons: (s.lessons ?? []).filter((l) => l.id !== lessonId) } : s));
@@ -278,6 +455,12 @@ export default function Curriculum({ courseId }: Props) {
         {sections.length} section{sections.length !== 1 ? "s" : ""} · {totalLessons} lesson{totalLessons !== 1 ? "s" : ""}
       </p>
 
+      {isPublished && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[13px] font-medium text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400">
+          This course is public. Sections, lessons, and resources can't be deleted while it's published.
+        </div>
+      )}
+
       {error && (
         <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-[13px] font-medium text-rose-600 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-400">
           ⚠ {error}
@@ -306,7 +489,9 @@ export default function Curriculum({ courseId }: Props) {
               </button>
               <button
                 onClick={() => setConfirmSection(section.id)}
-                className="rounded-lg p-1.5 text-slate-300 transition-colors hover:bg-rose-50 hover:text-rose-500 dark:text-slate-500 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
+                disabled={isPublished}
+                title={isPublished ? "This course is public, so its content can't be deleted." : undefined}
+                className="rounded-lg p-1.5 text-slate-300 transition-colors hover:bg-rose-50 hover:text-rose-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-300 dark:text-slate-500 dark:hover:bg-rose-500/10 dark:hover:text-rose-400"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -332,6 +517,18 @@ export default function Curriculum({ courseId }: Props) {
                         </span>
                       )}
                       <span className="text-[11px] uppercase tracking-wide text-slate-400 dark:text-slate-500">{lesson.type}</span>
+                      {lesson.type === "video" && (
+                        <button
+                          onClick={() => toggleVideos(lesson.id)}
+                          className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11.5px] font-semibold transition-colors ${
+                            expandedVideos.has(lesson.id)
+                              ? "bg-blue-600 text-white"
+                              : "bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-500/10 dark:text-blue-400 dark:hover:bg-blue-500/20"
+                          }`}
+                        >
+                          <Video className="h-3 w-3" /> Videos{lesson.videos_count != null ? ` (${lesson.videos_count})` : ""}
+                        </button>
+                      )}
                       <button
                         onClick={() => toggleResources(lesson.id)}
                         className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11.5px] font-semibold transition-colors ${
@@ -351,8 +548,9 @@ export default function Curriculum({ courseId }: Props) {
                       </button>
                       <button
                         onClick={() => handleDeleteLesson(section.id, lesson.id)}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-rose-50 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400"
-                        title="Delete lesson"
+                        disabled={isPublished}
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-300 transition-colors hover:bg-rose-50 hover:text-rose-500 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-300 dark:text-slate-500 dark:hover:text-rose-400"
+                        title={isPublished ? "This course is public, so its content can't be deleted." : "Delete lesson"}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -411,8 +609,12 @@ export default function Curriculum({ courseId }: Props) {
                       </div>
                     )}
 
+                    {expandedVideos.has(lesson.id) && (
+                      <VideosPanel courseId={courseId} sectionId={section.id} lessonId={lesson.id} isPublished={isPublished} />
+                    )}
+
                     {expandedResources.has(lesson.id) && (
-                      <ResourcesPanel courseId={courseId} sectionId={section.id} lessonId={lesson.id} />
+                      <ResourcesPanel courseId={courseId} sectionId={section.id} lessonId={lesson.id} isPublished={isPublished} />
                     )}
                   </div>
                 ))}
@@ -449,17 +651,20 @@ export default function Curriculum({ courseId }: Props) {
 
                     {newLesson[section.id]?.type === "video" && (
                       <div className="flex flex-col gap-2">
-                        <label className="text-[12px] text-slate-400">Upload video (mp4, mov, webm — max 500MB)</label>
-                        <input type="file" accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm"
+                        <label className="text-[12px] text-slate-400">Upload video(s) (mp4, mov, webm — max 500MB each)</label>
+                        <input type="file" multiple accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm"
                           className="text-[12.5px] text-slate-600 dark:text-slate-400"
                           onChange={(e) => {
-                            const f = e.target.files?.[0] ?? null;
-                            setNewLesson((p) => ({ ...p, [section.id]: { ...p[section.id], videoFile: f, duration: null } }));
-                            if (f) getVideoDuration(f)
-                              .then((d) => setNewLesson((p) => ({ ...p, [section.id]: { ...p[section.id], duration: d } })))
+                            const fs = Array.from(e.target.files ?? []);
+                            setNewLesson((p) => ({ ...p, [section.id]: { ...p[section.id], videoFiles: fs, duration: null } }));
+                            if (fs.length) Promise.all(fs.map((f) => getVideoDuration(f).catch(() => 0)))
+                              .then((durations) => setNewLesson((p) => ({ ...p, [section.id]: { ...p[section.id], duration: durations.reduce((a, b) => a + b, 0) } })))
                               .catch(() => {});
                           }} />
-                        {!newLesson[section.id]?.videoFile && (
+                        {(newLesson[section.id]?.videoFiles?.length ?? 0) > 1 && (
+                          <p className="text-[11px] text-slate-400">{newLesson[section.id]?.videoFiles?.length} videos selected — they'll upload one after another.</p>
+                        )}
+                        {!newLesson[section.id]?.videoFiles?.length && (
                           <input
                             placeholder="Or paste YouTube / Vimeo URL"
                             value={newLesson[section.id]?.video_url ?? ""}
@@ -472,7 +677,11 @@ export default function Curriculum({ courseId }: Props) {
                             <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
                               <div className="h-full rounded-full bg-teal-500 transition-all" style={{ width: `${uploadProgress[section.id]}%` }} />
                             </div>
-                            <span className="text-[11px] text-slate-400">Uploading {uploadProgress[section.id]}%</span>
+                            <span className="text-[11px] text-slate-400">
+                              {uploadFileIndex[section.id]
+                                ? `Uploading video ${uploadFileIndex[section.id].done + 1} of ${uploadFileIndex[section.id].total} — ${uploadProgress[section.id]}%`
+                                : `Uploading ${uploadProgress[section.id]}%`}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -487,19 +696,27 @@ export default function Curriculum({ courseId }: Props) {
                           onChange={(e) => setNewLesson((p) => ({ ...p, [section.id]: { ...p[section.id], content: e.target.value } }))}
                           className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-[13.5px] outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
                         />
-                        <label className="text-[12px] text-slate-400">Or upload a document (PDF, DOC, PPT — optional, shown as a download for students)</label>
+                        <label className="text-[12px] text-slate-400">Or upload document(s) (PDF, DOC, PPT — optional, shown as downloads for students)</label>
                         <input
                           type="file"
+                          multiple
                           accept=".pdf,.doc,.docx,.ppt,.pptx"
                           className="text-[12.5px] text-slate-600 dark:text-slate-400"
-                          onChange={(e) => setNewLesson((p) => ({ ...p, [section.id]: { ...p[section.id], articleFile: e.target.files?.[0] ?? null } }))}
+                          onChange={(e) => setNewLesson((p) => ({ ...p, [section.id]: { ...p[section.id], articleFiles: Array.from(e.target.files ?? []) } }))}
                         />
+                        {(newLesson[section.id]?.articleFiles?.length ?? 0) > 1 && (
+                          <p className="text-[11px] text-slate-400">{newLesson[section.id]?.articleFiles?.length} documents selected — they'll upload one after another.</p>
+                        )}
                         {uploadProgress[section.id] !== undefined && (
                           <div>
                             <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
                               <div className="h-full rounded-full bg-teal-500 transition-all" style={{ width: `${uploadProgress[section.id]}%` }} />
                             </div>
-                            <span className="text-[11px] text-slate-400">Uploading {uploadProgress[section.id]}%</span>
+                            <span className="text-[11px] text-slate-400">
+                              {uploadFileIndex[section.id]
+                                ? `Uploading document ${uploadFileIndex[section.id].done + 1} of ${uploadFileIndex[section.id].total} — ${uploadProgress[section.id]}%`
+                                : `Uploading ${uploadProgress[section.id]}%`}
+                            </span>
                           </div>
                         )}
                       </div>
