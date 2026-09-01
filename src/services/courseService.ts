@@ -62,11 +62,6 @@ export interface CourseDetail extends Course {
   is_enrolled?: boolean;
   access_expired?: boolean;
   access_expires_at?: string | null;
-  instructor?: {
-    id: number;
-    name: string;
-    avatar?: string | null;
-  } | null;
 }
 
 export interface EnrolledCourse {
