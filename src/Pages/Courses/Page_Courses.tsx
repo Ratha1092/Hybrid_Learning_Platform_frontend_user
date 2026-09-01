@@ -43,12 +43,8 @@ function SkeletonCard() {
 
 const PER_PAGE = 12;
 
-// Module-level cache for the default (no filter) first page
 let _cachedDefault: { courses: Course[]; lastPage: number } | null = null;
 let _cachedCategories: import("../../services/categoryService").Category[] | null = null;
-// When backend returns a flat array (no server-side pagination), store all courses here
-// so we can slice client-side for page changes without re-fetching.
-// Keyed by cacheKey so switching between already-visited categories doesn't re-hit the server.
 const _flatStore = new Map<string, { search: string; courses: Course[] }>();
 
 function Courses() {
@@ -152,8 +148,6 @@ function Courses() {
       .catch(() => {});
   }, []);
 
-  // So the grid can show "Continue Learning" / "Completed" instead of "Enroll"
-  // for courses the user is already enrolled in.
   useEffect(() => {
     if (!isAuthenticated) { setEnrolledById({}); return; }
     courseService.getEnrolled()
@@ -192,8 +186,6 @@ function Courses() {
   const filtered = courses.filter((c) => {
     const matchLevel = level === "All" || c.level.toLowerCase() === level.toLowerCase();
     const matchFree = !freeOnly || Number(c.price) === 0;
-    // Category mode never sends `search` server-side, so match it client-side here.
-    // Other modes already have search applied server-side before `courses` is set.
     const matchSearch = !category || !search || c.title.toLowerCase().includes(search.toLowerCase());
     return matchLevel && matchFree && matchSearch;
   });

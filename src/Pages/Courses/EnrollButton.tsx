@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { paymentService, type PaymentData } from "../../services/paymentService";
 import type { CourseDetail } from "../../services/courseService";
@@ -32,6 +33,7 @@ interface Props {
 export default function EnrollButton({ course }: Props) {
   const { isAuthenticated } = useAuth();
   const { settings } = useSettings();
+  const navigate = useNavigate();
   const [step, setStep] = useState<Step>("idle");
   const [justEnrolled, setJustEnrolled] = useState(false);
   const [cancelling, setCancelling] = useState(false);
@@ -63,7 +65,6 @@ export default function EnrollButton({ course }: Props) {
     if (sessionStorage.getItem(PENDING_ENROLL_KEY) !== String(course.id)) return;
     sessionStorage.removeItem(PENDING_ENROLL_KEY);
     handleEnroll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasActiveAccess, course.id]);
 
   useScrollLock(modalOpen);
@@ -74,7 +75,6 @@ export default function EnrollButton({ course }: Props) {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") closeModal(); };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modalOpen, step, payment]);
 
   const stopPolling = () => {
@@ -171,6 +171,12 @@ export default function EnrollButton({ course }: Props) {
 
   const handleEnroll = async () => {
     if (!isAuthenticated) {
+      // Only courses the instructor priced at $0 skip the login gate — a
+      // guest can watch those straight away, with no progress tracking.
+      if (Number(course.price) === 0) {
+        navigate(`/learn/${course.slug}`);
+        return;
+      }
       sessionStorage.setItem(PENDING_ENROLL_KEY, String(course.id));
       openLogin();
       return;
