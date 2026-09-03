@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { ChevronLeft, ChevronRight, MessageCircle, Check, Hash, FileText, Clock, Tag, File as FileIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, MessageCircle, Check, Hash, FileText, Clock, Tag, File as FileIcon, X } from "lucide-react";
 import api from "../../api/axios";
 import { classifyVideoUrl, buildYouTubeEmbed, buildVimeoEmbed, seekEmbeddedVideo } from "../../utils/videoUrl";
 import { resolveUrl } from "../../utils/format";
@@ -123,6 +123,17 @@ export default function Learn() {
   const activeMediaKindRef = useRef<"youtube" | "vimeo" | "direct" | null>(null);
   const activeVideoIdRef = useRef<number | null>(null);
   const pendingSeekRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!previewResource) return;
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setPreviewResource(null);
+    };
+
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [previewResource]);
 
   const getVideoCurrentTime = (): number | null => {
     if (activeMediaKindRef.current === "direct" && videoElRef.current) {
@@ -661,7 +672,7 @@ export default function Learn() {
                               ) : (
                                 !canPreview && (
                                   <span className="learn-resource__locked" title="Downloads are disabled for this platform">
-                                    View only
+                                    Download disabled
                                   </span>
                                 )
                               )}
@@ -722,6 +733,50 @@ export default function Learn() {
           </div>
         )}
       </main>
+      {previewResource && (
+        <div
+          className="learn-resource-preview"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setPreviewResource(null);
+          }}
+        >
+          <section
+            className="learn-resource-preview__dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="resource-preview-title"
+          >
+            <header className="learn-resource-preview__header">
+              <div>
+                <p className="learn-resource-preview__eyebrow">Lesson resource</p>
+                <h2 id="resource-preview-title">{previewResource.title}</h2>
+              </div>
+              <button
+                type="button"
+                className="learn-resource-preview__close"
+                onClick={() => setPreviewResource(null)}
+                aria-label="Close resource preview"
+              >
+                <X size={20} />
+              </button>
+            </header>
+            <div className="learn-resource-preview__body">
+              {resourceKind(previewResource.type) === "pdf" && (
+                <iframe title={previewResource.title} src={previewResource.preview_url} />
+              )}
+              {resourceKind(previewResource.type) === "image" && (
+                <img src={previewResource.preview_url} alt={previewResource.title} />
+              )}
+              {resourceKind(previewResource.type) === "video" && (
+                <video controls controlsList="nodownload" src={previewResource.preview_url}>
+                  Your browser does not support video playback.
+                </video>
+              )}
+            </div>
+          </section>
+        </div>
+      )}
       </div>
     </div>
   );
