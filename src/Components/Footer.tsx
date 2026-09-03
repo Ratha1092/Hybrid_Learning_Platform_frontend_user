@@ -34,7 +34,7 @@ export default function Footer() {
   const siteDescription = settings.site_description?.trim();
   const address = settings.contact_address?.trim();
   const phone = settings.support_phone?.trim();
-  const email = settings.support_email?.trim();
+  const email = settings.support_email?.trim().replace(/^www\./i, "");
 
   const nameParts = siteName.split(" ");
   const brandFirst = nameParts[0];

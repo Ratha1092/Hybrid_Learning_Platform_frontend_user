@@ -271,13 +271,13 @@ export default function Curriculum({ courseId, isPublished = false }: Props) {
   const [addingSection, setAddingSection] = useState(false);
   const [addingLesson, setAddingLesson]   = useState<number | null>(null);
   const [confirmSection, setConfirmSection] = useState<number | null>(null);
-  const [newLesson, setNewLesson]         = useState<Record<number, { title: string; type: string; video_url: string; content?: string; is_preview: boolean; videoFiles?: File[]; duration?: number | null; articleFiles?: File[] }>>({});
+  const [newLesson, setNewLesson]         = useState<Record<number, { title: string; description?: string; type: string; video_url: string; content?: string; is_preview: boolean; videoFiles?: File[]; duration?: number | null; articleFiles?: File[] }>>({});
   const [uploadProgress, setUploadProgress] = useState<Record<number, number>>({});
   const [uploadFileIndex, setUploadFileIndex] = useState<Record<number, { done: number; total: number }>>({});
   const [error, setError]                 = useState<string | null>(null);
 
   const [editingLessonId, setEditingLessonId] = useState<number | null>(null);
-  const [editForm, setEditForm] = useState({ title: "", is_preview: false, video_url: "", content: "" });
+  const [editForm, setEditForm] = useState({ title: "", description: "", is_preview: false, video_url: "", content: "" });
   const [editSaving, setEditSaving] = useState(false);
   const [editErr, setEditErr] = useState<string | null>(null);
 
@@ -336,9 +336,10 @@ export default function Curriculum({ courseId, isPublished = false }: Props) {
     if (!lesson?.title?.trim()) return;
     setError(null);
     try {
-      const payload: { title: string; type: string; is_preview: boolean; content?: string; duration?: number } = {
+      const payload: { title: string; type: string; description?: string; is_preview: boolean; content?: string; duration?: number } = {
         title: lesson.title.trim(), type: lesson.type || "video", is_preview: lesson.is_preview ?? false,
       };
+      if (lesson.description?.trim()) payload.description = lesson.description.trim();
       if (lesson.type === "video" && lesson.videoFiles?.length && lesson.duration != null)
         payload.duration = lesson.duration;
       if (lesson.type === "article" && lesson.content?.trim())
@@ -409,6 +410,7 @@ export default function Curriculum({ courseId, isPublished = false }: Props) {
     setEditErr(null);
     setEditForm({
       title: lesson.title,
+      description: lesson.description ?? "",
       is_preview: lesson.is_preview,
       video_url: lesson.video_url ?? "",
       content: lesson.content ?? "",
@@ -421,6 +423,7 @@ export default function Curriculum({ courseId, isPublished = false }: Props) {
     try {
       const payload: Partial<InstructorLesson> & { video_url?: string; content?: string } = {
         title: editForm.title.trim(),
+        description: editForm.description.trim() || undefined,
         is_preview: editForm.is_preview,
       };
       if (lesson.type === "video") payload.video_url = editForm.video_url || undefined;
@@ -565,6 +568,17 @@ export default function Curriculum({ courseId, isPublished = false }: Props) {
                           onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
                           className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13.5px] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
                         />
+                        <div className="flex flex-col gap-1">
+                          <textarea
+                            rows={2}
+                            maxLength={1000}
+                            placeholder="What this lesson covers (optional)"
+                            value={editForm.description}
+                            onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
+                            className="resize-y rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13.5px] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+                          />
+                          <span className="text-[11.5px] text-slate-400 dark:text-slate-500">Shown on the course outline so students know what they'll learn.</span>
+                        </div>
                         <label className="flex cursor-pointer items-center gap-2 text-[13px] text-slate-600 dark:text-slate-400">
                           <input
                             type="checkbox"
@@ -630,6 +644,17 @@ export default function Curriculum({ courseId, isPublished = false }: Props) {
                       onKeyDown={(e) => e.key === "Enter" && handleAddLesson(section.id)}
                       className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-[13.5px] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
                     />
+                    <div className="flex flex-col gap-1">
+                      <textarea
+                        rows={2}
+                        maxLength={1000}
+                        placeholder="What this lesson covers (optional)"
+                        value={newLesson[section.id]?.description ?? ""}
+                        onChange={(e) => setNewLesson((p) => ({ ...p, [section.id]: { ...p[section.id], description: e.target.value } }))}
+                        className="resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-[13.5px] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                      />
+                      <span className="text-[11.5px] text-slate-400 dark:text-slate-500">Shown on the course outline so students know what they'll learn.</span>
+                    </div>
                     <div className="flex items-center gap-3">
                       <select
                         value={newLesson[section.id]?.type ?? "video"}

@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Clock, Heart, MessageCircle, X } from "lucide-react";
 import { lessonCommentService, type LessonComment } from "../../services/lessonCommentService";
 import { useAuth } from "../../context/AuthContext";
 import { useAuthModal } from "../../context/AuthModalContext";
+import { getEcho } from "../../utils/echo";
 import { resolveUrl, timeAgo } from "../../utils/format";
 import "./LessonComments.css";
 
@@ -101,6 +102,24 @@ function applyToTree(
   });
 }
 
+// Appends `reply` under its parent, wherever that parent happens to be in
+// the (possibly nested) tree. Returns the original list unchanged if the
+// parent isn't loaded on this page — nothing visible to update in that case.
+function appendReply(list: LessonComment[], parentId: number, reply: LessonComment): LessonComment[] {
+  return list.map((c) => {
+    if (c.id === parentId) return { ...c, replies: [...(c.replies ?? []), reply] };
+    if (c.replies?.length) return { ...c, replies: appendReply(c.replies, parentId, reply) };
+    return c;
+  });
+}
+
+function collectIds(list: LessonComment[], into: Set<number>): void {
+  for (const c of list) {
+    into.add(c.id);
+    if (c.replies?.length) collectIds(c.replies, into);
+  }
+}
+
 function Avatar({ name, avatar, avatarUrl }: { name: string; avatar?: string | null; avatarUrl?: string | null }) {
   const url = avatarUrl ?? resolveUrl(avatar);
   return (
@@ -138,7 +157,7 @@ function CommentItem({
   const replying = replyOpenId === comment.id;
 
   return (
-    <div className={`lc-item${isReply ? " lc-item--reply" : ""}`}>
+    <div id={`lc-comment-${comment.id}`} className={`lc-item${isReply ? " lc-item--reply" : ""}`}>
       <Avatar name={name} avatar={comment.user?.avatar} avatarUrl={comment.user?.avatar_url} />
       <div className="lc-item__body">
         <div className="lc-item__head">
@@ -232,11 +251,12 @@ function CommentItem({
   );
 }
 
-export default function LessonComments({ lessonId, getCurrentTime, getVideoId, onSeek }: {
+export default function LessonComments({ lessonId, getCurrentTime, getVideoId, onSeek, highlightCommentId }: {
   lessonId: number;
   getCurrentTime?: () => number | null;
   getVideoId?: () => number | null;
   onSeek?: (seconds: number, videoId: number | null) => void;
+  highlightCommentId?: number | null;
 }) {
   const { user, isAuthenticated } = useAuth();
   const { openLogin } = useAuthModal();
@@ -259,6 +279,11 @@ export default function LessonComments({ lessonId, getCurrentTime, getVideoId, o
   const [replyTimestamp, setReplyTimestamp] = useState<TimestampValue | null>(null);
   const [replySubmitting, setReplySubmitting] = useState(false);
 
+
+  const totalRef = useRef(total);
+  const seenIdsRef = useRef<Set<number>>(new Set());
+  useEffect(() => { totalRef.current = total; }, [total]);
+
   const fetchPage = (p: number) => {
     setLoading(true);
     setErrorMsg(null);
@@ -270,6 +295,7 @@ export default function LessonComments({ lessonId, getCurrentTime, getVideoId, o
         setLastPage(cp.last_page);
         setTotal(cp.total);
         setUnavailable(false);
+        collectIds(cp.data, seenIdsRef.current);
       })
       .catch((err: unknown) => {
         const status = (err as { response?: { status?: number } }).response?.status;
@@ -279,12 +305,75 @@ export default function LessonComments({ lessonId, getCurrentTime, getVideoId, o
       .finally(() => setLoading(false));
   };
 
+  // Comments are paginated, so a deep link to one specific thread (e.g. from
+  // a "someone replied to your comment" notification) can't just load page 1
+  // — it has to find which page that top-level comment actually landed on.
+  // Walks forward page by page (bounded by lastPage) until it turns up, then
+  // scrolls it into view and gives it a brief highlight.
+  const locateAndHighlight = (targetId: number, p = 1) => {
+    setLoading(true);
+    setErrorMsg(null);
+    lessonCommentService.getByLesson(lessonId, p)
+      .then(({ data }) => {
+        const cp = data.data;
+        const found = cp.data.some((c) => c.id === targetId);
+        if (!found && p < cp.last_page) {
+          locateAndHighlight(targetId, p + 1);
+          return;
+        }
+        setComments(cp.data);
+        setPage(cp.current_page);
+        setLastPage(cp.last_page);
+        setTotal(cp.total);
+        setUnavailable(false);
+        collectIds(cp.data, seenIdsRef.current);
+        setLoading(false);
+        if (found) {
+          requestAnimationFrame(() => {
+            const el = document.getElementById(`lc-comment-${targetId}`);
+            if (!el) return;
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            el.classList.add("lc-item--highlight");
+            setTimeout(() => el.classList.remove("lc-item--highlight"), 2500);
+          });
+        }
+      })
+      .catch((err: unknown) => {
+        const status = (err as { response?: { status?: number } }).response?.status;
+        if (status === 404) setUnavailable(true);
+        else setErrorMsg("Couldn't load comments. Please try again.");
+        setLoading(false);
+      });
+  };
+
   useEffect(() => {
     setReplyOpenId(null);
     setNewTimestamp(null);
     setReplyTimestamp(null);
-    fetchPage(1);
+    seenIdsRef.current = new Set();
+    if (highlightCommentId != null) locateAndHighlight(highlightCommentId);
+    else fetchPage(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lessonId]);
+  useEffect(() => {
+    const echo = getEcho();
+    const channel = echo.channel(`lesson.${lessonId}.comments`);
+
+    channel.listen(".comment.posted", (incoming: LessonComment) => {
+      if (seenIdsRef.current.has(incoming.id)) return;
+      seenIdsRef.current.add(incoming.id);
+
+      if (incoming.parent_id == null) {
+        setComments((prev) => [incoming, ...prev]);
+        setTotal(totalRef.current + 1);
+      } else {
+        setComments((prev) => appendReply(prev, incoming.parent_id!, incoming));
+      }
+    });
+
+    return () => {
+      echo.leave(`lesson.${lessonId}.comments`);
+    };
   }, [lessonId]);
 
   const handleSubmitComment = (e: React.FormEvent) => {
@@ -304,6 +393,7 @@ export default function LessonComments({ lessonId, getCurrentTime, getVideoId, o
           ...data.data,
           user: data.data.user ?? (user ? { id: user.id, name: user.name, avatar: user.avatar ?? null, avatar_url: user.avatar_url ?? null } : null),
         };
+        seenIdsRef.current.add(saved.id);
         setComments((prev) => [saved, ...prev]);
         setTotal((t) => t + 1);
         setNewBody("");
@@ -329,6 +419,7 @@ export default function LessonComments({ lessonId, getCurrentTime, getVideoId, o
           ...data.data,
           user: data.data.user ?? (user ? { id: user.id, name: user.name, avatar: user.avatar ?? null, avatar_url: user.avatar_url ?? null } : null),
         };
+        seenIdsRef.current.add(saved.id);
         setComments((prev) =>
           prev.map((c) => (c.id === parentId ? { ...c, replies: [...(c.replies ?? []), saved] } : c))
         );

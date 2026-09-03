@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { Star } from "lucide-react";
-import { courseService, type CourseDetail, type Section, type Lesson, type LessonVideo } from "../../services/courseService";
+import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
+import { Star, ChevronLeft, ExternalLink } from "lucide-react";
+import { courseService, type CourseDetail, type Course, type Section, type Lesson, type LessonVideo } from "../../services/courseService";
 import { classifyVideoUrl, buildYouTubeEmbed, buildVimeoEmbed } from "../../utils/videoUrl";
 import { reviewService, type Review } from "../../services/reviewService";
 import { useAuth } from "../../context/AuthContext";
@@ -157,7 +157,15 @@ function SectionAccordion({ section, index, open, onToggle, isFreeCourse }: {
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="13" height="13" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                     )}
                   </span>
-                  <span className="lesson-row__title">{lesson.title}</span>
+                  <div className="lesson-row__main">
+                    <span className="lesson-row__title">{lesson.title}</span>
+                    {/* Outside the isPlayable/preview gate on purpose — this is
+                        what tells someone what a locked lesson teaches before
+                        they decide to buy. */}
+                    {lesson.description && (
+                      <p className="lesson-row__desc">{lesson.description}</p>
+                    )}
+                  </div>
                   <div className="lesson-row__right">
                     {lesson.is_preview && (
                       <span className="lesson-row__preview">Preview</span>
@@ -400,6 +408,49 @@ function ReviewsSection({ courseId, isEnrolled }: { courseId: number; isEnrolled
   );
 }
 
+function RelatedCourses({ categorySlug, categoryName, excludeCourseId }: {
+  categorySlug: string;
+  categoryName: string;
+  excludeCourseId: number;
+}) {
+  const [courses, setCourses] = useState<Course[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    courseService.getByCategory(categorySlug)
+      .then(({ data }) => {
+        if (cancelled) return;
+        setCourses((data.data.courses ?? []).filter((c) => c.id !== excludeCourseId && c.slug));
+      })
+      .catch(() => { if (!cancelled) setCourses([]); });
+    return () => { cancelled = true; };
+  }, [categorySlug, excludeCourseId]);
+
+  if (!courses || courses.length === 0) return null;
+
+  return (
+    <section className="detail-section detail-related">
+      <h2>More {categoryName} Courses</h2>
+      <div className="related-scroll">
+        {courses.slice(0, 8).map((c) => (
+          <Link key={c.id} to={`/courses/${c.slug}`} className="related-card">
+            <div className="related-card__thumb">
+              {c.thumbnail_url ? (
+                <img src={resolveUrl(c.thumbnail_url)!} alt={c.title} />
+              ) : (
+                <span>{c.title.charAt(0).toUpperCase()}</span>
+              )}
+              <span className="related-card__level">{c.level}</span>
+            </div>
+            <p className="related-card__title">{c.title}</p>
+            {c.instructor?.name && <p className="related-card__instructor">{c.instructor.name}</p>}
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function DetailCourse() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
@@ -477,11 +528,10 @@ function DetailCourse() {
           <div className={`detail-hero__placeholder detail-hero__placeholder--${course.level}`} />
         )}
         <div className="detail-hero__overlay" />
-        <button className="detail-back" onClick={() => navigate(-1)}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
-          Back
-        </button>
         <div className="detail-hero__content">
+          <Link to="/courses" className="detail-breadcrumb-back">
+            <ChevronLeft size={15} /> Back to all courses
+          </Link>
           <div className="detail-badges">
             <span className="detail-badge">{course.level}</span>
             {course.category?.name && (
@@ -490,68 +540,46 @@ function DetailCourse() {
           </div>
           <h1 className="detail-title">{course.title}</h1>
           <p className="detail-short-desc">{course.short_description}</p>
-          <div className="detail-meta">
+          <div className="detail-hero__row">
             {course.average_rating != null && (
-              <span className="detail-meta__item detail-meta__item--rating">
+              <span className="detail-rating">
                 <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                 {course.average_rating.toFixed(1)}
                 {course.reviews_count != null && course.reviews_count > 0 && (
-                  <span style={{ opacity: 0.75, fontWeight: 500 }}>({course.reviews_count})</span>
+                  <span className="detail-rating__count">({course.reviews_count})</span>
                 )}
               </span>
             )}
-            {course.instructor?.name && (
-              <span className="detail-meta__item detail-meta__item--instructor">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                {course.instructor.name}
-              </span>
-            )}
-            {course.language && (
-              <span className="detail-meta__item">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                {course.language}
-              </span>
-            )}
-            <span className="detail-meta__item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"/></svg>
-              {course.sections?.length ?? 0} sections
-            </span>
-            <span className="detail-meta__item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
-              {totalLessons} lessons
-            </span>
-            <span className="detail-meta__item">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              {fmtDuration(totalDuration)}
-            </span>
-            <button
-              className={`detail-meta__item detail-copy-btn${copied ? " detail-copy-btn--copied" : ""}`}
-              onClick={handleCopyLink}
-              title="Copy course link"
-            >
-              {copied ? (
-                <>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                  Copied!
-                </>
-              ) : (
-                <>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                  Share
-                </>
-              )}
-            </button>
-            {course.preview_video_url && (
-              <a
-                href={course.preview_video_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="detail-meta__item detail-copy-btn"
+            <div className="detail-actions">
+              <button
+                className={`detail-action-btn${copied ? " detail-action-btn--copied" : ""}`}
+                onClick={handleCopyLink}
+                title="Copy course link"
               >
-                <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                Watch preview
-              </a>
-            )}
+                {copied ? (
+                  <>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                    Share
+                  </>
+                )}
+              </button>
+              {course.preview_video_url && (
+                <a
+                  href={course.preview_video_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="detail-action-btn detail-action-btn--primary"
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  Watch preview
+                </a>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -626,32 +654,63 @@ function DetailCourse() {
 
           {/* Reviews */}
           <ReviewsSection courseId={course.id} isEnrolled={!!course.is_enrolled} />
+
+          {/* More like this */}
+          {course.category?.slug && (
+            <RelatedCourses
+              categorySlug={course.category.slug}
+              categoryName={course.category.name}
+              excludeCourseId={course.id}
+            />
+          )}
         </div>
 
-        {/* ── Right: Enroll card ── */}
-        <aside className="detail-card">
-          <div className="detail-card__price">
-            {Number(course.price) === 0 ? (
-              <span className="detail-card__price--free">Free</span>
-            ) : (
-              `$${course.price}`
-            )}
-          </div>
-          <EnrollButton course={course} />
-          <ul className="detail-card__info">
-            {course.instructor?.name && (
-              <li><span>Instructor</span><strong>{course.instructor.name}</strong></li>
-            )}
-            {course.category?.name && (
-              <li><span>Category</span><strong>{course.category.name}</strong></li>
-            )}
-            <li><span>Level</span><strong>{course.level}</strong></li>
-            {course.language && <li><span>Language</span><strong>{course.language}</strong></li>}
-            <li><span>Sections</span><strong>{course.sections?.length ?? 0}</strong></li>
-            <li><span>Lessons</span><strong>{totalLessons}</strong></li>
-            <li><span>Duration</span><strong>{fmtDuration(totalDuration)}</strong></li>
-          </ul>
-        </aside>
+        {/* ── Right: Enroll card + instructor ── */}
+        <div className="detail-sidebar-col">
+          <aside className="detail-card">
+            <div className="detail-card__price">
+              {Number(course.price) === 0 ? (
+                <span className="detail-card__price--free">Free</span>
+              ) : (
+                `$${course.price}`
+              )}
+            </div>
+            <EnrollButton course={course} />
+            <ul className="detail-card__info">
+              {course.instructor?.name && (
+                <li><span>Instructor</span><strong>{course.instructor.name}</strong></li>
+              )}
+              {course.category?.name && (
+                <li><span>Category</span><strong>{course.category.name}</strong></li>
+              )}
+              <li><span>Level</span><strong>{course.level}</strong></li>
+              {course.language && <li><span>Language</span><strong>{course.language}</strong></li>}
+              <li><span>Sections</span><strong>{course.sections?.length ?? 0}</strong></li>
+              <li><span>Lessons</span><strong>{totalLessons}</strong></li>
+              <li><span>Duration</span><strong>{fmtDuration(totalDuration)}</strong></li>
+            </ul>
+          </aside>
+
+          {course.instructor?.name && (
+            <aside className="instructor-card">
+              <div className="instructor-card__avatar">
+                {course.instructor.avatar_url ?? resolveUrl(course.instructor.avatar ?? null) ? (
+                  <img src={course.instructor.avatar_url ?? resolveUrl(course.instructor.avatar ?? null)!} alt={course.instructor.name} />
+                ) : (
+                  <span>{course.instructor.name.charAt(0).toUpperCase()}</span>
+                )}
+              </div>
+              <p className="instructor-card__label">Course Instructor</p>
+              <p className="instructor-card__name">{course.instructor.name}</p>
+              <Link
+                to={`/courses?instructor=${course.instructor.id}&name=${encodeURIComponent(course.instructor.name)}`}
+                className="instructor-card__link"
+              >
+                View other courses <ExternalLink size={13} />
+              </Link>
+            </aside>
+          )}
+        </div>
       </div>
     </div>
   );

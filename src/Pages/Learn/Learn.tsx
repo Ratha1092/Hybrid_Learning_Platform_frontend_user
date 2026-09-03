@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronLeft, ChevronRight, MessageCircle, Check, Hash, FileText, Clock, Tag, File as FileIcon } from "lucide-react";
 import api from "../../api/axios";
 import { classifyVideoUrl, buildYouTubeEmbed, buildVimeoEmbed, seekEmbeddedVideo } from "../../utils/videoUrl";
 import { resolveUrl } from "../../utils/format";
 import LessonComments from "../../Components/LessonComments/LessonComments";
+import CourseCommunity from "../../Components/CourseCommunity/CourseCommunity";
 import { useAuth } from "../../context/AuthContext";
 import { useAuthModal } from "../../context/AuthModalContext";
 import TopNavBar from "./TopNavBar";
@@ -12,20 +13,12 @@ import CourseProgressCard from "./CourseProgressCard";
 import "./Learn.css";
 
 // Fraction of the video that must actually be played (not just seeked past)
-// before a lesson auto-completes.
 const AUTO_COMPLETE_THRESHOLD = 0.9;
 // How often we persist the resume position while playing.
 const RESUME_SAVE_INTERVAL_MS = 5000;
-// A lesson with a single video keeps the legacy key (`learn:resume:{lessonId}`)
-// so existing saved resume positions keep working; a lesson with several
-// videos gets one key per part.
 const resumeKey = (lessonId: number, videoId?: number) =>
   videoId != null ? `learn:resume:${lessonId}:${videoId}` : `learn:resume:${lessonId}`;
 
-// video.played gives the ranges of currentTime the user has actually played
-// through (seeking ahead leaves a gap), so summing it — rather than trusting
-// the furthest currentTime reached — stops "drag to the end" from counting
-// as watched.
 function playedCoverage(video: HTMLVideoElement): number {
   if (!video.duration) return 0;
   let covered = 0;
@@ -38,7 +31,22 @@ interface LessonAttachment {
   id: number;
   title: string;
   type: string;
-  file_url: string;
+  // Served inline so the browser renders it in place; null download link means
+  // an admin has turned downloads off (lesson_resources_downloadable).
+  preview_url: string;
+  file_url: string | null;
+}
+
+// Only these render in the browser. Office formats have no native viewer, so
+// they stay download-only rather than being handed to a third-party renderer.
+const PREVIEWABLE = new Set(["pdf", "png", "jpg", "jpeg", "gif", "webp", "svg", "mp4", "webm"]);
+
+function resourceKind(type: string): "pdf" | "image" | "video" | "none" {
+  const t = type.toLowerCase();
+  if (t === "pdf") return "pdf";
+  if (["png", "jpg", "jpeg", "gif", "webp", "svg"].includes(t)) return "image";
+  if (["mp4", "webm"].includes(t)) return "video";
+  return "none";
 }
 
 // A lesson can hold several videos (e.g. a lecture split into parts).
@@ -75,7 +83,9 @@ interface CourseData {
   title: string;
   slug: string;
   price: string | number;
+  resources_downloadable?: boolean;
   sections: SectionItem[];
+  is_enrolled?: boolean;
   access_expired?: boolean;
   access_expires_at?: string | null;
   category?: { id: number; name: string; slug: string } | null;
@@ -83,16 +93,20 @@ interface CourseData {
   thumbnail_url?: string | null;
 }
 
-type LessonTab = "lesson" | "comments";
+type LessonTab = "lesson" | "comments" | "community";
 
 export default function Learn() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const searchParamsRef = useRef(searchParams);
+  useEffect(() => { searchParamsRef.current = searchParams; });
   const { isAuthenticated } = useAuth();
   const { openLogin } = useAuthModal();
 
   const [course, setCourse] = useState<CourseData | null>(null);
   const [activeLesson, setActiveLesson] = useState<LessonItem | null>(null);
+  const [highlightCommentId, setHighlightCommentId] = useState<number | null>(null);
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -100,6 +114,7 @@ export default function Learn() {
   const [openSections, setOpenSections] = useState<Set<number>>(new Set([0]));
   const [completeError, setCompleteError] = useState<string | null>(null);
   const [tab, setTab] = useState<LessonTab>("lesson");
+  const [previewResource, setPreviewResource] = useState<LessonAttachment | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const lastResumeSaveRef = useRef(0);
   const autoCompletingRef = useRef<Set<number>>(new Set());
@@ -149,15 +164,25 @@ export default function Learn() {
       .then(async ({ data }) => {
         const courseData = data.data;
         setCourse(courseData);
-        const first = courseData.sections?.[0]?.lessons?.[0];
+        const lessonParam = Number(searchParamsRef.current.get("lesson")) || null;
+        const commentParam = Number(searchParamsRef.current.get("comment")) || null;
+        const sections = courseData.sections ?? [];
+        let targetLesson: LessonItem | undefined;
+        if (lessonParam) {
+          const sectionIndex = sections.findIndex((s) => s.lessons.some((l) => l.id === lessonParam));
+          if (sectionIndex >= 0) {
+            targetLesson = sections[sectionIndex].lessons.find((l) => l.id === lessonParam);
+            setOpenSections((prev) => new Set(prev).add(sectionIndex));
+          }
+        }
+        const first = targetLesson ?? sections[0]?.lessons?.[0];
         if (first) setActiveLesson(first);
-
-        // Guests aren't signed in, so there's no progress to load — and the
-        // per-lesson requests would just 401.
+        if (targetLesson && commentParam) {
+          setTab("comments");
+          setHighlightCommentId(commentParam);
+        }
         if (!isAuthenticated) return;
-
-        // Load saved progress for all lessons in parallel
-        const allLessons = courseData.sections?.flatMap(s => s.lessons) ?? [];
+        const allLessons = sections.flatMap(s => s.lessons);
         const results = await Promise.allSettled(
           allLessons.map(l => api.get<{ data: { is_completed: boolean } }>(`/lessons/${l.id}/progress`))
         );
@@ -175,14 +200,14 @@ export default function Learn() {
 
   const handleSelectLesson = (lesson: LessonItem) => {
     setActiveLesson(lesson);
+    setPreviewResource(null);
     setActiveVideoIndex(0);
     setCompleteError(null);
     setTab("lesson");
+    setHighlightCommentId(null);
   };
 
   const handleComplete = async (lessonId: number) => {
-    // Guests have nowhere to save progress to — send them to log in instead
-    // of silently failing the request.
     if (!isAuthenticated) {
       openLogin();
       return;
@@ -594,6 +619,14 @@ export default function Learn() {
                   >
                     Comments
                   </button>
+                  {course.is_enrolled && !course.access_expired && (
+                    <button
+                      className={`learn-tab${tab === "community" ? " learn-tab--active" : ""}`}
+                      onClick={() => setTab("community")}
+                    >
+                      Community
+                    </button>
+                  )}
                 </div>
 
                 <div className="learn-tab-panel" hidden={tab !== "lesson"}>
@@ -605,16 +638,36 @@ export default function Learn() {
                     <div className="learn-resources">
                       <h3 className="learn-resources__title">Resources</h3>
                       <ul className="learn-resources__list">
-                        {activeLesson.attachments.map((r) => (
-                          <li key={r.id} className="learn-resource">
-                            <span className="learn-resource__icon">📎</span>
-                            <span className="learn-resource__title">{r.title}</span>
-                            <span className="learn-resource__type">{r.type}</span>
-                            <a href={r.file_url} target="_blank" rel="noopener noreferrer" className="learn-resource__download">
-                              Download
-                            </a>
-                          </li>
-                        ))}
+                        {activeLesson.attachments.map((r) => {
+                          const canPreview = PREVIEWABLE.has(r.type.toLowerCase());
+                          return (
+                            <li key={r.id} className="learn-resource">
+                              <span className="learn-resource__icon">📎</span>
+                              <span className="learn-resource__title">{r.title}</span>
+                              <span className="learn-resource__type">{r.type}</span>
+                              {canPreview && (
+                                <button
+                                  type="button"
+                                  className="learn-resource__view"
+                                  onClick={() => setPreviewResource(r)}
+                                >
+                                  View
+                                </button>
+                              )}
+                              {r.file_url ? (
+                                <a href={r.file_url} target="_blank" rel="noopener noreferrer" className="learn-resource__download">
+                                  Download
+                                </a>
+                              ) : (
+                                !canPreview && (
+                                  <span className="learn-resource__locked" title="Downloads are disabled for this platform">
+                                    View only
+                                  </span>
+                                )
+                              )}
+                            </li>
+                          );
+                        })}
                       </ul>
                     </div>
                   )}
@@ -633,8 +686,15 @@ export default function Learn() {
                     getCurrentTime={activeLesson.type === "video" ? getVideoCurrentTime : undefined}
                     getVideoId={activeLesson.type === "video" ? getActiveVideoId : undefined}
                     onSeek={activeLesson.type === "video" ? seekActiveVideo : undefined}
+                    highlightCommentId={highlightCommentId}
                   />
                 </div>
+
+                {course.is_enrolled && !course.access_expired && (
+                  <div className="learn-tab-panel learn-tab-panel--community" hidden={tab !== "community"}>
+                    <CourseCommunity courseId={course.id} />
+                  </div>
+                )}
               </div>
             </div>
 

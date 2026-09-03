@@ -43,6 +43,7 @@ const PayoutAccount = lazy(() => import("./Pages/User/Instructor/Sivbar/PayoutAc
 const Students = lazy(() => import("./Pages/User/Instructor/Sivbar/Students"));
 const InstructorProfile = lazy(() => import("./Pages/User/Instructor/Sivbar/InstructorProfile"));
 import Library from "./Pages/Library/Library";
+import Community from "./Pages/Community/Community";
 import Learn from "./Pages/Learn/Learn";
 import Contact from "./Pages/Contact/Contact";
 import Help from "./Pages/Help/Help";
@@ -196,6 +197,7 @@ function App() {
           <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
           <Route path="/profile/edit" element={<Navigate to="/profile?view=edit" replace />} />
           <Route path="/library" element={<RequireAuth><WithFooter><Library /></WithFooter></RequireAuth>} />
+          <Route path="/community" element={<RequireAuth><WithFooter><Community /></WithFooter></RequireAuth>} />
           {/* Learn gates paid courses itself so guests can still watch free ones */}
           <Route path="/learn/:slug" element={<Learn />} />
 
