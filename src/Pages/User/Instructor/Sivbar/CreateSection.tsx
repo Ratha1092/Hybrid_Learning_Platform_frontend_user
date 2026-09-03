@@ -114,7 +114,7 @@ function SectionLessonResources({ sectionId, lessonId, readOnly = false }: { sec
   );
 }
 
-const EMPTY_LESSON_FORM = { title: "", type: "video", video_url: "", content: "", is_preview: false, videoFile: null as File | null, duration: null as number | null, articleFile: null as File | null };
+const EMPTY_LESSON_FORM = { title: "", description: "", type: "video", video_url: "", content: "", is_preview: false, videoFile: null as File | null, duration: null as number | null, articleFile: null as File | null };
 
 export default function SectionLibrary() {
   const navigate = useNavigate();
@@ -150,6 +150,12 @@ export default function SectionLibrary() {
   const [confirmDelete, setConfirmDelete] = useState<StandaloneSection | null>(null);
   const [deleteSaving, setDeleteSaving] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // Inline lesson edit
+  const [editingLessonId, setEditingLessonId] = useState<number | null>(null);
+  const [editLessonForm, setEditLessonForm] = useState({ title: "", description: "", is_preview: false, video_url: "", content: "" });
+  const [editLessonSaving, setEditLessonSaving] = useState(false);
+  const [editLessonErr, setEditLessonErr] = useState<string | null>(null);
 
   // Delete confirm (lesson)
   const [confirmDeleteLesson, setConfirmDeleteLesson] = useState<InstructorLesson | null>(null);
@@ -248,6 +254,7 @@ export default function SectionLibrary() {
       const { data } = await instructorService.createSectionLesson(wizardSection.id, {
         title: lessonForm.title.trim(),
         type: lessonForm.type,
+        description: lessonForm.description.trim() || undefined,
         duration: lessonForm.videoFile && lessonForm.duration != null ? lessonForm.duration : undefined,
         is_preview: lessonForm.is_preview,
         video_url: lessonForm.type === "video" && !lessonForm.videoFile ? (lessonForm.video_url || undefined) : undefined,
@@ -279,6 +286,49 @@ export default function SectionLibrary() {
       setLessonErr(err.response?.data?.errors ? Object.values(err.response.data.errors).flat().join(" ") : err.response?.data?.message ?? "Failed to add lesson.");
     }
     setSavingLesson(false);
+  };
+
+  const startEditLesson = (l: InstructorLesson) => {
+    setShowLessonForm(false);
+    setEditingLessonId(l.id);
+    setEditLessonErr(null);
+    setEditLessonForm({
+      title: l.title,
+      description: l.description ?? "",
+      is_preview: l.is_preview,
+      video_url: l.video_url ?? "",
+      content: l.content ?? "",
+    });
+  };
+
+  const handleSaveEditLesson = async (l: InstructorLesson) => {
+    if (!wizardSection || !editLessonForm.title.trim()) {
+      setEditLessonErr("Title is required.");
+      return;
+    }
+    const sectionId = wizardSection.id;
+    setEditLessonSaving(true); setEditLessonErr(null);
+    try {
+      const payload: Partial<InstructorLesson> = {
+        title: editLessonForm.title.trim(),
+        description: editLessonForm.description.trim() || undefined,
+        is_preview: editLessonForm.is_preview,
+      };
+      if (l.type === "video") payload.video_url = editLessonForm.video_url || undefined;
+      if (l.type === "article") payload.content = editLessonForm.content || undefined;
+
+      await instructorService.updateSectionLesson(sectionId, l.id, payload);
+      setSections((prev) => prev.map((s) =>
+        s.id === sectionId
+          ? { ...s, lessons: (s.lessons ?? []).map((x) => (x.id === l.id ? { ...x, ...payload } : x)) }
+          : s
+      ));
+      setEditingLessonId(null);
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string; errors?: Record<string, string[]> } }; message?: string };
+      setEditLessonErr(err.response?.data?.errors ? Object.values(err.response.data.errors).flat().join(" ") : err.response?.data?.message ?? "Failed to update lesson.");
+    }
+    setEditLessonSaving(false);
   };
 
   const handleDeleteLesson = async () => {
@@ -652,6 +702,14 @@ export default function SectionLibrary() {
                         <span className="hidden sm:inline">Resources</span>
                       </button>
                       <button
+                        onClick={() => startEditLesson(l)}
+                        className="rounded-lg p-1 text-slate-300 transition-colors hover:bg-blue-50 hover:text-blue-600 dark:text-slate-500 dark:hover:bg-blue-500/10 dark:hover:text-blue-400"
+                        aria-label="Edit lesson"
+                        title="Edit lesson"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
                         onClick={() => { setLessonDeleteError(null); setConfirmDeleteLesson(l); }}
                         className="rounded-lg p-1 text-slate-300 transition-colors hover:bg-rose-50 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400"
                         aria-label="Delete lesson"
@@ -659,6 +717,76 @@ export default function SectionLibrary() {
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
+
+                    {editingLessonId === l.id && (
+                      <div className="flex flex-col gap-2.5 border-t border-slate-100 p-3.5 dark:border-slate-700">
+                        <input
+                          autoFocus
+                          placeholder="Lesson title *"
+                          value={editLessonForm.title}
+                          onChange={(e) => setEditLessonForm((f) => ({ ...f, title: e.target.value }))}
+                          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none focus:border-blue-400 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                        />
+                        <div className="flex flex-col gap-1">
+                          <textarea
+                            rows={2}
+                            maxLength={1000}
+                            placeholder="What this lesson covers (optional)"
+                            value={editLessonForm.description}
+                            onChange={(e) => setEditLessonForm((f) => ({ ...f, description: e.target.value }))}
+                            className="resize-y rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none focus:border-blue-400 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                          />
+                          <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                            Shown on the course outline so students know what they'll learn.
+                          </span>
+                        </div>
+                        {l.type === "video" && (
+                          <input
+                            placeholder="Video URL (optional)"
+                            value={editLessonForm.video_url}
+                            onChange={(e) => setEditLessonForm((f) => ({ ...f, video_url: e.target.value }))}
+                            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none focus:border-blue-400 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                          />
+                        )}
+                        {l.type === "article" && (
+                          <textarea
+                            rows={3}
+                            placeholder="Article content"
+                            value={editLessonForm.content}
+                            onChange={(e) => setEditLessonForm((f) => ({ ...f, content: e.target.value }))}
+                            className="resize-y rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none focus:border-blue-400 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                          />
+                        )}
+                        <label className="flex cursor-pointer items-center gap-2 text-[12.5px] text-slate-600 dark:text-slate-400">
+                          <input
+                            type="checkbox"
+                            checked={editLessonForm.is_preview}
+                            onChange={(e) => setEditLessonForm((f) => ({ ...f, is_preview: e.target.checked }))}
+                            className="h-3.5 w-3.5 rounded border-slate-300"
+                          />
+                          Free preview
+                        </label>
+
+                        {editLessonErr && <p className="text-[11.5px] font-medium text-rose-500">⚠ {editLessonErr}</p>}
+
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleSaveEditLesson(l)}
+                            disabled={editLessonSaving || !editLessonForm.title.trim()}
+                            className="rounded-lg bg-blue-600 px-4 py-2 text-[12.5px] font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                          >
+                            {editLessonSaving ? "Saving..." : "Save Changes"}
+                          </button>
+                          <button
+                            onClick={() => setEditingLessonId(null)}
+                            disabled={editLessonSaving}
+                            className="rounded-lg px-4 py-2 text-[12.5px] font-semibold text-slate-500 transition-colors hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-700"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
                     {expandedResources.has(l.id) && (
                       <SectionLessonResources sectionId={wizardSection.id} lessonId={l.id} />
                     )}
@@ -682,6 +810,19 @@ export default function SectionLibrary() {
                       onChange={(e) => setLF("title", e.target.value)}
                       className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none focus:border-blue-400 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
                     />
+                    <div className="flex flex-col gap-1">
+                      <textarea
+                        rows={2}
+                        placeholder="What this lesson covers (optional)"
+                        value={lessonForm.description}
+                        onChange={(e) => setLF("description", e.target.value)}
+                        maxLength={1000}
+                        className="resize-y rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none focus:border-blue-400 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                      />
+                      <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                        Shown on the course outline so students know what they'll learn.
+                      </span>
+                    </div>
                     <div className="flex items-center gap-3">
                       <select
                         value={lessonForm.type}

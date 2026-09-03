@@ -48,6 +48,7 @@ function Navbar() {
     { to: "/courses",    label: t("nav.courses") },
     { to: "/instructors", label: t("nav.instructors") },
     { to: "/library",    label: t("nav.library") },
+    { to: "/community",  label: t("nav.community") },
     { to: "/about",      label: t("nav.about") },
     { to: "/contact",    label: t("nav.contact") },
   ];

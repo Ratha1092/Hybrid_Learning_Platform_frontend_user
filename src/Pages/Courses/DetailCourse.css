@@ -409,7 +409,7 @@
 
 .lesson-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   padding: 11px 18px;
   transition: background 0.12s;
@@ -460,12 +460,33 @@
   flex-shrink: 0;
   width: 20px;
   text-align: center;
+  margin-top: 3px;
+}
+
+.lesson-row__main {
+  flex: 1;
+  min-width: 0;
 }
 
 .lesson-row__title {
-  flex: 1;
+  display: block;
   font-size: 13.5px;
   color: #334155;
+}
+
+/* Clamped to two lines so a long description can't turn the outline into a
+   wall of text — the full copy still shows in the player.
+   Scoped via .lesson-row so it outranks `.detail-section p`, which wraps this
+   accordion and would otherwise force 15px/1.75 body copy onto it. */
+.lesson-row .lesson-row__desc {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: #64748b;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .lesson-row__right {
@@ -473,6 +494,7 @@
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+  margin-top: 1px;
 }
 
 .lesson-row__preview {
@@ -1318,6 +1340,7 @@ html.dark .lesson-row-wrap { border-bottom-color: #334155; }
 html.dark .lesson-row:hover { background: #273548; }
 html.dark .lesson-row__icon { color: #64748b; }
 html.dark .lesson-row__title { color: #e2e8f0; }
+html.dark .lesson-row .lesson-row__desc { color: #94a3b8; }
 html.dark .lesson-row__preview { color: #5eead4; background: rgba(46,196,182,0.12); border-color: rgba(94,234,212,0.25); }
 html.dark .lesson-row__dur { color: #64748b; }
 html.dark .lesson-preview { background: #1e293b; }

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Bell, GraduationCap, XCircle, CheckCircle2, Trophy,
-  BookOpen, ShoppingBag, CreditCard, ShieldCheck, ChevronRight,
+  BookOpen, ShoppingBag, CreditCard, ShieldCheck, ChevronRight, MessageCircle,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -31,6 +31,7 @@ const TYPE_CONFIG: Record<string, { Icon: typeof Bell; accent: string }> = {
   order:                { Icon: ShoppingBag,   accent: "#2563eb" },
   payment:              { Icon: CreditCard,    accent: "#10b981" },
   role_changed:         { Icon: ShieldCheck,   accent: "#2563eb" },
+  comment_reply:        { Icon: MessageCircle, accent: "#2ec4b6" },
   default:              { Icon: Bell,          accent: "#3b82f6" },
 };
 

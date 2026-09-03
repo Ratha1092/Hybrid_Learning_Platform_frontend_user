@@ -155,6 +155,7 @@ export interface InstructorLesson {
   id: number;
   title: string;
   type: string;
+  description?: string;
   duration: number;
   is_preview: boolean;
   order: number;
@@ -235,6 +236,7 @@ export const instructorService = {
     data: {
       title: string;
       type: string;
+      description?: string;
       duration?: number;
       is_preview?: boolean;
       video_url?: string;
@@ -454,6 +456,7 @@ export const instructorService = {
     data: {
       title: string;
       type: string;
+      description?: string;
       duration?: number;
       is_preview?: boolean;
       video_url?: string;

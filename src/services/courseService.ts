@@ -40,6 +40,7 @@ export interface Lesson {
   id: number;
   title: string;
   type: string;
+  description?: string;
   is_preview: boolean;
   video_url?: string;
   videos?: LessonVideo[];

@@ -7,13 +7,13 @@ import { getVideoDuration } from "../../../../utils/videoUrl";
 import "../css/CreateCourse.css";
 
 interface LocalLesson {
-  id: number; title: string; type: string; is_preview: boolean; video_url?: string; content?: string;
+  id: number; title: string; description?: string; type: string; is_preview: boolean; video_url?: string; content?: string;
 }
 interface LocalSection {
   id: number; title: string; order?: number; lessons: LocalLesson[];
 }
 interface LessonForm {
-  title: string; type: string; video_url: string; content: string; is_preview: boolean; videoFile: File | null;
+  title: string; description: string; type: string; video_url: string; content: string; is_preview: boolean; videoFile: File | null;
   duration: number | null; articleFile: File | null;
 }
 
@@ -176,14 +176,14 @@ interface SectionBlockProps {
 function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLessonAdded, onLessonDeleted, onLessonUpdated }: SectionBlockProps) {
   const [open, setOpen] = useState(true);
   const [showForm, setShowForm] = useState(!!autoOpenForm);
-  const [lesson, setLesson] = useState<LessonForm>({ title: "", type: "video", video_url: "", content: "", is_preview: false, videoFile: null, duration: null, articleFile: null });
+  const [lesson, setLesson] = useState<LessonForm>({ title: "", description: "", type: "video", video_url: "", content: "", is_preview: false, videoFile: null, duration: null, articleFile: null });
   const [saving, setSaving] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [expandedResources, setExpandedResources] = useState<Set<number>>(new Set());
 
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editForm, setEditForm] = useState({ title: "", is_preview: false, video_url: "", content: "" });
+  const [editForm, setEditForm] = useState({ title: "", description: "", is_preview: false, video_url: "", content: "" });
   const [editSaving, setEditSaving] = useState(false);
   const [editErr, setEditErr] = useState<string | null>(null);
 
@@ -194,7 +194,7 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
     setShowForm(false);
     setEditingId(l.id);
     setEditErr(null);
-    setEditForm({ title: l.title, is_preview: l.is_preview, video_url: l.video_url ?? "", content: l.content ?? "" });
+    setEditForm({ title: l.title, description: l.description ?? "", is_preview: l.is_preview, video_url: l.video_url ?? "", content: l.content ?? "" });
   };
 
   const handleSaveEdit = async (l: LocalLesson) => {
@@ -203,6 +203,7 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
     try {
       const payload: Partial<LocalLesson> & { video_url?: string; content?: string } = {
         title: editForm.title.trim(),
+        description: editForm.description.trim() || undefined,
         is_preview: editForm.is_preview,
       };
       if (l.type === "video") payload.video_url = editForm.video_url || undefined;
@@ -210,6 +211,7 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
       await instructorService.updateLesson(courseId, section.id, l.id, payload);
       onLessonUpdated(l.id, {
         title: editForm.title.trim(),
+        description: editForm.description.trim(),
         is_preview: editForm.is_preview,
         ...(l.type === "video" ? { video_url: editForm.video_url } : {}),
         ...(l.type === "article" ? { content: editForm.content } : {}),
@@ -228,6 +230,7 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
       const { data } = await instructorService.createLesson(courseId, section.id, {
         title: lesson.title.trim(),
         type: lesson.type,
+        description: lesson.description.trim() || undefined,
         duration: lesson.videoFile && lesson.duration != null ? lesson.duration : undefined,
         is_preview: lesson.is_preview,
         video_url: lesson.type === "video" && !lesson.videoFile ? (lesson.video_url || undefined) : undefined,
@@ -248,7 +251,7 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
         setUploadProgress(null);
       }
       onLessonAdded({ ...data.data, lessons: undefined } as unknown as LocalLesson);
-      setLesson({ title: "", type: "video", video_url: "", content: "", is_preview: false, videoFile: null, duration: null, articleFile: null });
+      setLesson({ title: "", description: "", type: "video", video_url: "", content: "", is_preview: false, videoFile: null, duration: null, articleFile: null });
       setShowForm(false);
     } catch (e) { setErr(getApiError(e)); }
     setSaving(false);
@@ -306,6 +309,13 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
                     value={editForm.title}
                     onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
                   />
+                  <textarea
+                    rows={2}
+                    maxLength={1000}
+                    placeholder="What this lesson covers (optional)"
+                    value={editForm.description}
+                    onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
+                  />
                   <label className="cur-lesson-form__check">
                     <input
                       type="checkbox"
@@ -355,6 +365,13 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
                 placeholder="Lesson title *"
                 value={lesson.title}
                 onChange={(e) => setL("title", e.target.value)}
+              />
+              <textarea
+                rows={2}
+                maxLength={1000}
+                placeholder="What this lesson covers (optional)"
+                value={lesson.description}
+                onChange={(e) => setL("description", e.target.value)}
               />
               <div className="cur-lesson-form__row">
                 <select value={lesson.type} onChange={(e) => setL("type", e.target.value)}>
