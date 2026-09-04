@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Layers, PlusCircle, ArrowRight, Lightbulb, Info, Eye, Pencil, Trash2, X, Plus, Paperclip } from "lucide-react";
+import { BookOpen, Layers, PlusCircle, ArrowRight, Lightbulb, Info, Eye, Pencil, Trash2, X, Plus, Paperclip, ArrowLeft, ExternalLink } from "lucide-react";
 import {
   instructorService,
   type StandaloneSection,
   type InstructorLesson,
   type LessonResource,
+  type InstructorLessonVideo,
 } from "../../../../services/instructorService";
 import { getVideoDuration } from "../../../../utils/videoUrl";
 import { useScrollLock } from "../../../../hooks/useScrollLock";
@@ -73,6 +74,11 @@ function SectionLessonResources({ sectionId, lessonId, readOnly = false }: { sec
               <span className="text-sm">{EXT_ICON[r.type] ?? "📎"}</span>
               <span className="flex-1 text-[12.5px] font-medium text-slate-700 dark:text-slate-200">{r.title}</span>
               <span className="text-[11px] text-slate-400">.{r.type}</span>
+              {(r.preview_url || r.file_url) && (
+                <a href={r.preview_url || r.file_url} target="_blank" rel="noreferrer" className="text-blue-500 hover:text-blue-700" aria-label={`View ${r.title}`} title="View resource">
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+              )}
               {!readOnly && (
                 <button onClick={() => handleDelete(r.id)} className="text-slate-300 hover:text-rose-500 dark:text-slate-500 dark:hover:text-rose-400">
                   <Trash2 className="h-3.5 w-3.5" />
@@ -110,6 +116,31 @@ function SectionLessonResources({ sectionId, lessonId, readOnly = false }: { sec
           )}
         </>
       )}
+    </div>
+  );
+}
+
+function SectionLessonVideos({ sectionId, lessonId }: { sectionId: number; lessonId: number }) {
+  const [videos, setVideos] = useState<InstructorLessonVideo[]>([]);
+
+  useEffect(() => {
+    instructorService.getSectionLessonVideos(sectionId, lessonId)
+      .then((r) => setVideos(r.data.data ?? []))
+      .catch(() => setVideos([]));
+  }, [sectionId, lessonId]);
+
+  if (!videos.length) return null;
+  return (
+    <div className="mb-3 flex flex-col gap-2">
+      <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Uploaded Videos</p>
+      {videos.map((video, index) => video.video_source && (
+        <div key={video.id} className="overflow-hidden rounded-lg border border-slate-200 bg-black dark:border-slate-600">
+          <video controls preload="metadata" className="max-h-64 w-full" src={video.video_source}>
+            <track kind="captions" />
+          </video>
+          <p className="bg-white px-3 py-1.5 text-[11px] text-slate-500 dark:bg-slate-800 dark:text-slate-400">Video {index + 1}</p>
+        </div>
+      ))}
     </div>
   );
 }
@@ -153,7 +184,7 @@ export default function SectionLibrary() {
 
   // Inline lesson edit
   const [editingLessonId, setEditingLessonId] = useState<number | null>(null);
-  const [editLessonForm, setEditLessonForm] = useState({ title: "", description: "", is_preview: false, video_url: "", content: "" });
+  const [editLessonForm, setEditLessonForm] = useState({ title: "", description: "", type: "video", is_preview: false, video_url: "", content: "", videoFiles: [] as File[], resourceFiles: [] as File[] });
   const [editLessonSaving, setEditLessonSaving] = useState(false);
   const [editLessonErr, setEditLessonErr] = useState<string | null>(null);
 
@@ -311,9 +342,12 @@ export default function SectionLibrary() {
     setEditLessonForm({
       title: l.title,
       description: l.description ?? "",
+      type: l.type,
       is_preview: l.is_preview,
       video_url: l.video_url ?? "",
       content: l.content ?? "",
+      videoFiles: [],
+      resourceFiles: [],
     });
   };
 
@@ -328,12 +362,24 @@ export default function SectionLibrary() {
       const payload: Partial<InstructorLesson> = {
         title: editLessonForm.title.trim(),
         description: editLessonForm.description.trim() || undefined,
+        type: editLessonForm.type,
         is_preview: editLessonForm.is_preview,
       };
-      if (l.type === "video") payload.video_url = editLessonForm.video_url || undefined;
-      if (l.type === "article") payload.content = editLessonForm.content || undefined;
+      if (editLessonForm.type === "video") payload.video_url = editLessonForm.video_url || undefined;
+      if (editLessonForm.type === "article") payload.content = editLessonForm.content || undefined;
 
       await instructorService.updateSectionLesson(sectionId, l.id, payload);
+      for (const file of editLessonForm.videoFiles) {
+        const fd = new FormData();
+        fd.append("video", file);
+        await instructorService.addSectionLessonVideo(sectionId, l.id, fd);
+      }
+      for (const file of editLessonForm.resourceFiles) {
+        const fd = new FormData();
+        fd.append("title", file.name);
+        fd.append("file", file);
+        await instructorService.uploadSectionLessonResource(sectionId, l.id, fd);
+      }
       setSections((prev) => prev.map((s) =>
         s.id === sectionId
           ? { ...s, lessons: (s.lessons ?? []).map((x) => (x.id === l.id ? { ...x, ...payload } : x)) }
@@ -720,6 +766,14 @@ export default function SectionLibrary() {
 
                     {editingLessonId === l.id && (
                       <div className="flex flex-col gap-2.5 border-t border-slate-100 p-3.5 dark:border-slate-700">
+                        <select
+                          value={editLessonForm.type}
+                          onChange={(e) => setEditLessonForm((f) => ({ ...f, type: e.target.value, video_url: "", content: "" }))}
+                          className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none focus:border-blue-400 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                        >
+                          <option value="video">Video lesson</option>
+                          <option value="article">Article lesson</option>
+                        </select>
                         <input
                           autoFocus
                           placeholder="Lesson title *"
@@ -740,15 +794,22 @@ export default function SectionLibrary() {
                             Shown on the course outline so students know what they'll learn.
                           </span>
                         </div>
-                        {l.type === "video" && (
-                          <input
-                            placeholder="Video URL (optional)"
-                            value={editLessonForm.video_url}
-                            onChange={(e) => setEditLessonForm((f) => ({ ...f, video_url: e.target.value }))}
-                            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none focus:border-blue-400 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
-                          />
+                        {editLessonForm.type === "video" && (
+                          <>
+                            <input
+                              placeholder="Video URL (optional)"
+                              value={editLessonForm.video_url}
+                              onChange={(e) => setEditLessonForm((f) => ({ ...f, video_url: e.target.value }))}
+                              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none focus:border-blue-400 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+                            />
+                            <label className="cursor-pointer rounded-lg border border-dashed border-slate-300 px-3 py-2 text-[12px] text-slate-500 dark:border-slate-600">
+                              Add video files
+                              <input type="file" multiple accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm" className="hidden" onChange={(e) => { setEditLessonForm((f) => ({ ...f, videoFiles: [...f.videoFiles, ...Array.from(e.target.files ?? [])] })); e.currentTarget.value = ""; }} />
+                            </label>
+                            {editLessonForm.videoFiles.length > 0 && <span className="text-[11px] text-slate-400">{editLessonForm.videoFiles.length} new video file{editLessonForm.videoFiles.length === 1 ? "" : "s"} ready</span>}
+                          </>
                         )}
-                        {l.type === "article" && (
+                        {editLessonForm.type === "article" && (
                           <textarea
                             rows={3}
                             placeholder="Article content"
@@ -757,6 +818,11 @@ export default function SectionLibrary() {
                             className="resize-y rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none focus:border-blue-400 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
                           />
                         )}
+                        <label className="cursor-pointer rounded-lg border border-dashed border-slate-300 px-3 py-2 text-[12px] text-slate-500 dark:border-slate-600">
+                          Add lesson resources
+                          <input type="file" multiple accept=".pdf,.zip,.doc,.docx,.ppt,.pptx,.mp4,.jpg,.png" className="hidden" onChange={(e) => { setEditLessonForm((f) => ({ ...f, resourceFiles: [...f.resourceFiles, ...Array.from(e.target.files ?? [])] })); e.currentTarget.value = ""; }} />
+                        </label>
+                        {editLessonForm.resourceFiles.length > 0 && <span className="text-[11px] text-slate-400">{editLessonForm.resourceFiles.length} new resource file{editLessonForm.resourceFiles.length === 1 ? "" : "s"} ready</span>}
                         <label className="flex cursor-pointer items-center gap-2 text-[12.5px] text-slate-600 dark:text-slate-400">
                           <input
                             type="checkbox"
@@ -788,7 +854,10 @@ export default function SectionLibrary() {
                       </div>
                     )}
                     {expandedResources.has(l.id) && (
-                      <SectionLessonResources sectionId={wizardSection.id} lessonId={l.id} />
+                      <>
+                        {l.type === "video" && <SectionLessonVideos sectionId={wizardSection.id} lessonId={l.id} />}
+                        <SectionLessonResources sectionId={wizardSection.id} lessonId={l.id} />
+                      </>
                     )}
                   </div>
                 ))}
@@ -1068,13 +1137,22 @@ export default function SectionLibrary() {
                     </button>
                   </div>
                   {expandedResources.has(l.id) && (
-                    <SectionLessonResources sectionId={viewSection.id} lessonId={l.id} readOnly />
+                    <>
+                      {l.type === "video" && <SectionLessonVideos sectionId={viewSection.id} lessonId={l.id} />}
+                      <SectionLessonResources sectionId={viewSection.id} lessonId={l.id} readOnly />
+                    </>
                   )}
                 </div>
               ))}
             </div>
 
             <div className="mt-5 flex gap-2">
+              <button
+                onClick={() => setViewSectionId(null)}
+                className="inline-flex items-center justify-center gap-1 rounded-xl border border-slate-200 px-4 py-2.5 text-[13px] font-semibold text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-700"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" /> Back
+              </button>
               <button
                 onClick={() => { const s = viewSection; setViewSectionId(null); openEditWizard(s); }}
                 className="flex-1 rounded-xl bg-teal-600 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-teal-700"

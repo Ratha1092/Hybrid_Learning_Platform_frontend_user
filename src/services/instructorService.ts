@@ -171,6 +171,8 @@ export interface LessonResource {
   title: string;
   type: string;
   file_path: string;
+  file_url?: string;
+  preview_url?: string;
 }
 
 // Represents one of possibly several videos attached to a lesson.
