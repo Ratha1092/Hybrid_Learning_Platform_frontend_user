@@ -868,12 +868,17 @@ export default function SectionLibrary() {
                           accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm"
                           className="hidden"
                           onChange={(e) => {
-                            const files = Array.from(e.target.files ?? []);
-                            setLF("videoFiles", files);
-                            setLF("duration", null);
-                            if (files.length) Promise.all(files.map((file) => getVideoDuration(file).catch(() => 0)))
-                              .then((durations) => setLF("duration", Math.round(durations.reduce((total, duration) => total + duration, 0))))
-                              .catch(() => {});
+                            const selected = Array.from(e.target.files ?? []);
+                            setLessonForm((prev) => {
+                              const videoFiles = [...prev.videoFiles, ...selected.filter((file) =>
+                                !prev.videoFiles.some((existing) => existing.name === file.name && existing.lastModified === file.lastModified)
+                              )];
+                              if (videoFiles.length) Promise.all(videoFiles.map((file) => getVideoDuration(file).catch(() => 0)))
+                                .then((durations) => setLessonForm((current) => ({ ...current, duration: Math.round(durations.reduce((total, duration) => total + duration, 0)) })))
+                                .catch(() => {});
+                              return { ...prev, videoFiles, duration: null };
+                            });
+                            e.currentTarget.value = "";
                           }}
                         />
                         </label>
@@ -948,7 +953,16 @@ export default function SectionLibrary() {
                           multiple
                           accept=".pdf,.zip,.doc,.docx,.ppt,.pptx,.mp4,.jpg,.png"
                           className="hidden"
-                          onChange={(e) => setLF("resourceFiles", Array.from(e.target.files ?? []))}
+                          onChange={(e) => {
+                            const selected = Array.from(e.target.files ?? []);
+                            setLessonForm((prev) => ({
+                              ...prev,
+                              resourceFiles: [...prev.resourceFiles, ...selected.filter((file) =>
+                                !prev.resourceFiles.some((existing) => existing.name === file.name && existing.lastModified === file.lastModified)
+                              )],
+                            }));
+                            e.currentTarget.value = "";
+                          }}
                         />
                       </label>
                       {lessonForm.resourceFiles.length > 0 && (
