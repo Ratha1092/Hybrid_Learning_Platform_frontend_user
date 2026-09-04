@@ -13,8 +13,8 @@ interface LocalSection {
   id: number; title: string; order?: number; lessons: LocalLesson[];
 }
 interface LessonForm {
-  title: string; description: string; type: string; video_url: string; content: string; is_preview: boolean; videoFile: File | null;
-  duration: number | null; articleFile: File | null;
+  title: string; description: string; type: string; video_url: string; content: string; is_preview: boolean; videoFiles: File[];
+  duration: number | null; articleFile: File | null; resourceFiles: File[];
 }
 
 const STEPS = ["Basic Info", "Curriculum", "Pricing", "Submit"];
@@ -176,7 +176,7 @@ interface SectionBlockProps {
 function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLessonAdded, onLessonDeleted, onLessonUpdated }: SectionBlockProps) {
   const [open, setOpen] = useState(true);
   const [showForm, setShowForm] = useState(!!autoOpenForm);
-  const [lesson, setLesson] = useState<LessonForm>({ title: "", description: "", type: "video", video_url: "", content: "", is_preview: false, videoFile: null, duration: null, articleFile: null });
+  const [lesson, setLesson] = useState<LessonForm>({ title: "", description: "", type: "video", video_url: "", content: "", is_preview: false, videoFiles: [], duration: null, articleFile: null, resourceFiles: [] });
   const [saving, setSaving] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -221,7 +221,7 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
     setEditSaving(false);
   };
 
-  const setL = (k: keyof LessonForm, v: string | boolean | File | number | null) => setLesson((f) => ({ ...f, [k]: v }));
+  const setL = (k: keyof LessonForm, v: string | boolean | File | File[] | number | null) => setLesson((f) => ({ ...f, [k]: v }));
 
   const handleAddLesson = async () => {
     if (!lesson.title.trim()) return;
@@ -231,15 +231,23 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
         title: lesson.title.trim(),
         type: lesson.type,
         description: lesson.description.trim() || undefined,
-        duration: lesson.videoFile && lesson.duration != null ? lesson.duration : undefined,
+        duration: lesson.videoFiles.length && lesson.duration != null ? lesson.duration : undefined,
         is_preview: lesson.is_preview,
-        video_url: lesson.type === "video" && !lesson.videoFile ? (lesson.video_url || undefined) : undefined,
+        video_url: lesson.type === "video" && !lesson.videoFiles.length ? (lesson.video_url || undefined) : undefined,
         content: lesson.content || undefined,
       });
       const lessonId = data.data.id;
-      if (lesson.type === "video" && lesson.videoFile) {
-        setUploadProgress(0);
-        await instructorService.uploadVideo(courseId, section.id, lessonId, lesson.videoFile, setUploadProgress);
+      if (lesson.type === "video" && lesson.videoFiles.length) {
+        for (let i = 0; i < lesson.videoFiles.length; i++) {
+          const file = lesson.videoFiles[i];
+          const duration = await getVideoDuration(file).catch(() => 0);
+          const fd = new FormData();
+          fd.append("video", file);
+          fd.append("duration", String(Math.round(duration)));
+          await instructorService.addLessonVideo(courseId, section.id, lessonId, fd, (percent) => {
+            setUploadProgress(Math.round(((i + percent / 100) / lesson.videoFiles.length) * 100));
+          });
+        }
         setUploadProgress(null);
       }
       if (lesson.type === "article" && lesson.articleFile) {
@@ -250,8 +258,16 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
         await instructorService.uploadLessonResource(courseId, section.id, lessonId, fd, setUploadProgress);
         setUploadProgress(null);
       }
+      for (const file of lesson.resourceFiles) {
+        setUploadProgress(0);
+        const fd = new FormData();
+        fd.append("title", file.name);
+        fd.append("file", file);
+        await instructorService.uploadLessonResource(courseId, section.id, lessonId, fd, setUploadProgress);
+      }
+      setUploadProgress(null);
       onLessonAdded({ ...data.data, lessons: undefined } as unknown as LocalLesson);
-      setLesson({ title: "", description: "", type: "video", video_url: "", content: "", is_preview: false, videoFile: null, duration: null, articleFile: null });
+      setLesson({ title: "", description: "", type: "video", video_url: "", content: "", is_preview: false, videoFiles: [], duration: null, articleFile: null, resourceFiles: [] });
       setShowForm(false);
     } catch (e) { setErr(getApiError(e)); }
     setSaving(false);
@@ -385,17 +401,31 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
               </div>
               {lesson.type === "video" && (
                 <>
-                  <label style={{ fontSize: 12, color: "#6b7280" }}>Upload video (mp4, mov, webm — max 500MB)</label>
-                  <input
-                    type="file"
-                    accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm"
+                  <label className="cur-video-picker">
+                    <span>🎬 Choose video file{lesson.videoFiles.length === 1 ? "" : "s"}</span>
+                    <small>MP4, MOV, AVI, MKV, or WebM · up to 500MB each · multiple files supported</small>
+                    <input
+                      type="file"
+                      multiple
+                      className="cur-video-picker__input"
+                      accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm"
                     onChange={(e) => {
-                      const f = e.target.files?.[0] ?? null;
-                      setLesson((prev) => ({ ...prev, videoFile: f, duration: null }));
-                      if (f) getVideoDuration(f).then((d) => setL("duration", d)).catch(() => {});
+                      const files = Array.from(e.target.files ?? []);
+                      setLesson((prev) => ({ ...prev, videoFiles: files, duration: null }));
+                      if (files.length) Promise.all(files.map((file) => getVideoDuration(file).catch(() => 0)))
+                        .then((durations) => setL("duration", Math.round(durations.reduce((total, duration) => total + duration, 0))))
+                        .catch(() => {});
                     }}
-                  />
-                  {!lesson.videoFile && (
+                    />
+                  </label>
+                  {lesson.videoFiles.length > 0 && (
+                    <ul className="cur-video-files">
+                      {lesson.videoFiles.map((file) => (
+                        <li key={`${file.name}-${file.lastModified}`}><span>🎬 {file.name}</span><span>{(file.size / (1024 * 1024)).toFixed(1)} MB</span></li>
+                      ))}
+                    </ul>
+                  )}
+                  {!lesson.videoFiles.length && (
                     <input placeholder="Or paste YouTube / Vimeo URL" value={lesson.video_url} onChange={(e) => setL("video_url", e.target.value)} />
                   )}
                   {uploadProgress !== null && (
@@ -403,7 +433,7 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
                       <div style={{ background: "#e5e7eb", borderRadius: 4, height: 6 }}>
                         <div style={{ background: "#14b8a6", height: 6, borderRadius: 4, width: `${uploadProgress}%`, transition: "width 0.3s" }} />
                       </div>
-                      <span style={{ fontSize: 11, color: "#6b7280" }}>Uploading {uploadProgress}%</span>
+                      <span style={{ fontSize: 11, color: "#6b7280" }}>Uploading video parts… {uploadProgress}%</span>
                     </div>
                   )}
                 </>
@@ -427,6 +457,20 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
                   )}
                 </>
               )}
+              <div className="cur-resource-picker">
+                <strong>Lesson resources <span>(optional)</span></strong>
+                <p>Attach PDFs, documents, slides, ZIP files, images, or videos now. They will upload when you save this lesson.</p>
+                <label>
+                  📎 Choose resource file{lesson.resourceFiles.length === 1 ? "" : "s"}
+                  <input
+                    type="file"
+                    multiple
+                    accept=".pdf,.zip,.doc,.docx,.ppt,.pptx,.mp4,.jpg,.png"
+                    onChange={(e) => setL("resourceFiles", Array.from(e.target.files ?? []))}
+                  />
+                </label>
+                {lesson.resourceFiles.length > 0 && <small>{lesson.resourceFiles.length} resource{lesson.resourceFiles.length !== 1 ? "s" : ""} ready: {lesson.resourceFiles.map((file) => file.name).join(", ")}</small>}
+              </div>
               <div className="cur-lesson-form__actions">
                 <button className="cur-btn cur-btn--primary" onClick={handleAddLesson} disabled={saving}>
                   {saving ? "Saving..." : "Save Lesson"}

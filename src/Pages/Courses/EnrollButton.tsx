@@ -31,7 +31,7 @@ interface Props {
 }
 
 export default function EnrollButton({ course }: Props) {
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { settings } = useSettings();
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>("idle");
@@ -56,6 +56,7 @@ export default function EnrollButton({ course }: Props) {
   const isEnrolled = !!course.is_enrolled;
   const isExpired = !!course.access_expired;
   const hasActiveAccess = (isEnrolled && !isExpired) || justEnrolled;
+  const isOwnFreeCourse = isAuthenticated && user?.id === course.instructor?.id && Number(course.price) === 0;
   const modalOpen = MODAL_STEPS.includes(step);
 
   // Resume an enrollment/renewal that was interrupted by a login/register redirect.
@@ -170,6 +171,12 @@ export default function EnrollButton({ course }: Props) {
   };
 
   const handleEnroll = async () => {
+    // Instructors should be able to review their own free course, but must not
+    // create an order/enrollment for it (that would count them as a student).
+    if (isOwnFreeCourse) {
+      navigate(`/learn/${course.slug}`);
+      return;
+    }
     if (!isAuthenticated) {
       // Only courses the instructor priced at $0 skip the login gate — a
       // guest can watch those straight away, with no progress tracking.

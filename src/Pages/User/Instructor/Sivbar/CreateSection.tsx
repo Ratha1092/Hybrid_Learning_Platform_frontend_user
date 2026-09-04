@@ -114,7 +114,7 @@ function SectionLessonResources({ sectionId, lessonId, readOnly = false }: { sec
   );
 }
 
-const EMPTY_LESSON_FORM = { title: "", description: "", type: "video", video_url: "", content: "", is_preview: false, videoFile: null as File | null, duration: null as number | null, articleFile: null as File | null };
+const EMPTY_LESSON_FORM = { title: "", description: "", type: "video", video_url: "", content: "", is_preview: false, videoFiles: [] as File[], duration: null as number | null, articleFile: null as File | null, resourceFiles: [] as File[] };
 
 export default function SectionLibrary() {
   const navigate = useNavigate();
@@ -244,7 +244,7 @@ export default function SectionLibrary() {
     setDeleteSaving(false);
   };
 
-  const setLF = (k: keyof typeof lessonForm, v: string | boolean | File | number | null) =>
+  const setLF = (k: keyof typeof lessonForm, v: string | boolean | File | File[] | number | null) =>
     setLessonForm((f) => ({ ...f, [k]: v }));
 
   const handleAddLesson = async () => {
@@ -255,15 +255,23 @@ export default function SectionLibrary() {
         title: lessonForm.title.trim(),
         type: lessonForm.type,
         description: lessonForm.description.trim() || undefined,
-        duration: lessonForm.videoFile && lessonForm.duration != null ? lessonForm.duration : undefined,
+        duration: lessonForm.videoFiles.length && lessonForm.duration != null ? lessonForm.duration : undefined,
         is_preview: lessonForm.is_preview,
-        video_url: lessonForm.type === "video" && !lessonForm.videoFile ? (lessonForm.video_url || undefined) : undefined,
+        video_url: lessonForm.type === "video" && !lessonForm.videoFiles.length ? (lessonForm.video_url || undefined) : undefined,
         content: lessonForm.content || undefined,
       });
       const lessonId = data.data.id;
-      if (lessonForm.type === "video" && lessonForm.videoFile) {
-        setLessonUploadProgress(0);
-        await instructorService.uploadSectionLessonVideo(wizardSection.id, lessonId, lessonForm.videoFile, setLessonUploadProgress);
+      if (lessonForm.type === "video" && lessonForm.videoFiles.length) {
+        for (let i = 0; i < lessonForm.videoFiles.length; i++) {
+          const file = lessonForm.videoFiles[i];
+          const duration = await getVideoDuration(file).catch(() => 0);
+          const fd = new FormData();
+          fd.append("video", file);
+          fd.append("duration", String(Math.round(duration)));
+          await instructorService.addSectionLessonVideo(wizardSection.id, lessonId, fd, (percent) => {
+            setLessonUploadProgress(Math.round(((i + percent / 100) / lessonForm.videoFiles.length) * 100));
+          });
+        }
         setLessonUploadProgress(null);
       }
       if (lessonForm.type === "article" && lessonForm.articleFile) {
@@ -274,6 +282,14 @@ export default function SectionLibrary() {
         await instructorService.uploadSectionLessonResource(wizardSection.id, lessonId, fd, setLessonUploadProgress);
         setLessonUploadProgress(null);
       }
+      for (const file of lessonForm.resourceFiles) {
+        setLessonUploadProgress(0);
+        const fd = new FormData();
+        fd.append("title", file.name);
+        fd.append("file", file);
+        await instructorService.uploadSectionLessonResource(wizardSection.id, lessonId, fd, setLessonUploadProgress);
+      }
+      setLessonUploadProgress(null);
       const sectionId = wizardSection.id;
       setSections((prev) => prev.map((s) =>
         s.id === sectionId
@@ -582,7 +598,7 @@ export default function SectionLibrary() {
           onClick={closeWizard}
         >
           <div
-            className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-card dark:bg-slate-800"
+            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-7 shadow-card dark:bg-slate-800 sm:p-8"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-3">
@@ -839,20 +855,42 @@ export default function SectionLibrary() {
                     </div>
 
                     {lessonForm.type === "video" && (
-                      <div className="flex flex-col gap-2">
-                        <label className="text-[11.5px] text-slate-400">Upload video (mp4, mov, webm — max 500MB)</label>
-                        <input
-                          type="file"
+                      <div className="flex flex-col gap-3">
+                        <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Upload video parts</label>
+                        <label className="flex cursor-pointer flex-col gap-2 rounded-xl border-2 border-dashed border-blue-200 bg-blue-50/60 px-4 py-4 text-slate-700 transition-colors hover:border-blue-400 hover:bg-blue-50 dark:border-blue-500/30 dark:bg-blue-500/10 dark:text-slate-200 dark:hover:border-blue-400">
+                          <span className="flex items-center gap-2 text-[13px] font-semibold text-blue-700 dark:text-blue-300">
+                            <Plus className="h-4 w-4" /> Choose video file{lessonForm.videoFiles.length === 1 ? "" : "s"}
+                          </span>
+                          <span className="text-[12px] text-slate-500 dark:text-slate-400">MP4, MOV, AVI, MKV, or WebM · up to 500MB each · you can choose multiple files</span>
+                          <input
+                            type="file"
+                            multiple
                           accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm"
-                          className="text-[12px] text-slate-600 dark:text-slate-400"
+                          className="hidden"
                           onChange={(e) => {
-                            const f = e.target.files?.[0] ?? null;
-                            setLF("videoFile", f);
+                            const files = Array.from(e.target.files ?? []);
+                            setLF("videoFiles", files);
                             setLF("duration", null);
-                            if (f) getVideoDuration(f).then((d) => setLF("duration", d)).catch(() => {});
+                            if (files.length) Promise.all(files.map((file) => getVideoDuration(file).catch(() => 0)))
+                              .then((durations) => setLF("duration", Math.round(durations.reduce((total, duration) => total + duration, 0))))
+                              .catch(() => {});
                           }}
                         />
-                        {!lessonForm.videoFile && (
+                        </label>
+                        {lessonForm.videoFiles.length > 0 && (
+                          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-500/25 dark:bg-emerald-500/10">
+                            <p className="text-[12.5px] font-bold text-emerald-700 dark:text-emerald-300">{lessonForm.videoFiles.length} video{lessonForm.videoFiles.length !== 1 ? "s" : ""} selected</p>
+                            <ul className="mt-2 space-y-1.5">
+                              {lessonForm.videoFiles.map((file) => (
+                                <li key={`${file.name}-${file.lastModified}`} className="flex items-center justify-between gap-3 text-[12px] text-emerald-800 dark:text-emerald-200">
+                                  <span className="truncate">🎬 {file.name}</span>
+                                  <span className="shrink-0">{(file.size / (1024 * 1024)).toFixed(1)} MB</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {!lessonForm.videoFiles.length && (
                           <input
                             placeholder="Or paste YouTube / Vimeo URL"
                             value={lessonForm.video_url}
@@ -865,7 +903,7 @@ export default function SectionLibrary() {
                             <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
                               <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${lessonUploadProgress}%` }} />
                             </div>
-                            <span className="text-[11px] text-slate-400">Uploading {lessonUploadProgress}%</span>
+                            <span className="text-[11px] text-slate-400">Uploading video parts… {lessonUploadProgress}%</span>
                           </div>
                         )}
                       </div>
@@ -897,6 +935,26 @@ export default function SectionLibrary() {
                         )}
                       </div>
                     )}
+
+                    <div className="flex flex-col gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50/70 p-3.5 dark:border-slate-600 dark:bg-slate-700/30">
+                      <div>
+                        <p className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Lesson resources <span className="font-normal text-slate-400">(optional)</span></p>
+                        <p className="mt-0.5 text-[11.5px] text-slate-400 dark:text-slate-500">Attach PDFs, documents, slides, ZIP files, images, or videos now. They will upload when you save the lesson.</p>
+                      </div>
+                      <label className="cursor-pointer rounded-lg border border-dashed border-slate-300 bg-white px-3 py-2.5 text-[12px] font-semibold text-slate-600 transition-colors hover:border-blue-400 hover:bg-blue-50 dark:border-slate-500 dark:bg-slate-800 dark:text-slate-300">
+                        📎 Choose resource file{lessonForm.resourceFiles.length === 1 ? "" : "s"}
+                        <input
+                          type="file"
+                          multiple
+                          accept=".pdf,.zip,.doc,.docx,.ppt,.pptx,.mp4,.jpg,.png"
+                          className="hidden"
+                          onChange={(e) => setLF("resourceFiles", Array.from(e.target.files ?? []))}
+                        />
+                      </label>
+                      {lessonForm.resourceFiles.length > 0 && (
+                        <p className="text-[12px] font-medium text-emerald-600 dark:text-emerald-400">{lessonForm.resourceFiles.length} resource{lessonForm.resourceFiles.length !== 1 ? "s" : ""} ready to upload: {lessonForm.resourceFiles.map((file) => file.name).join(", ")}</p>
+                      )}
+                    </div>
 
                     {lessonErr && <p className="text-[11.5px] font-medium text-rose-500">⚠ {lessonErr}</p>}
 
