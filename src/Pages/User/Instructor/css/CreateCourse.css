@@ -1159,6 +1159,37 @@
 
 .cur-lesson-form__actions { display: flex; gap: 8px; }
 
+.cur-video-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 13px 15px;
+  border: 2px dashed #9bc7bd;
+  border-radius: 10px;
+  background: var(--pt-pine-s, #E4F0EC);
+  color: var(--pt-pine, #27695A);
+  cursor: pointer;
+}
+.cur-video-picker:hover { border-color: var(--pt-pine, #27695A); }
+.cur-video-picker > span { font-size: 0.875rem; font-weight: 700; }
+.cur-video-picker small { color: var(--pt-muted, #6C6A61); font-size: 0.75rem; }
+.cur-lesson-form .cur-video-picker__input { display: none; }
+.cur-video-files {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+  padding: 10px 12px;
+  list-style: none;
+  border: 1px solid #a7e3cf;
+  border-radius: 9px;
+  background: #ecfdf5;
+  color: #166534;
+  font-size: 0.78rem;
+}
+.cur-video-files li { display: flex; justify-content: space-between; gap: 12px; }
+.cur-video-files li span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 /* Add section row */
 .cur-hint {
   font-size: 0.78rem;
