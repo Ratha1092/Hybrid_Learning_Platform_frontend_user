@@ -638,11 +638,40 @@
 }
 .detail-card__info li:last-child { border-bottom: none; padding-bottom: 0; }
 .detail-card__info strong { color: #0f172a; font-weight: 600; }
-.detail-card__instructor > div {
-  display: flex;
+.detail-card__instructor-profile {
+  display: flex !important;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 5px;
+  align-items: center;
+  gap: 0;
+  padding: 4px 0 18px !important;
+}
+.detail-card__instructor-avatar {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 11px;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #2ec4b6;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+}
+.detail-card__instructor-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.detail-card__instructor-profile p {
+  margin: 0 0 4px;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.detail-card__instructor-profile > strong {
+  margin-bottom: 13px;
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
 }
 .detail-card__instructor-link {
   display: inline-flex;
@@ -659,6 +688,49 @@
   outline-offset: 2px;
   border-radius: 3px;
 }
+
+/* ── Course preview modal ── */
+.course-preview-modal {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(2, 6, 23, 0.78);
+  backdrop-filter: blur(5px);
+}
+.course-preview-modal__panel {
+  width: min(960px, 100%);
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 16px;
+  background: #0f172a;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.46);
+}
+.course-preview-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 16px;
+  color: #fff;
+}
+.course-preview-modal__head p { margin: 0; overflow: hidden; font-size: 14px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.course-preview-modal__head button {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  cursor: pointer;
+}
+.course-preview-modal__head button:hover { background: rgba(255,255,255,0.2); }
+.course-preview-modal__video { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; background: #000; }
 
 /* ── EnrollButton states ── */
 .enroll-success {

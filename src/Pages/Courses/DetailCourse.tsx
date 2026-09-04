@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
-import { Star, ChevronLeft, ExternalLink } from "lucide-react";
+import { Star, ChevronLeft, ExternalLink, X } from "lucide-react";
 import { courseService, type CourseDetail, type Course, type Section, type Lesson, type LessonVideo } from "../../services/courseService";
 import { classifyVideoUrl, buildYouTubeEmbed, buildVimeoEmbed } from "../../utils/videoUrl";
 import { reviewService, type Review } from "../../services/reviewService";
@@ -107,6 +107,34 @@ function PreviewPlayer({ lesson }: { lesson: Lesson }) {
         className="lesson-preview__video"
       />
     </>
+  );
+}
+
+function CoursePreviewModal({ videoUrl, title, onClose }: { videoUrl: string; title: string; onClose: () => void }) {
+  const kind = classifyVideoUrl(videoUrl);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
+  return (
+    <div className="course-preview-modal" role="dialog" aria-modal="true" aria-label={`${title} preview`} onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <div className="course-preview-modal__panel">
+        <div className="course-preview-modal__head">
+          <p>{title} — Preview</p>
+          <button type="button" onClick={onClose} aria-label="Close preview"><X size={20} /></button>
+        </div>
+        {kind === "youtube" ? (
+          <iframe src={buildYouTubeEmbed(videoUrl)} title={`${title} preview`} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen className="course-preview-modal__video" />
+        ) : kind === "vimeo" ? (
+          <iframe src={buildVimeoEmbed(videoUrl)} title={`${title} preview`} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen className="course-preview-modal__video" />
+        ) : (
+          <video src={videoUrl} controls autoPlay controlsList="nodownload" onContextMenu={(event) => event.preventDefault()} className="course-preview-modal__video" />
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -460,6 +488,7 @@ function DetailCourse() {
   const [error, setError] = useState<string | null>(null);
   const [openSections, setOpenSections] = useState<Set<number>>(new Set([0]));
   const [copied, setCopied] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const handleCopyLink = async () => {
     try {
@@ -569,15 +598,14 @@ function DetailCourse() {
                 )}
               </button>
               {course.preview_video_url && (
-                <a
-                  href={course.preview_video_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={() => setPreviewOpen(true)}
                   className="detail-action-btn detail-action-btn--primary"
                 >
                   <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                   Watch preview
-                </a>
+                </button>
               )}
             </div>
           </div>
@@ -678,17 +706,22 @@ function DetailCourse() {
             <EnrollButton course={course} />
             <ul className="detail-card__info">
               {course.instructor?.name && (
-                <li className="detail-card__instructor">
-                  <span>Instructor</span>
-                  <div>
-                    <strong>{course.instructor.name}</strong>
-                    <Link
-                      to={`/courses?instructor=${course.instructor.id}&name=${encodeURIComponent(course.instructor.name)}`}
-                      className="detail-card__instructor-link"
-                    >
-                      View other courses <ExternalLink size={13} />
-                    </Link>
+                <li className="detail-card__instructor-profile">
+                  <div className="detail-card__instructor-avatar">
+                    {course.instructor.avatar_url ?? resolveUrl(course.instructor.avatar ?? null) ? (
+                      <img src={course.instructor.avatar_url ?? resolveUrl(course.instructor.avatar ?? null)!} alt={course.instructor.name} />
+                    ) : (
+                      <span>{course.instructor.name.charAt(0).toUpperCase()}</span>
+                    )}
                   </div>
+                  <p>Course Instructor</p>
+                  <strong>{course.instructor.name}</strong>
+                  <Link
+                    to={`/courses?instructor=${course.instructor.id}&name=${encodeURIComponent(course.instructor.name)}`}
+                    className="detail-card__instructor-link"
+                  >
+                    View other courses <ExternalLink size={13} />
+                  </Link>
                 </li>
               )}
               {course.category?.name && (
@@ -703,6 +736,9 @@ function DetailCourse() {
           </aside>
         </div>
       </div>
+      {previewOpen && course.preview_video_url && (
+        <CoursePreviewModal videoUrl={course.preview_video_url} title={course.title} onClose={() => setPreviewOpen(false)} />
+      )}
     </div>
   );
 }
