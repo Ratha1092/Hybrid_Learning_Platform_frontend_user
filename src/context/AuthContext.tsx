@@ -85,10 +85,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Sync role/instructor_status on mount so cached user is never stale
+  // A login response may not include every capability flag (such as
+  // has_enrollments). Refresh whenever the signed-in account changes so UI
+  // that depends on those flags is correct on the first navigation too.
   useEffect(() => {
-    if (localStorage.getItem("user")) refreshUser();
-  }, [refreshUser]);
+    if (user) refreshUser();
+  }, [user?.id, refreshUser]);
 
   // Keep state in sync when another tab logs in/out
   useEffect(() => {
