@@ -678,7 +678,18 @@ function DetailCourse() {
             <EnrollButton course={course} />
             <ul className="detail-card__info">
               {course.instructor?.name && (
-                <li><span>Instructor</span><strong>{course.instructor.name}</strong></li>
+                <li className="detail-card__instructor">
+                  <span>Instructor</span>
+                  <div>
+                    <strong>{course.instructor.name}</strong>
+                    <Link
+                      to={`/courses?instructor=${course.instructor.id}&name=${encodeURIComponent(course.instructor.name)}`}
+                      className="detail-card__instructor-link"
+                    >
+                      View other courses <ExternalLink size={13} />
+                    </Link>
+                  </div>
+                </li>
               )}
               {course.category?.name && (
                 <li><span>Category</span><strong>{course.category.name}</strong></li>
@@ -690,26 +701,6 @@ function DetailCourse() {
               <li><span>Duration</span><strong>{fmtDuration(totalDuration)}</strong></li>
             </ul>
           </aside>
-
-          {course.instructor?.name && (
-            <aside className="instructor-card">
-              <div className="instructor-card__avatar">
-                {course.instructor.avatar_url ?? resolveUrl(course.instructor.avatar ?? null) ? (
-                  <img src={course.instructor.avatar_url ?? resolveUrl(course.instructor.avatar ?? null)!} alt={course.instructor.name} />
-                ) : (
-                  <span>{course.instructor.name.charAt(0).toUpperCase()}</span>
-                )}
-              </div>
-              <p className="instructor-card__label">Course Instructor</p>
-              <p className="instructor-card__name">{course.instructor.name}</p>
-              <Link
-                to={`/courses?instructor=${course.instructor.id}&name=${encodeURIComponent(course.instructor.name)}`}
-                className="instructor-card__link"
-              >
-                View other courses <ExternalLink size={13} />
-              </Link>
-            </aside>
-          )}
         </div>
       </div>
     </div>
