@@ -10,7 +10,11 @@ export function useDashboardSwitch() {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  const isInstructor = isAuthenticated && (user?.role === "instructor" || user?.instructor_status === "verified");
+  const isInstructor = isAuthenticated && (
+    user?.role === "instructor" ||
+    user?.instructor_status === "approved" ||
+    user?.instructor_status === "verified"
+  );
   const canSwitch = isInstructor && !!user?.has_enrollments;
   const [view, setDashboardView] = useDashboardView(user?.id, isInstructor ? "teaching" : "learning");
 

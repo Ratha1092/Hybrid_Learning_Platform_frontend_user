@@ -88,7 +88,8 @@
   color: #fff;
 }
 
-/* Back breadcrumb — normal page flow, not a floating pill over the image */
+/* Keep the return link at the top of the hero while the course details stay
+   anchored to its bottom. */
 .detail-breadcrumb-back {
   display: inline-flex;
   align-items: center;
@@ -99,7 +100,7 @@
   font-family: "DM Sans", sans-serif;
   font-size: 13px;
   font-weight: 600;
-  margin-bottom: 16px;
+  margin-bottom: auto;
   transition: color 0.15s;
 }
 .detail-breadcrumb-back:hover { color: #fff; }

@@ -33,8 +33,12 @@ function Navbar() {
   const initial = (user?.name?.charAt(0) ?? "U").toUpperCase();
   const showAvatarImg = !!user?.avatar_url && !avatarBroken;
 
-  const isStudent = isAuthenticated && user?.role !== "instructor" && user?.instructor_status !== "verified";
-  const isInstructor = isAuthenticated && (user?.role === "instructor" || user?.instructor_status === "verified");
+  const isInstructor = isAuthenticated && (
+    user?.role === "instructor" ||
+    user?.instructor_status === "approved" ||
+    user?.instructor_status === "verified"
+  );
+  const isStudent = isAuthenticated && !isInstructor;
 
   // Only instructors who have also enrolled in a course (as a student) get the
   // teaching/learning switcher — everyone else keeps today's single-destination Dashboard link.
