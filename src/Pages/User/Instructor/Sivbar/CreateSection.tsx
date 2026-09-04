@@ -451,22 +451,6 @@ export default function SectionLibrary() {
                   key={s.id}
                   className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-e1 transition-all hover:border-slate-300 hover:shadow-soft dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600"
                 >
-                  {/* Drag handle */}
-                  <div className="flex shrink-0 cursor-grab flex-col gap-1 opacity-30">
-                    <div className="flex gap-1">
-                      <div className="h-1 w-1 rounded-full bg-slate-500" />
-                      <div className="h-1 w-1 rounded-full bg-slate-500" />
-                    </div>
-                    <div className="flex gap-1">
-                      <div className="h-1 w-1 rounded-full bg-slate-500" />
-                      <div className="h-1 w-1 rounded-full bg-slate-500" />
-                    </div>
-                    <div className="flex gap-1">
-                      <div className="h-1 w-1 rounded-full bg-slate-500" />
-                      <div className="h-1 w-1 rounded-full bg-slate-500" />
-                    </div>
-                  </div>
-
                   {/* Icon */}
                   <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-teal-50 dark:bg-teal-500/10">
                     <Layers className="h-4 w-4 text-teal-600 dark:text-teal-400" />
