@@ -410,11 +410,17 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
                       className="cur-video-picker__input"
                       accept="video/mp4,video/quicktime,video/x-msvideo,video/x-matroska,video/webm"
                     onChange={(e) => {
-                      const files = Array.from(e.target.files ?? []);
-                      setLesson((prev) => ({ ...prev, videoFiles: files, duration: null }));
-                      if (files.length) Promise.all(files.map((file) => getVideoDuration(file).catch(() => 0)))
-                        .then((durations) => setL("duration", Math.round(durations.reduce((total, duration) => total + duration, 0))))
-                        .catch(() => {});
+                      const selected = Array.from(e.target.files ?? []);
+                      setLesson((prev) => {
+                        const videoFiles = [...prev.videoFiles, ...selected.filter((file) =>
+                          !prev.videoFiles.some((existing) => existing.name === file.name && existing.lastModified === file.lastModified)
+                        )];
+                        if (videoFiles.length) Promise.all(videoFiles.map((file) => getVideoDuration(file).catch(() => 0)))
+                          .then((durations) => setLesson((current) => ({ ...current, duration: Math.round(durations.reduce((total, duration) => total + duration, 0)) })))
+                          .catch(() => {});
+                        return { ...prev, videoFiles, duration: null };
+                      });
+                      e.currentTarget.value = "";
                     }}
                     />
                   </label>
@@ -466,7 +472,16 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
                     type="file"
                     multiple
                     accept=".pdf,.zip,.doc,.docx,.ppt,.pptx,.mp4,.jpg,.png"
-                    onChange={(e) => setL("resourceFiles", Array.from(e.target.files ?? []))}
+                    onChange={(e) => {
+                      const selected = Array.from(e.target.files ?? []);
+                      setLesson((prev) => ({
+                        ...prev,
+                        resourceFiles: [...prev.resourceFiles, ...selected.filter((file) =>
+                          !prev.resourceFiles.some((existing) => existing.name === file.name && existing.lastModified === file.lastModified)
+                        )],
+                      }));
+                      e.currentTarget.value = "";
+                    }}
                   />
                 </label>
                 {lesson.resourceFiles.length > 0 && <small>{lesson.resourceFiles.length} resource{lesson.resourceFiles.length !== 1 ? "s" : ""} ready: {lesson.resourceFiles.map((file) => file.name).join(", ")}</small>}
