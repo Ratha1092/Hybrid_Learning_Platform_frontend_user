@@ -148,7 +148,7 @@ export default function EnrollButton({ course }: Props) {
 
       // Free course → backend enrolled directly, status = "completed"
       if (data.data.status === "completed") {
-        setStep("done");
+        navigate(`/learn/${course.slug}`);
         return;
       }
 

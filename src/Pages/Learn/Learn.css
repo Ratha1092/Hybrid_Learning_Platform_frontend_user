@@ -214,9 +214,11 @@ a.lesson-topnav__crumb:hover { color: #111827; }
 .learn-main {
   flex: 1; overflow-y: auto;
   display: flex; flex-direction: column;
+  min-width: 0;
 }
 
 .learn-main__inner {
+  box-sizing: border-box;
   max-width: 1040px; width: 100%; margin: 0 auto;
   display: flex; flex-direction: column; flex: 1;
 }
@@ -492,18 +494,56 @@ a.lesson-topnav__crumb:hover { color: #111827; }
   .learn-content-grid { grid-template-columns: 1fr; gap: 28px; }
 }
 @media (max-width: 768px) {
-  .learn-wrap { flex-direction: column; height: auto; }
-  .learn-sidebar { width: 100%; height: auto; border-right: none; border-bottom: 1px solid #e5e7eb; }
-  .learn-sidebar--collapsed { width: 0; height: 0; border-bottom-color: transparent; }
-  .learn-sections { max-height: 240px; min-width: 0; }
+  .learn-wrap { position: relative; flex-direction: row; }
+  .learn-sidebar {
+    position: fixed;
+    top: 56px;
+    left: 0;
+    z-index: 35;
+    width: min(290px, calc(100vw - 48px));
+    height: calc(100vh - 56px);
+    border-right: 1px solid #e5e7eb;
+    border-bottom: none;
+    box-shadow: 12px 0 30px rgba(15, 23, 42, 0.16);
+    transform: translateX(0);
+    transition: transform 0.18s ease, border-color 0.18s ease;
+  }
+  .learn-sidebar--collapsed {
+    width: min(290px, calc(100vw - 48px));
+    height: calc(100vh - 56px);
+    border-bottom-color: transparent;
+    transform: translateX(-100%);
+    pointer-events: none;
+  }
+  .learn-sections { max-height: none; min-width: 0; }
   .course-progress-card { min-width: 0; }
+  .learn-main__inner { padding: 0 12px; }
+  .learn-video-wrap { margin-top: 12px; border-radius: 12px; }
+  .learn-control-bar { padding: 14px 0; gap: 10px; }
+  .learn-control-bar__center { min-width: 0; }
+  .learn-complete-btn { padding-inline: 14px; }
+  .learn-content-grid { padding: 22px 0 32px; gap: 22px; }
+  .learn-tab-panel,
+  .learn-tab-panel--comments { padding: 16px; }
   .lesson-topnav__logo-text { display: none; }
-  .lesson-topnav__crumb { max-width: 110px; }
+  .lesson-topnav { gap: 8px; padding-inline: 10px; }
+  .lesson-topnav__left { gap: 6px; }
+  .lesson-topnav__right { gap: 6px; }
+  .lesson-topnav__crumb { max-width: 92px; }
   .learn-resource { flex-wrap: wrap; }
   .learn-resource__title { min-width: calc(100% - 36px); }
   .learn-resource-preview { padding: 12px; }
   .learn-resource-preview__header { padding: 13px 14px; }
   .learn-resource-preview__body iframe { height: calc(100vh - 125px); }
+}
+
+@media (max-width: 420px) {
+  .lesson-topnav__icon-btn { width: 32px; height: 32px; }
+  .lesson-topnav__crumb { max-width: 64px; }
+  .learn-main__inner { padding-inline: 8px; }
+  .learn-nav-bar { padding-inline: 0; }
+  .learn-complete-btn { padding-inline: 10px; font-size: 12px; }
+  .learn-content-grid { gap: 18px; }
 }
 
 /* Dark mode — a deeper, richer */
