@@ -1251,6 +1251,7 @@
     padding: 24px 14px 60px;
     gap: 20px;
   }
+  .detail-sidebar-col { order: -1; }
   .detail-hero__content {
     min-height: 280px;
     padding: 16px 20px 28px;
@@ -1264,10 +1265,15 @@
   .related-card { flex-basis: 160px; }
   .detail-check-list { grid-template-columns: 1fr; }
   .detail-section p { overflow-wrap: anywhere; }
+  .detail-breadcrumb-back { margin-bottom: 28px; }
 }
 
 @media (max-width: 400px) {
-  .detail-hero__content { padding: 14px; padding-top: 62px; }
+  .detail-hero__content {
+    min-height: 0;
+    justify-content: flex-start;
+    padding: 16px 14px 28px;
+  }
   .detail-title { font-size: 20px; }
   .detail-body { padding-inline: 12px; }
   .detail-card { padding: 18px; }

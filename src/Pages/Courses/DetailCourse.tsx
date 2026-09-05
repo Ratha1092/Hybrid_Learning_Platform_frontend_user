@@ -482,8 +482,11 @@ function RelatedCourses({ categorySlug, categoryName, excludeCourseId }: {
 function DetailCourse() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   const [course, setCourse] = useState<CourseDetail | null>(null);
+  const [enrolledCourseIds, setEnrolledCourseIds] = useState<Set<number>>(new Set());
+  const [completedCourseIds, setCompletedCourseIds] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [openSections, setOpenSections] = useState<Set<number>>(new Set([0]));
@@ -508,6 +511,27 @@ function DetailCourse() {
       )
       .finally(() => setLoading(false));
   }, [slug]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !course) {
+      setEnrolledCourseIds(new Set());
+      setCompletedCourseIds(new Set());
+      return;
+    }
+    courseService.getEnrolled()
+      .then(({ data }) => {
+        setEnrolledCourseIds(new Set(data.data.map((enrollment) => enrollment.course_id)));
+        setCompletedCourseIds(new Set(
+          data.data
+            .filter((enrollment) => enrollment.completed_at || (enrollment.progress_percentage ?? enrollment.progress ?? 0) >= 100)
+            .map((enrollment) => enrollment.course_id)
+        ));
+      })
+      .catch(() => {
+        setEnrolledCourseIds(new Set());
+        setCompletedCourseIds(new Set());
+      });
+  }, [course, isAuthenticated]);
 
   const toggleSection = (i: number) => {
     setOpenSections((prev) => {
@@ -681,7 +705,14 @@ function DetailCourse() {
           )}
 
           {/* Reviews */}
-          <ReviewsSection courseId={course.id} isEnrolled={!!course.is_enrolled} />
+          <ReviewsSection
+            courseId={course.id}
+            isEnrolled={
+              !!course.is_enrolled ||
+              enrolledCourseIds.has(course.id) ||
+              completedCourseIds.has(course.id)
+            }
+          />
 
           {/* More like this */}
           {course.category?.slug && (

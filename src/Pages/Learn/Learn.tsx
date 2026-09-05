@@ -116,6 +116,7 @@ export default function Learn() {
   const [tab, setTab] = useState<LessonTab>("lesson");
   const [previewResource, setPreviewResource] = useState<LessonAttachment | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const commentsSectionRef = useRef<HTMLDivElement>(null);
   const lastResumeSaveRef = useRef(0);
   const autoCompletingRef = useRef<Set<number>>(new Set());
   const videoElRef = useRef<HTMLVideoElement>(null);
@@ -208,6 +209,14 @@ export default function Learn() {
       .catch(() => setError("Failed to load course."))
       .finally(() => setLoading(false));
   }, [slug, navigate, isAuthenticated]);
+
+  useEffect(() => {
+    if (tab !== "comments") return;
+    const frame = requestAnimationFrame(() => {
+      commentsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [tab]);
 
   const handleSelectLesson = (lesson: LessonItem) => {
     setActiveLesson(lesson);
@@ -616,7 +625,7 @@ export default function Learn() {
                 )}
               </div>
 
-              <div className="learn-content-right">
+              <div ref={commentsSectionRef} className="learn-content-right">
                 <div className="learn-tabs">
                   <button
                     className={`learn-tab${tab === "lesson" ? " learn-tab--active" : ""}`}
