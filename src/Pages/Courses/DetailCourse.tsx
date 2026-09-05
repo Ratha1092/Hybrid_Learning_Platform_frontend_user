@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
-import { Star, ChevronLeft, ExternalLink, X } from "lucide-react";
+import { Star, ChevronLeft, ExternalLink, X, Flag } from "lucide-react";
 import { courseService, type CourseDetail, type Course, type Section, type Lesson, type LessonVideo } from "../../services/courseService";
 import { classifyVideoUrl, buildYouTubeEmbed, buildVimeoEmbed } from "../../utils/videoUrl";
 import { reviewService, type Review } from "../../services/reviewService";
@@ -8,6 +8,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useAuthModal } from "../../context/AuthModalContext";
 import { resolveUrl, timeAgo } from "../../utils/format";
 import EnrollButton from "./EnrollButton";
+import ContentReportModal from "../../Components/ContentReportModal/ContentReportModal";
 import "./DetailCourse.css";
 
 function fmtDuration(seconds: number) {
@@ -271,6 +272,7 @@ function ReviewsSection({ courseId, isEnrolled }: { courseId: number; isEnrolled
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitMessage, setSubmitMessage] = useState<string | null>(null);
   const [pendingOwnReview, setPendingOwnReview] = useState(false);
+  const [reportReviewId, setReportReviewId] = useState<number | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -418,6 +420,11 @@ function ReviewsSection({ courseId, isEnrolled }: { courseId: number; isEnrolled
                 </div>
                 {r.title && <p className="review-card__title">{r.title}</p>}
                 {r.comment && <p className="review-card__comment">{r.comment}</p>}
+                {isAuthenticated && r.user_id !== user?.id && (
+                  <button className="review-card__report" type="button" onClick={() => setReportReviewId(r.id)}>
+                    <Flag size={12} /> Report
+                  </button>
+                )}
                 {!r.is_approved && r.user_id === user?.id && (
                   <p className="review-card__pending">Awaiting moderation — only visible to you</p>
                 )}
@@ -431,6 +438,14 @@ function ReviewsSection({ courseId, isEnrolled }: { courseId: number; isEnrolled
         <button className="review-load-more" onClick={loadMore} disabled={loadingMore}>
           {loadingMore ? "Loading..." : "Load more reviews"}
         </button>
+      )}
+      {reportReviewId !== null && (
+        <ContentReportModal
+          type="review"
+          itemId={reportReviewId}
+          itemLabel="review"
+          onClose={() => setReportReviewId(null)}
+        />
       )}
     </section>
   );
@@ -492,6 +507,7 @@ function DetailCourse() {
   const [openSections, setOpenSections] = useState<Set<number>>(new Set([0]));
   const [copied, setCopied] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [showCourseReport, setShowCourseReport] = useState(false);
 
   const handleCopyLink = async () => {
     try {
@@ -621,6 +637,16 @@ function DetailCourse() {
                   </>
                 )}
               </button>
+              {isAuthenticated && (
+                <button
+                  type="button"
+                  onClick={() => setShowCourseReport(true)}
+                  className="detail-action-btn detail-action-btn--report"
+                  title="Report course"
+                >
+                  <Flag size={15} /> Report
+                </button>
+              )}
               {course.preview_video_url && (
                 <button
                   type="button"
@@ -635,6 +661,15 @@ function DetailCourse() {
           </div>
         </div>
       </div>
+
+      {showCourseReport && (
+        <ContentReportModal
+          type="course"
+          itemId={course.id}
+          itemLabel="course"
+          onClose={() => setShowCourseReport(false)}
+        />
+      )}
 
       {/* ── Body ── */}
       <div className="detail-body">

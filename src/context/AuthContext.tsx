@@ -6,7 +6,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import api, { AUTH_TOKEN_KEY, SESSION_EXPIRED_EVENT } from "../api/axios";
+import api, { SESSION_EXPIRED_EVENT } from "../api/axios";
 
 export interface AuthUser {
   id: number;
@@ -43,16 +43,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   });
 
-  const login = (newUser: AuthUser, token?: string) => {
+  const login = (newUser: AuthUser, _token?: string) => {
     localStorage.setItem("user", JSON.stringify(newUser));
-    if (token) localStorage.setItem(AUTH_TOKEN_KEY, token);
     setUser(newUser);
   };
 
-  const logout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem(AUTH_TOKEN_KEY);
-    setUser(null);
+  const logout = async () => {
+    try {
+      await api.post("/auth/logout");
+    } catch {
+      // Local cleanup must still happen when the server is unavailable.
+    } finally {
+      localStorage.removeItem("user");
+      setUser(null);
+    }
   };
 
   const updateUser = (fields: Partial<AuthUser>) => {

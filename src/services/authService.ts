@@ -4,7 +4,8 @@
 
   const csrfApi = axios.create({
     baseURL: import.meta.env.VITE_API_URL as string,
-    withCredentials: false,
+    withCredentials: true,
+    withXSRFToken: true,
   });
 
   export interface LoginPayload {
