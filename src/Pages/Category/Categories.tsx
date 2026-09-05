@@ -65,7 +65,7 @@ export default function Categories({ categories }: { categories?: Category[] }) 
                 <Reveal key={cat.id} delay={i * 60}>
                   <button
                     onClick={() => navigate(`/courses?category=${cat.slug}`)}
-                    className="group flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-e1 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-card dark:border-slate-700 dark:bg-slate-800"
+                    className="group flex min-w-0 w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-e1 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-card dark:border-slate-700 dark:bg-slate-800"
                   >
                     {/* Icon / thumbnail panel */}
                     {cat.image_url ? (
@@ -83,8 +83,8 @@ export default function Categories({ categories }: { categories?: Category[] }) 
                     )}
 
                     {/* Body */}
-                    <div className="flex flex-1 flex-col p-4 text-left">
-                      <h3 className="font-display text-[15px] font-bold leading-tight ink">{cat.name}</h3>
+                    <div className="flex min-w-0 flex-1 flex-col p-4 text-left">
+                      <h3 className="line-clamp-2 min-h-[2.25rem] font-display text-[15px] font-bold leading-tight ink">{cat.name}</h3>
                       <p className="mt-1 text-[13px] muted2">{cat.courses_count} courses</p>
                       <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-3 dark:border-slate-700">
                         <span className="text-[12.5px] font-semibold brand-blue">Explore</span>

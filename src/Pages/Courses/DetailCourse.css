@@ -5,6 +5,7 @@
   background: #EEF1F6;
   min-height: 100vh;
   font-family: "DM Sans", sans-serif;
+  overflow-x: hidden;
 }
 
 /* ── State (loading / error) ── */
@@ -1247,7 +1248,7 @@
 @media (max-width: 768px) {
   .detail-body {
     grid-template-columns: 1fr;
-    padding: 24px 16px 60px;
+    padding: 24px 14px 60px;
     gap: 20px;
   }
   .detail-hero__content {
@@ -1261,11 +1262,20 @@
   .detail-sidebar-col { position: static; }
   .detail-card { padding: 22px; }
   .related-card { flex-basis: 160px; }
+  .detail-check-list { grid-template-columns: 1fr; }
+  .detail-section p { overflow-wrap: anywhere; }
 }
 
 @media (max-width: 400px) {
   .detail-hero__content { padding: 14px; padding-top: 62px; }
   .detail-title { font-size: 20px; }
+  .detail-body { padding-inline: 12px; }
+  .detail-card { padding: 18px; }
+  .accordion__header,
+  .lesson-row { padding-inline: 12px; }
+  .lesson-preview { padding-inline: 12px; }
+  .lesson-row__right { gap: 4px; }
+  .lesson-row__preview { display: none; }
 }
 
 /* ── Checkout modal ── */

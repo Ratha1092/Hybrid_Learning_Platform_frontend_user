@@ -63,7 +63,7 @@ html.dark .notif-badge {
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-  width: 380px;
+  width: min(380px, calc(100vw - 24px));
   background: #fff;
   border: 1px solid #e2e8f0;
   border-radius: 20px;
