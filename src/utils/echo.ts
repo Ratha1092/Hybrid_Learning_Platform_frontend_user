@@ -1,7 +1,6 @@
 import Echo from "laravel-echo";
 import Pusher from "pusher-js";
 import axios from "axios";
-import { AUTH_TOKEN_KEY } from "../api/axios";
 
 declare global {
   interface Window {
@@ -32,10 +31,10 @@ export function getEcho(): Echo<"pusher"> {
               `${API_BASE}/api/broadcasting/auth`,
               { socket_id: socketId, channel_name: channel.name },
               {
-                withCredentials: false,
+                withCredentials: true,
+                withXSRFToken: true,
                 headers: {
                   Accept: "application/json",
-                  Authorization: `Bearer ${localStorage.getItem(AUTH_TOKEN_KEY) ?? ""}`,
                 },
               }
             )

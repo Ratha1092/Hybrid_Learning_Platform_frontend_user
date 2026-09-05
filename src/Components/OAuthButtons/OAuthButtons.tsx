@@ -103,9 +103,9 @@ export default function OAuthButtons({ onError, onSuccess, from }: Props) {
 
   const handleGitHub = () => {
     const state = randomState();
-    localStorage.setItem("github_oauth_state", state);
-    if (from) localStorage.setItem("github_oauth_from", from);
-    else localStorage.removeItem("github_oauth_from");
+    sessionStorage.setItem("github_oauth_state", state);
+    if (from) sessionStorage.setItem("github_oauth_from", from);
+    else sessionStorage.removeItem("github_oauth_from");
     const params = new URLSearchParams({
       client_id: GITHUB_CLIENT_ID,
       redirect_uri: GITHUB_CALLBACK_URL,

@@ -1,0 +1,38 @@
+.content-report-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, .62);
+  backdrop-filter: blur(4px);
+}
+.content-report-modal {
+  width: min(460px, 100%);
+  padding: 22px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fff;
+  color: #0f172a;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .25);
+  font-family: "DM Sans", sans-serif;
+}
+.content-report-modal__head { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+.content-report-modal__eyebrow { display: inline-flex; align-items: center; gap: 6px; color: #64748b; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
+.content-report-modal h2 { margin: 5px 0 0; font-size: 20px; line-height: 1.25; }
+.content-report-modal__close { display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid #e2e8f0; border-radius: 50%; background: #fff; color: #64748b; cursor: pointer; }
+.content-report-modal__label { display: flex; justify-content: space-between; margin: 14px 0 6px; color: #334155; font-size: 12px; font-weight: 700; }
+.content-report-modal__label span { color: #94a3b8; font-weight: 500; }
+.content-report-modal select, .content-report-modal textarea { width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 11px; background: #fff; color: #0f172a; font: 13px "DM Sans", sans-serif; }
+.content-report-modal textarea { resize: vertical; min-height: 92px; }
+.content-report-modal select:focus, .content-report-modal textarea:focus { outline: 2px solid rgba(37, 99, 235, .2); border-color: #2563eb; }
+.content-report-modal__error { margin: 10px 0 0; color: #dc2626; font-size: 12px; }
+.content-report-modal__actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+.content-report-modal__actions button { border: 0; border-radius: 8px; padding: 9px 14px; font: 700 12px "DM Sans", sans-serif; cursor: pointer; }
+.content-report-modal__actions button:disabled { opacity: .55; cursor: not-allowed; }
+.content-report-modal__cancel { background: #f1f5f9; color: #475569; }
+.content-report-modal__submit { background: #2563eb; color: #fff; }
+html.dark .content-report-modal { border-color: #334155; background: #1e293b; color: #f1f5f9; }
+html.dark .content-report-modal__close, html.dark .content-report-modal select, html.dark .content-report-modal textarea { border-color: #475569; background: #0f172a; color: #f1f5f9; }
+html.dark .content-report-modal__label { color: #cbd5e1; }
