@@ -113,9 +113,11 @@ export default function Learn() {
   const [completedIds, setCompletedIds] = useState<Set<number>>(new Set());
   const [openSections, setOpenSections] = useState<Set<number>>(new Set([0]));
   const [completeError, setCompleteError] = useState<string | null>(null);
+  const [autoAdvance, setAutoAdvance] = useState(false);
   const [tab, setTab] = useState<LessonTab>("lesson");
   const [previewResource, setPreviewResource] = useState<LessonAttachment | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const learnMainRef = useRef<HTMLElement>(null);
   const commentsSectionRef = useRef<HTMLDivElement>(null);
   const lastResumeSaveRef = useRef(0);
   const autoCompletingRef = useRef<Set<number>>(new Set());
@@ -225,6 +227,9 @@ export default function Learn() {
     setCompleteError(null);
     setTab("lesson");
     setHighlightCommentId(null);
+    requestAnimationFrame(() => {
+      learnMainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    });
   };
 
   const handleComplete = async (lessonId: number) => {
@@ -240,6 +245,12 @@ export default function Learn() {
         is_completed: true,
       });
       localStorage.removeItem(resumeKey(lessonId));
+      if (autoAdvance) {
+        const lessons = course?.sections?.flatMap((section) => section.lessons) ?? [];
+        const completedIndex = lessons.findIndex((lesson) => lesson.id === lessonId);
+        const followingLesson = completedIndex >= 0 ? lessons[completedIndex + 1] : undefined;
+        if (followingLesson) handleSelectLesson(followingLesson);
+      }
     } catch {
       // Roll back and show error
       setCompletedIds((prev) => { const next = new Set(prev); next.delete(lessonId); return next; });
@@ -399,7 +410,7 @@ export default function Learn() {
       </aside>
 
       {/* Main content */}
-      <main className="learn-main">
+      <main ref={learnMainRef} className="learn-main">
         {course.access_expired && (
           <div className="learn-expired-banner">
             <span>⏳ Your access to this course has expired.</span>
@@ -550,6 +561,16 @@ export default function Learn() {
                   </button>
                 ) : (
                   <span className="learn-completed-badge"><Check size={14} /> Completed</span>
+                )}
+                {nextLesson && (
+                  <label className="learn-auto-next">
+                    <input
+                      type="checkbox"
+                      checked={autoAdvance}
+                      onChange={(event) => setAutoAdvance(event.target.checked)}
+                    />
+                    Auto-next lesson
+                  </label>
                 )}
                 <button
                   className="learn-icon-btn"
