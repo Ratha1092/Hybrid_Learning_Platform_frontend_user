@@ -7,11 +7,25 @@ import "./OAuthButtons.css";
 const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID as string;
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string;
 const GITHUB_CALLBACK_URL = `${window.location.origin}/auth/github/callback`;
+const GOOGLE_NONCE_KEY = "google_oauth_nonce";
+const GITHUB_VERIFIER_KEY = "github_oauth_code_verifier";
 
 function randomState() {
   return Array.from(crypto.getRandomValues(new Uint8Array(16)))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
+}
+
+function randomVerifier() {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+async function challengeFor(verifier: string) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier));
+  return btoa(String.fromCharCode(...new Uint8Array(digest)))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
 interface Props {
@@ -47,23 +61,22 @@ export default function OAuthButtons({ onError, onSuccess, from }: Props) {
       if (typeof google === "undefined" || !overlayRef.current) return;
 
       if (!googleInitialized) {
+        const nonce = randomState();
+        sessionStorage.setItem(GOOGLE_NONCE_KEY, nonce);
         google.accounts.id.initialize({
           client_id: GOOGLE_CLIENT_ID,
+          nonce,
           use_fedcm_for_button: true,
           callback: async (response) => {
             const { onError, onSuccess, from, login, navigate, setGoogleLoading } = googleCallbacks!;
             setGoogleLoading(true);
             try {
-              const payload = JSON.parse(atob(response.credential.split(".")[1])) as {
-                sub: string; email: string; name: string; picture?: string;
-              };
+              const nonce = sessionStorage.getItem(GOOGLE_NONCE_KEY);
+              if (!nonce) throw new Error("Google sign-in session expired. Please try again.");
               await authService.csrf();
               const { data } = await authService.googleOAuth({
                 id_token: response.credential,
-                provider_id: payload.sub,
-                email: payload.email,
-                name: payload.name,
-                avatar: payload.picture ?? null,
+                nonce,
               });
               if (!data.success) { onError?.(data.message || "Google sign-in failed."); return; }
               login(data.data.user, data.data.token);
@@ -101,9 +114,12 @@ export default function OAuthButtons({ onError, onSuccess, from }: Props) {
     }
   }, []);
 
-  const handleGitHub = () => {
+  const handleGitHub = async () => {
     const state = randomState();
+    const verifier = randomVerifier();
+    const challenge = await challengeFor(verifier);
     sessionStorage.setItem("github_oauth_state", state);
+    sessionStorage.setItem(GITHUB_VERIFIER_KEY, verifier);
     if (from) sessionStorage.setItem("github_oauth_from", from);
     else sessionStorage.removeItem("github_oauth_from");
     const params = new URLSearchParams({
@@ -111,6 +127,8 @@ export default function OAuthButtons({ onError, onSuccess, from }: Props) {
       redirect_uri: GITHUB_CALLBACK_URL,
       scope: "read:user,user:email",
       state,
+      code_challenge: challenge,
+      code_challenge_method: "S256",
     });
     window.location.href = `https://github.com/login/oauth/authorize?${params}`;
   };

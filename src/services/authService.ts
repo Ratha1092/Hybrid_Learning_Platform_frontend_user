@@ -56,10 +56,7 @@
 
   export interface GoogleOAuthPayload {
     id_token: string;
-    provider_id: string;
-    email: string;
-    name: string;
-    avatar?: string | null;
+    nonce: string;
   }
 
   export const authService = {
@@ -84,8 +81,8 @@
     googleOAuth: (payload: GoogleOAuthPayload) =>
       api.post<OAuthResponse>("/auth/oauth/google", payload, { timeout: 20000 }),
 
-    githubOAuth: (code: string) =>
-      api.post<OAuthResponse>("/auth/oauth/github", { code }, { timeout: 20000 }),
+    githubOAuth: (code: string, code_verifier: string) =>
+      api.post<OAuthResponse>("/auth/oauth/github", { code, code_verifier }, { timeout: 20000 }),
 
     // 2FA — completing a login that returned a { requires_2fa } challenge.
     send2faLoginCode: (challenge_token: string) =>

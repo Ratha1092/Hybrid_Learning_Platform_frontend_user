@@ -4,6 +4,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { authService } from "../../../services/authService";
 
 type State = "loading" | "error";
+const GITHUB_VERIFIER_KEY = "github_oauth_code_verifier";
 
 export default function GitHubCallback() {
   const { login } = useAuth();
@@ -18,10 +19,12 @@ export default function GitHubCallback() {
 
     const savedState = sessionStorage.getItem("github_oauth_state");
     sessionStorage.removeItem("github_oauth_state");
+    const codeVerifier = sessionStorage.getItem(GITHUB_VERIFIER_KEY);
+    sessionStorage.removeItem(GITHUB_VERIFIER_KEY);
 
-    if (!code) {
+    if (!code || !codeVerifier) {
       setState("error");
-      setErrorMsg("GitHub did not return an authorization code.");
+      setErrorMsg("GitHub sign-in session expired. Please try again.");
       return;
     }
 
@@ -32,7 +35,7 @@ export default function GitHubCallback() {
     }
 
     authService.csrf()
-      .then(() => authService.githubOAuth(code))
+      .then(() => authService.githubOAuth(code, codeVerifier))
       .then(({ data }) => {
         if (!data.success) {
           setState("error");
