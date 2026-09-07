@@ -180,15 +180,42 @@ export default function PayoutDetail() {
           <div className="flex flex-col gap-6">
             {payout.payout_account && (
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-e1 dark:border-slate-700 dark:bg-slate-800">
-                <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">Paid To</p>
+                <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                  Paid To
+                </p>
                 <div className="divide-y divide-slate-100 dark:divide-slate-700">
-                  <Row label="Method" value={<span className="capitalize">{payout.payout_account.method}</span>} />
-                  <Row label="Account name" value={payout.payout_account.account_name} />
+                  <Row
+                    label="Method"
+                    value={
+                      <span className="capitalize">
+                        {payout.payout_account.method}
+                      </span>
+                    }
+                  />
+                  <Row label="Account name"value={payout.payout_account.account_name}/>
                   {payout.payout_account.account_number && (
-                    <Row label="Account number" value={payout.payout_account.account_number} />
+                    <Row label="Account number" value={payout.payout_account.account_number}/>
                   )}
                   {payout.payout_account.phone_number && (
-                    <Row label="Phone" value={payout.payout_account.phone_number} />
+                    <Row label="Phone" value={payout.payout_account.phone_number}/>
+                  )}
+
+                  {payout.payout_account.qr_code_url && (
+                    <div className="py-4">
+                      <p className="mb-3 text-sm font-medium text-slate-600 dark:text-slate-300">
+                        QR Code
+                      </p>
+
+                      <div className="flex justify-center">
+                        <div className="rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-600">
+                          <img
+                            src={payout.payout_account.qr_code_url}
+                            alt="Payout QR Code"
+                            className="h-48 w-48 object-contain"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
