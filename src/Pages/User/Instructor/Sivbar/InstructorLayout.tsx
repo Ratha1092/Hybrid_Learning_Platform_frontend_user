@@ -1,8 +1,6 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
-
 import DashboardModeToggle from "../../../../Components/DashboardModeToggle/DashboardModeToggle";
-
 import "../css/InstructorLayout.css";
 
 type MenuLink = {
@@ -13,30 +11,7 @@ type MenuLink = {
   children?: MenuLink[];
 };
 
-/**
- * Extract the payout ID from:
- *
- * /instructor/finance/payouts/1
- * /instructor/finance/payouts/25
- * /instructor/finance/payouts/abc
- *
- * Returns null when the current page is not a payout detail page.
- */
-function getCurrentPayoutId(pathname: string): string | null {
-  const match = pathname.match(
-    /^\/instructor\/finance\/payouts\/([^/]+)$/
-  );
-
-  return match?.[1] ?? null;
-}
-
-/**
- * Instructor sidebar navigation.
- *
- * The payout detail link is generated dynamically from
- * the current payout ID instead of using a hard-coded ID.
- */
-const getMenuLinks = (payoutId: string | null): MenuLink[] => [
+const MENU_LINKS: MenuLink[] = [
   {
     to: "/instructor/dashboard",
     label: "Dashboard",
@@ -150,35 +125,30 @@ const getMenuLinks = (payoutId: string | null): MenuLink[] => [
         <path d="M12 2v20M17 5H9.5a3.5 3.5 0 1 0 0 7h5a3.5 3.5 0 1 1 0 7H6" />
       </svg>
     ),
-
-    /*
-     * Only show "Payout Detail" when we are actually
-     * viewing a payout.
-     */
-    children: payoutId
-      ? [
-          {
-            to: `/instructor/finance/payouts/${payoutId}`,
-            label: "Payout Detail",
-            end: true,
-            icon: (
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <rect x="3" y="4" width="18" height="16" rx="2" />
-                <path d="M7 8h10" />
-                <path d="M7 12h6" />
-                <path d="M7 16h4" />
-              </svg>
-            ),
-          },
-        ]
-      : [],
+    children: [
+      {
+        to: "/instructor/revenue",
+        label: "Payout History",
+        end: true,
+        icon: (
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M4 5h16" />
+            <path d="M4 9h16" />
+            <path d="M4 13h10" />
+            <path d="M4 17h8" />
+            <circle cx="18" cy="16" r="3" />
+            <path d="m20.2 18.2 1.3 1.3" />
+          </svg>
+        ),
+      },
+    ],
   },
 
   {
@@ -227,21 +197,6 @@ export default function InstructorLayout() {
   const location = useLocation();
   const navRef = useRef<HTMLElement>(null);
 
-  /**
-   * Get the current payout ID from the URL.
-   *
-   * Example:
-   * /instructor/finance/payouts/15
-   *
-   * payoutId = "15"
-   */
-  const payoutId = getCurrentPayoutId(location.pathname);
-
-  /**
-   * Generate the sidebar using the current payout ID.
-   */
-  const menuLinks = getMenuLinks(payoutId);
-
   useEffect(() => {
     const active =
       navRef.current?.querySelector<HTMLElement>(".il-link--active");
@@ -262,32 +217,38 @@ export default function InstructorLayout() {
           <DashboardModeToggle className="mb-3.5" />
 
           <nav className="il-nav" ref={navRef}>
-            {menuLinks.map((l) => (
-              <div key={l.to} className="il-link-group">
+            {MENU_LINKS.map((link) => (
+              <div key={link.to} className="il-link-group">
                 <NavLink
-                  to={l.to}
-                  end={l.end}
+                  to={link.to}
+                  end={link.end}
                   className={({ isActive }) =>
                     `il-link${isActive ? " il-link--active" : ""}`
                   }
                 >
-                  <span className="il-link__icon">{l.icon}</span>
-                  {l.label}
+                  <span className="il-link__icon">
+                    {link.icon}
+                  </span>
+
+                  {link.label}
                 </NavLink>
 
-                {l.children?.map((c) => (
+                {link.children?.map((child) => (
                   <NavLink
-                    key={c.to}
-                    to={c.to}
-                    end={c.end}
+                    key={child.to}
+                    to={child.to}
+                    end={child.end}
                     className={({ isActive }) =>
                       `il-link il-link--sub${
                         isActive ? " il-link--active" : ""
                       }`
                     }
                   >
-                    <span className="il-link__icon">{c.icon}</span>
-                    {c.label}
+                    <span className="il-link__icon">
+                      {child.icon}
+                    </span>
+
+                    {child.label}
                   </NavLink>
                 ))}
               </div>
@@ -295,17 +256,20 @@ export default function InstructorLayout() {
 
             <div className="il-sidebar-div" />
 
-            {BOTTOM_LINKS.map((l) => (
+            {BOTTOM_LINKS.map((link) => (
               <NavLink
-                key={l.to}
-                to={l.to}
-                end={l.end}
+                key={link.to}
+                to={link.to}
+                end={link.end}
                 className={({ isActive }) =>
                   `il-link${isActive ? " il-link--active" : ""}`
                 }
               >
-                <span className="il-link__icon">{l.icon}</span>
-                {l.label}
+                <span className="il-link__icon">
+                  {link.icon}
+                </span>
+
+                {link.label}
               </NavLink>
             ))}
           </nav>
@@ -313,7 +277,10 @@ export default function InstructorLayout() {
 
         {/* Content */}
         <main className="il-content">
-          <div className="page-fade" key={location.pathname}>
+          <div
+            className="page-fade"
+            key={location.pathname}
+          >
             <Outlet />
           </div>
         </main>
