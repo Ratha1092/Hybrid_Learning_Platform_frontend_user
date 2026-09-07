@@ -12,14 +12,7 @@ import {
 import { getEcho, disconnectEcho } from "../../utils/echo";
 import "./Notification.css";
 
-// Polling is kept as a silent fallback in case the WebSocket drops.
-// 5 min is enough — real-time events handle the instant updates.
 const POLL_INTERVAL = 5 * 60_000;
-
-// Backend root (VITE_API_URL, no /api/v1) — needed because a handful of
-// notification links point at the Filament admin panel, which lives on the
-// backend's own domain, not this SPA's.
-const API_ORIGIN = import.meta.env.VITE_API_URL ?? "";
 
 const TYPE_CONFIG: Record<string, { Icon: typeof Bell; accent: string }> = {
   instructor_approved:  { Icon: GraduationCap, accent: "#d97706" },
@@ -39,25 +32,29 @@ function getConfig(type: string) {
   return TYPE_CONFIG[type] ?? TYPE_CONFIG.default;
 }
 
-// Figures out how to actually get the user to `link`: an internal SPA route
-// (React Router, no full reload), or an external one — either a link on a
-// different domain, or a relative `/admin/...` path, which only makes sense
-// resolved against the backend's own origin (the Filament panel lives there,
-// not on this frontend).
 function resolveHref(link: string): { external: boolean; href: string } {
-  if (link.startsWith("/admin")) {
-    return { external: true, href: `${API_ORIGIN}${link}` };
-  }
   try {
     const url = new URL(link, window.location.origin);
-    if (url.origin !== window.location.origin) {
-      return { external: true, href: link };
+
+    // Same frontend domain → React Router
+    if (url.origin === window.location.origin) {
+      return {
+        external: false,
+        href: url.pathname + url.search + url.hash,
+      };
     }
-    return { external: false, href: url.pathname + url.search };
+    return {
+      external: true,
+      href: url.href,
+    };
   } catch {
-    return { external: false, href: link };
+    return {
+      external: false,
+      href: link,
+    };
   }
 }
+
 
 export default function Notification() {
   const { isAuthenticated, user, refreshUser } = useAuth();
@@ -67,7 +64,7 @@ export default function Notification() {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // ── REST fetch (initial load + fallback polling) ──────────────────────────
+  // REST fetch (initial load + fallback polling)
   const fetchNotifications = async () => {
     try {
       const { data } = await notificationService.getAll();
@@ -89,7 +86,7 @@ export default function Notification() {
     return () => clearInterval(id);
   }, [isAuthenticated]);
 
-  // ── Pusher real-time subscription ────────────────────────────────────────
+  // Pusher real-time subscriptio
   useEffect(() => {
     if (!isAuthenticated || !user?.id) return;
 
@@ -114,14 +111,14 @@ export default function Notification() {
     };
   }, [isAuthenticated, user?.id]);
 
-  // ── Disconnect Echo when the user logs out ────────────────────────────────
+  // Disconnect Echo when the user logs ou
   useEffect(() => {
     if (!isAuthenticated) {
       disconnectEcho();
     }
   }, [isAuthenticated]);
 
-  // ── Close dropdown on outside click ──────────────────────────────────────
+  // Close dropdown on outside clic
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
