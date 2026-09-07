@@ -36,13 +36,13 @@ function resolveHref(link: string): { external: boolean; href: string } {
   try {
     const url = new URL(link, window.location.origin);
 
-    // Same frontend domain → React Router
     if (url.origin === window.location.origin) {
       return {
         external: false,
         href: url.pathname + url.search + url.hash,
       };
     }
+
     return {
       external: true,
       href: url.href,
