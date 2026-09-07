@@ -1,27 +1,77 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
+
 import DashboardModeToggle from "../../../../Components/DashboardModeToggle/DashboardModeToggle";
+
 import "../css/InstructorLayout.css";
 
-const MENU_LINKS = [
+type MenuLink = {
+  to: string;
+  label: string;
+  end?: boolean;
+  icon: ReactNode;
+  children?: MenuLink[];
+};
+
+/**
+ * Extract the payout ID from:
+ *
+ * /instructor/finance/payouts/1
+ * /instructor/finance/payouts/25
+ * /instructor/finance/payouts/abc
+ *
+ * Returns null when the current page is not a payout detail page.
+ */
+function getCurrentPayoutId(pathname: string): string | null {
+  const match = pathname.match(
+    /^\/instructor\/finance\/payouts\/([^/]+)$/
+  );
+
+  return match?.[1] ?? null;
+}
+
+/**
+ * Instructor sidebar navigation.
+ *
+ * The payout detail link is generated dynamically from
+ * the current payout ID instead of using a hard-coded ID.
+ */
+const getMenuLinks = (payoutId: string | null): MenuLink[] => [
   {
     to: "/instructor/dashboard",
     label: "Dashboard",
     end: true,
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="3" y="3" width="7" height="7" rx="1" />
+        <rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" />
+        <rect x="14" y="14" width="7" height="7" rx="1" />
       </svg>
     ),
   },
+
   {
     to: "/instructor/courses",
     label: "My Courses",
     end: true,
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 5.5C7 5 9.5 5.4 12 7c2.5-1.6 5-2 8-1.5V18c-3-.5-5.5-.1-8 1.5-2.5-1.6-5-2-8-1.5Z"/>
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M4 5.5C7 5 9.5 5.4 12 7c2.5-1.6 5-2 8-1.5V18c-3-.5-5.5-.1-8 1.5-2.5-1.6-5-2-8-1.5Z" />
       </svg>
     ),
     children: [
@@ -30,68 +80,144 @@ const MENU_LINKS = [
         label: "Create Course",
         end: true,
         icon: (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 8v8M8 12h8" />
           </svg>
         ),
       },
+
       {
         to: "/instructor/courses/sections",
         label: "Create Sections",
         end: true,
         icon: (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
           </svg>
         ),
       },
     ],
   },
+
   {
     to: "/instructor/students",
     label: "Students",
     end: true,
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-        <circle cx="9" cy="7" r="4"/>
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
       </svg>
     ),
   },
+
   {
     to: "/instructor/revenue",
     label: "Revenue",
     end: true,
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 1 0 0 7h5a3.5 3.5 0 1 1 0 7H6"/>
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 1 0 0 7h5a3.5 3.5 0 1 1 0 7H6" />
       </svg>
     ),
+
+    /*
+     * Only show "Payout Detail" when we are actually
+     * viewing a payout.
+     */
+    children: payoutId
+      ? [
+          {
+            to: `/instructor/finance/payouts/${payoutId}`,
+            label: "Payout Detail",
+            end: true,
+            icon: (
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="3" y="4" width="18" height="16" rx="2" />
+                <path d="M7 8h10" />
+                <path d="M7 12h6" />
+                <path d="M7 16h4" />
+              </svg>
+            ),
+          },
+        ]
+      : [],
   },
+
   {
     to: "/instructor/payout-account",
     label: "Payout Account",
     end: true,
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="5" width="20" height="14" rx="2"/>
-        <path d="M2 10h20"/>
-        <path d="M6 15h4"/>
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <rect x="2" y="5" width="20" height="14" rx="2" />
+        <path d="M2 10h20" />
+        <path d="M6 15h4" />
       </svg>
     ),
   },
 ];
 
-const BOTTOM_LINKS = [
+const BOTTOM_LINKS: MenuLink[] = [
   {
     to: "/instructor/profile",
     label: "Profile",
     end: true,
     icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="8" r="4"/>
-        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
       </svg>
     ),
   },
@@ -101,23 +227,42 @@ export default function InstructorLayout() {
   const location = useLocation();
   const navRef = useRef<HTMLElement>(null);
 
-  // On mobile the nav is a horizontally-scrolling pill bar — make sure the
-  // current page's pill is actually visible on load/navigation instead of
-  // requiring the user to find it by scrolling.
+  /**
+   * Get the current payout ID from the URL.
+   *
+   * Example:
+   * /instructor/finance/payouts/15
+   *
+   * payoutId = "15"
+   */
+  const payoutId = getCurrentPayoutId(location.pathname);
+
+  /**
+   * Generate the sidebar using the current payout ID.
+   */
+  const menuLinks = getMenuLinks(payoutId);
+
   useEffect(() => {
-    const active = navRef.current?.querySelector<HTMLElement>(".il-link--active");
-    active?.scrollIntoView({ block: "nearest", inline: "center" });
+    const active =
+      navRef.current?.querySelector<HTMLElement>(".il-link--active");
+
+    active?.scrollIntoView({
+      block: "nearest",
+      inline: "center",
+    });
   }, [location.pathname]);
 
   return (
     <div className="il-page">
       <div className="il-wrap">
-        {/* ── Sidebar (persists across sub-navigation, no re-animation) ── */}
+        {/* Sidebar */}
         <aside className="il-sidebar">
           <p className="il-section-label">Instructor</p>
+
           <DashboardModeToggle className="mb-3.5" />
+
           <nav className="il-nav" ref={navRef}>
-            {MENU_LINKS.map((l) => (
+            {menuLinks.map((l) => (
               <div key={l.to} className="il-link-group">
                 <NavLink
                   to={l.to}
@@ -129,13 +274,16 @@ export default function InstructorLayout() {
                   <span className="il-link__icon">{l.icon}</span>
                   {l.label}
                 </NavLink>
+
                 {l.children?.map((c) => (
                   <NavLink
                     key={c.to}
                     to={c.to}
                     end={c.end}
                     className={({ isActive }) =>
-                      `il-link il-link--sub${isActive ? " il-link--active" : ""}`
+                      `il-link il-link--sub${
+                        isActive ? " il-link--active" : ""
+                      }`
                     }
                   >
                     <span className="il-link__icon">{c.icon}</span>
@@ -144,7 +292,9 @@ export default function InstructorLayout() {
                 ))}
               </div>
             ))}
+
             <div className="il-sidebar-div" />
+
             {BOTTOM_LINKS.map((l) => (
               <NavLink
                 key={l.to}
@@ -161,7 +311,7 @@ export default function InstructorLayout() {
           </nav>
         </aside>
 
-        {/* ── Content ── */}
+        {/* Content */}
         <main className="il-content">
           <div className="page-fade" key={location.pathname}>
             <Outlet />
