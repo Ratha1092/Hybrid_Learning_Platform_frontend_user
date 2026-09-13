@@ -52,7 +52,7 @@ export default function EditCourse() {
 
   const [form, setForm] = useState({
     title: "", short_description: "", description: "", price: "0", level: "beginner", language: "English",
-    category_id: "", requirements: "", what_you_will_learn: "",
+    category_id: "", requirements: "", what_you_will_learn: "", target_audience: "", required_tools_materials: "",
     visibility: "public",
   });
   const [saving, setSaving]   = useState(false);
@@ -95,6 +95,8 @@ export default function EditCourse() {
           category_id:         c.category_id != null ? String(c.category_id) : "",
           requirements:        c.requirements ?? "",
           what_you_will_learn: c.what_you_will_learn ?? "",
+          target_audience:     c.target_audience ?? "",
+          required_tools_materials: c.required_tools_materials ?? "",
           visibility:          c.visibility ?? "public",
         });
       })
@@ -354,6 +356,26 @@ export default function EditCourse() {
                       placeholder="One prerequisite per line"
                       value={form.requirements}
                       onChange={(e) => set("requirements", e.target.value)}
+                      className={`${FIELD} resize-y`}
+                    />
+                  </div>
+                  <div>
+                    <label className={LABEL}>Target Audience</label>
+                    <textarea
+                      rows={5}
+                      placeholder="Who is this course for?"
+                      value={form.target_audience}
+                      onChange={(e) => set("target_audience", e.target.value)}
+                      className={`${FIELD} resize-y`}
+                    />
+                  </div>
+                  <div>
+                    <label className={LABEL}>Required Tools & Materials</label>
+                    <textarea
+                      rows={5}
+                      placeholder="Software, tools, books, or materials students need"
+                      value={form.required_tools_materials}
+                      onChange={(e) => set("required_tools_materials", e.target.value)}
                       className={`${FIELD} resize-y`}
                     />
                   </div>

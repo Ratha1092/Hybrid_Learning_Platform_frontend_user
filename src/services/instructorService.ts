@@ -146,6 +146,8 @@ export interface InstructorCourse {
   preview_video_url?: string;
   requirements?: string;
   what_you_will_learn?: string;
+  target_audience?: string;
+  required_tools_materials?: string;
   visibility?: string;
   commission_percentage?: number;
 }
