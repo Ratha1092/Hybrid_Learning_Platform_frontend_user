@@ -145,7 +145,70 @@ function SectionLessonVideos({ sectionId, lessonId }: { sectionId: number; lesso
   );
 }
 
-const EMPTY_LESSON_FORM = { title: "", description: "", type: "video", video_url: "", content: "", is_preview: false, videoFiles: [] as File[], duration: null as number | null, articleFile: null as File | null, resourceFiles: [] as File[] };
+type CompletionRuleForm = { watch_video: boolean; read_content: boolean; pass_quiz: boolean; submit_assignment: boolean };
+
+const EMPTY_COMPLETION_RULE: CompletionRuleForm = { watch_video: false, read_content: false, pass_quiz: false, submit_assignment: false };
+
+const EMPTY_LESSON_FORM = { title: "", description: "", type: "video", video_url: "", content: "", objectives: "", takeaways: "", completion_rule: { ...EMPTY_COMPLETION_RULE }, is_preview: false, videoFiles: [] as File[], duration: null as number | null, articleFile: null as File | null, resourceFiles: [] as File[] };
+
+function LessonOutlineFields({
+  objectives,
+  takeaways,
+  completionRule,
+  onObjectivesChange,
+  onTakeawaysChange,
+  onCompletionRuleChange,
+}: {
+  objectives: string;
+  takeaways: string;
+  completionRule: CompletionRuleForm;
+  onObjectivesChange: (value: string) => void;
+  onTakeawaysChange: (value: string) => void;
+  onCompletionRuleChange: (rule: CompletionRuleForm) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-3 rounded-xl border border-dashed border-teal-200 bg-teal-50/40 p-3.5 dark:border-teal-500/20 dark:bg-teal-500/5">
+      <div>
+        <p className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Lesson outline</p>
+        <p className="mt-0.5 text-[11.5px] text-slate-400">Add one objective or takeaway per line.</p>
+      </div>
+      <textarea
+        rows={3}
+        placeholder="Learning objectives\nUnderstand the key concept\nApply it in a practical example"
+        value={objectives}
+        onChange={(e) => onObjectivesChange(e.target.value)}
+        className="resize-y rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none focus:border-teal-400 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+      />
+      <textarea
+        rows={2}
+        placeholder="Key takeaways\nThe main idea students should remember"
+        value={takeaways}
+        onChange={(e) => onTakeawaysChange(e.target.value)}
+        className="resize-y rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none focus:border-teal-400 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
+      />
+      <div>
+        <p className="mb-2 text-[12px] font-semibold text-slate-600 dark:text-slate-300">Completion requirements</p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {([
+            ["watch_video", "Watch the video"],
+            ["read_content", "Read the content"],
+            ["pass_quiz", "Pass the quiz"],
+            ["submit_assignment", "Submit the assignment"],
+          ] as const).map(([key, label]) => (
+            <label key={key} className="flex items-center gap-2 text-[12px] text-slate-600 dark:text-slate-400">
+              <input
+                type="checkbox"
+                checked={completionRule[key]}
+                onChange={(e) => onCompletionRuleChange({ ...completionRule, [key]: e.target.checked })}
+              />
+              {label}
+            </label>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function SectionLibrary() {
   const navigate = useNavigate();
@@ -161,6 +224,7 @@ export default function SectionLibrary() {
   const [wizardSectionId, setWizardSectionId] = useState<number | null>(null);
   const wizardSection = sections.find((s) => s.id === wizardSectionId) ?? null;
   const [wizardTitle, setWizardTitle] = useState("");
+  const [newSectionTitle, setNewSectionTitle] = useState("");
   const [wizardSaving, setWizardSaving] = useState(false);
   const [wizardError, setWizardError] = useState<string | null>(null);
 
@@ -184,7 +248,7 @@ export default function SectionLibrary() {
 
   // Inline lesson edit
   const [editingLessonId, setEditingLessonId] = useState<number | null>(null);
-  const [editLessonForm, setEditLessonForm] = useState({ title: "", description: "", type: "video", is_preview: false, video_url: "", content: "", videoFiles: [] as File[], resourceFiles: [] as File[] });
+  const [editLessonForm, setEditLessonForm] = useState({ title: "", description: "", type: "video", is_preview: false, video_url: "", content: "", objectives: "", takeaways: "", completion_rule: { ...EMPTY_COMPLETION_RULE }, videoFiles: [] as File[], resourceFiles: [] as File[] });
   const [editLessonSaving, setEditLessonSaving] = useState(false);
   const [editLessonErr, setEditLessonErr] = useState<string | null>(null);
 
@@ -221,6 +285,20 @@ export default function SectionLibrary() {
     setWizardTitle("");
     setWizardError(null);
     resetLessonForm();
+  };
+
+  const handleQuickCreateSection = async () => {
+    const title = newSectionTitle.trim();
+    if (!title) return;
+
+    try {
+      const { data } = await instructorService.createStandaloneSection(title);
+      setSections((prev) => [data.data, ...prev]);
+      setNewSectionTitle("");
+      setViewSectionId(data.data.id);
+    } catch {
+      setLoadError("Failed to create section. Please try again.");
+    }
   };
 
   const openEditWizard = (s: StandaloneSection) => {
@@ -275,7 +353,7 @@ export default function SectionLibrary() {
     setDeleteSaving(false);
   };
 
-  const setLF = (k: keyof typeof lessonForm, v: string | boolean | File | File[] | number | null) =>
+  const setLF = (k: keyof typeof lessonForm, v: string | boolean | File | File[] | number | null | CompletionRuleForm) =>
     setLessonForm((f) => ({ ...f, [k]: v }));
 
   const handleAddLesson = async () => {
@@ -290,6 +368,9 @@ export default function SectionLibrary() {
         is_preview: lessonForm.is_preview,
         video_url: lessonForm.type === "video" && !lessonForm.videoFiles.length ? (lessonForm.video_url || undefined) : undefined,
         content: lessonForm.content || undefined,
+        objectives: lessonForm.objectives.split("\n").map((value, index) => ({ id: index + 1, objective: value.trim(), order: index })).filter((item) => item.objective),
+        takeaways: lessonForm.takeaways.split("\n").map((value, index) => ({ id: index + 1, takeaway: value.trim(), order: index })).filter((item) => item.takeaway),
+        completion_rule: lessonForm.completion_rule,
       });
       const lessonId = data.data.id;
       if (lessonForm.type === "video" && lessonForm.videoFiles.length) {
@@ -346,6 +427,14 @@ export default function SectionLibrary() {
       is_preview: l.is_preview,
       video_url: l.video_url ?? "",
       content: l.content ?? "",
+      objectives: (l.objectives ?? []).map((item) => item.objective).join("\n"),
+      takeaways: (l.takeaways ?? []).map((item) => item.takeaway).join("\n"),
+      completion_rule: {
+        watch_video: l.completion_rule?.watch_video ?? false,
+        read_content: l.completion_rule?.read_content ?? false,
+        pass_quiz: l.completion_rule?.pass_quiz ?? false,
+        submit_assignment: l.completion_rule?.submit_assignment ?? false,
+      },
       videoFiles: [],
       resourceFiles: [],
     });
@@ -367,6 +456,9 @@ export default function SectionLibrary() {
       };
       if (editLessonForm.type === "video") payload.video_url = editLessonForm.video_url || undefined;
       if (editLessonForm.type === "article") payload.content = editLessonForm.content || undefined;
+      payload.objectives = editLessonForm.objectives.split("\n").map((value, index) => ({ id: index + 1, objective: value.trim(), order: index })).filter((item) => item.objective);
+      payload.takeaways = editLessonForm.takeaways.split("\n").map((value, index) => ({ id: index + 1, takeaway: value.trim(), order: index })).filter((item) => item.takeaway);
+      payload.completion_rule = editLessonForm.completion_rule;
 
       await instructorService.updateSectionLesson(sectionId, l.id, payload);
       for (const file of editLessonForm.videoFiles) {
@@ -416,28 +508,51 @@ export default function SectionLibrary() {
     setExpandedResources((prev) => { const n = new Set(prev); n.has(lessonId) ? n.delete(lessonId) : n.add(lessonId); return n; });
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="mx-auto w-full max-w-6xl flex flex-col gap-6">
 
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="font-display text-[28px] font-extrabold text-slate-900 dark:text-white">
-            Section Library
-          </h1>
-          <p className="mt-1 max-w-lg text-[13.5px] leading-relaxed text-slate-500 dark:text-slate-400">
-            Create and organize sections before adding them to a course. Each section belongs to one course.
-          </p>
-          <p className="mt-1.5 text-[12.5px] font-medium text-slate-400 dark:text-slate-500">
-            {loading ? "Loading…" : `${sections.length} standalone section${sections.length !== 1 ? "s" : ""}`}
-          </p>
+      {/* Board-style header + quick create */}
+      <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-e1 dark:border-slate-700 dark:bg-slate-800">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="font-display text-[28px] font-extrabold text-slate-900 dark:text-white">
+              Course Outline Builder
+            </h1>
+            <p className="mt-1 max-w-xl text-[13.5px] leading-relaxed text-slate-500 dark:text-slate-400">
+              Create and organize sections before adding them to a course. Each section belongs to one course.
+            </p>
+          </div>
+          <button
+            onClick={openCreateWizard}
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-[13.5px] font-semibold text-white transition-colors hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+          >
+            <PlusCircle className="h-4 w-4" />
+            New Section
+          </button>
         </div>
-        <button
-          onClick={openCreateWizard}
-          className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-[13.5px] font-semibold text-white transition-colors hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
-        >
-          <PlusCircle className="h-4 w-4" />
-          New Section
-        </button>
+
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-700/40">
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <input
+              value={newSectionTitle}
+              onChange={(e) => setNewSectionTitle(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") handleQuickCreateSection(); }}
+              placeholder="Type a section title and press Enter"
+              className="flex-1 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-[13.5px] text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500"
+            />
+            <button
+              onClick={handleQuickCreateSection}
+              disabled={!newSectionTitle.trim()}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-teal-600 px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <PlusCircle className="h-4 w-4" />
+              Add Section
+            </button>
+          </div>
+        </div>
+
+        <p className="mt-3 text-[12.5px] font-medium text-slate-400 dark:text-slate-500">
+          {loading ? "Loading…" : `${sections.length} standalone section${sections.length !== 1 ? "s" : ""}`}
+        </p>
       </div>
 
       {/* Two-column body */}
@@ -491,29 +606,33 @@ export default function SectionLibrary() {
 
           {/* Section list */}
           {!loading && sections.length > 0 && (
-            <div className="flex flex-col gap-2.5">
-              {sections.map((s) => (
+            <div className="flex flex-col gap-3">
+              {sections.map((s, index) => (
                 <div
                   key={s.id}
-                  className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-e1 transition-all hover:border-slate-300 hover:shadow-soft dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600"
+                  className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-e1 transition-all hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-soft dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600"
                 >
-                  {/* Icon */}
-                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-teal-50 dark:bg-teal-500/10">
-                    <Layers className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-slate-900 text-[12px] font-bold text-white dark:bg-slate-700">
+                    {index + 1}
                   </div>
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <p className="truncate text-[14px] font-semibold text-slate-800 dark:text-slate-100">{s.title}</p>
-                    <p className="mt-0.5 text-[12px] text-slate-400 dark:text-slate-500">
-                      {s.lessons_count === 0 ? "No lessons yet" : `${s.lessons_count} lesson${s.lessons_count !== 1 ? "s" : ""}`}
-                      <span className="mx-2 text-slate-200 dark:text-slate-600">·</span>
-                      <span className="font-medium text-slate-500 dark:text-slate-400">Standalone</span>
-                    </p>
+                  <div className="flex min-w-0 flex-1 items-center gap-3">
+                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-teal-50 dark:bg-teal-500/10">
+                      <Layers className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[14px] font-semibold text-slate-800 dark:text-slate-100">{s.title}</p>
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-[12px] text-slate-400 dark:text-slate-500">
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 font-medium text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                          {s.lessons_count === 0 ? "No lessons" : `${s.lessons_count} lesson${s.lessons_count !== 1 ? "s" : ""}`}
+                        </span>
+                        <span className="font-medium text-slate-500 dark:text-slate-400">Standalone</span>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex shrink-0 items-center gap-1">
+                  <div className="flex shrink-0 items-center gap-1.5">
                     <button
                       onClick={() => setViewSectionId(s.id)}
                       className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200"
@@ -542,7 +661,6 @@ export default function SectionLibrary() {
                 </div>
               ))}
 
-              {/* Attach CTA */}
               <div className="mt-1 flex items-center justify-between gap-4 rounded-2xl border border-teal-100 bg-teal-50 px-5 py-4 dark:border-teal-500/20 dark:bg-teal-500/10">
                 <p className="text-[13.5px] font-medium text-teal-700 dark:text-teal-300">
                   Ready to use these sections in a course?
@@ -818,6 +936,14 @@ export default function SectionLibrary() {
                             className="resize-y rounded-lg border border-slate-200 bg-white px-3 py-2 text-[13px] outline-none focus:border-blue-400 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
                           />
                         )}
+                        <LessonOutlineFields
+                          objectives={editLessonForm.objectives}
+                          takeaways={editLessonForm.takeaways}
+                          completionRule={editLessonForm.completion_rule}
+                          onObjectivesChange={(value) => setEditLessonForm((f) => ({ ...f, objectives: value }))}
+                          onTakeawaysChange={(value) => setEditLessonForm((f) => ({ ...f, takeaways: value }))}
+                          onCompletionRuleChange={(completion_rule) => setEditLessonForm((f) => ({ ...f, completion_rule }))}
+                        />
                         <label className="cursor-pointer rounded-lg border border-dashed border-slate-300 px-3 py-2 text-[12px] text-slate-500 dark:border-slate-600">
                           Add lesson resources
                           <input type="file" multiple accept=".pdf,.zip,.doc,.docx,.ppt,.pptx,.mp4,.jpg,.png" className="hidden" onChange={(e) => { setEditLessonForm((f) => ({ ...f, resourceFiles: [...f.resourceFiles, ...Array.from(e.target.files ?? [])] })); e.currentTarget.value = ""; }} />
@@ -993,6 +1119,15 @@ export default function SectionLibrary() {
                         )}
                       </div>
                     )}
+
+                    <LessonOutlineFields
+                      objectives={lessonForm.objectives}
+                      takeaways={lessonForm.takeaways}
+                      completionRule={lessonForm.completion_rule}
+                      onObjectivesChange={(value) => setLF("objectives", value)}
+                      onTakeawaysChange={(value) => setLF("takeaways", value)}
+                      onCompletionRuleChange={(completion_rule) => setLF("completion_rule", completion_rule)}
+                    />
 
                     <div className="flex flex-col gap-2 rounded-xl border border-dashed border-slate-200 bg-slate-50/70 p-3.5 dark:border-slate-600 dark:bg-slate-700/30">
                       <div>

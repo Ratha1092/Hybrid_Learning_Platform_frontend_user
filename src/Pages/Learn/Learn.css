@@ -345,6 +345,34 @@ a.lesson-topnav__crumb:hover { color: #111827; }
   margin: 0; font-size: 14px; color: #4b5563; line-height: 1.75;
 }
 
+.learn-outline-block {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid #f1f5f9;
+}
+.learn-outline-block h3 {
+  margin: 0 0 10px;
+  color: #111827;
+  font-size: 13px;
+  font-weight: 800;
+}
+.learn-outline-block h4 {
+  margin: 0 0 6px;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 700;
+}
+.learn-outline-block ul { margin: 0; padding-left: 19px; color: #4b5563; font-size: 13px; line-height: 1.7; }
+.learn-content-block, .learn-assessment, .learn-assignment { margin-top: 10px; color: #4b5563; font-size: 13px; line-height: 1.7; }
+.learn-content-block p, .learn-assessment p, .learn-assignment p { margin: 0; white-space: pre-wrap; }
+.learn-content-block pre { margin: 8px 0 0; overflow-x: auto; border-radius: 8px; padding: 12px; background: #111827; color: #e5e7eb; font-size: 12px; }
+.learn-question { margin-top: 14px; }
+.learn-question strong { color: #374151; font-size: 13px; }
+.learn-question ul { margin-top: 5px; }
+.learn-assignment > span { color: #6b7280; font-size: 12px; }
+.learn-completion-rule { background: #f0fdfa; border: 1px solid #ccfbf1; border-radius: 10px; padding: 14px; }
+.learn-completion-rule h3 { color: #0f766e; }
+
 /* Instructor */
 .learn-instructor {
   display: flex; align-items: center; gap: 10px;
@@ -626,6 +654,10 @@ html.dark .learn-meta-list li { border-bottom-color: #16213a; }
 html.dark .learn-meta-list__label { color: #8b96ab; }
 html.dark .learn-meta-list li strong { color: #f1f5f9; }
 html.dark .learn-lesson-desc { color: #aab6c9; }
+html.dark .learn-outline-block { border-color: #16213a; }
+html.dark .learn-outline-block h3, html.dark .learn-outline-block h4, html.dark .learn-question strong { color: #e5e7eb; }
+html.dark .learn-outline-block ul, html.dark .learn-content-block, html.dark .learn-assessment, html.dark .learn-assignment { color: #aab6c9; }
+html.dark .learn-completion-rule { background: rgba(20, 184, 166, 0.08); border-color: rgba(45, 212, 191, 0.2); }
 html.dark .learn-instructor { border-top-color: #16213a; }
 html.dark .learn-instructor__label { color: #6b7690; }
 html.dark .learn-instructor__name { color: #f1f5f9; }

@@ -152,6 +152,68 @@ export interface InstructorCourse {
   commission_percentage?: number;
 }
 
+export interface InstructorLessonObjective {
+  id: number;
+  objective: string;
+  order: number;
+}
+
+export interface InstructorLessonContentBlock {
+  id: number;
+  type: "text" | "video" | "image" | "code" | "resource" | "external" | string;
+  title?: string | null;
+  content?: string | null;
+  media_path?: string | null;
+  media_url?: string | null;
+  language?: string | null;
+  metadata?: Record<string, unknown> | null;
+  order: number;
+}
+
+export interface InstructorLessonTakeaway {
+  id: number;
+  takeaway: string;
+  order: number;
+}
+
+export interface InstructorLessonAssessmentQuestion {
+  id: number;
+  question: string;
+  type: "single_choice" | "multiple_choice" | "true_false" | string;
+  options?: string[] | null;
+  points?: number | null;
+  explanation?: string | null;
+  order: number;
+}
+
+export interface InstructorLessonAssessment {
+  id: number;
+  title: string;
+  description?: string | null;
+  passing_score?: number | null;
+  attempts?: number | null;
+  is_required?: boolean;
+  order?: number;
+  questions?: InstructorLessonAssessmentQuestion[];
+}
+
+export interface InstructorLessonAssignment {
+  id: number;
+  title: string;
+  instructions?: string | null;
+  submission_type?: "file" | "text" | "url" | string | null;
+  max_score?: number | null;
+  is_required?: boolean;
+  order?: number;
+}
+
+export interface InstructorLessonCompletionRule {
+  watch_video?: boolean;
+  read_content?: boolean;
+  pass_quiz?: boolean;
+  submit_assignment?: boolean;
+}
+
 // Represents a lesson inside a section.
 export interface InstructorLesson {
   id: number;
@@ -164,6 +226,12 @@ export interface InstructorLesson {
   video_url?: string;
   content?: string;
   videos_count?: number;
+  objectives?: InstructorLessonObjective[];
+  content_blocks?: InstructorLessonContentBlock[];
+  takeaways?: InstructorLessonTakeaway[];
+  assessments?: InstructorLessonAssessment[];
+  assignments?: InstructorLessonAssignment[];
+  completion_rule?: InstructorLessonCompletionRule | null;
 }
 
 // Represents a file attached to a lesson as a downloadable resource.
@@ -245,6 +313,9 @@ export const instructorService = {
       is_preview?: boolean;
       video_url?: string;
       content?: string;
+      objectives?: InstructorLessonObjective[];
+      takeaways?: InstructorLessonTakeaway[];
+      completion_rule?: InstructorLessonCompletionRule | null;
     }
   ) =>
     api.post<{ data: InstructorLesson }>(`/instructor/sections/${sectionId}/lessons`, data),
@@ -465,6 +536,9 @@ export const instructorService = {
       is_preview?: boolean;
       video_url?: string;
       content?: string;
+      objectives?: InstructorLessonObjective[];
+      takeaways?: InstructorLessonTakeaway[];
+      completion_rule?: InstructorLessonCompletionRule | null;
     }
   ) =>
     api.post<{ data: InstructorLesson }>(

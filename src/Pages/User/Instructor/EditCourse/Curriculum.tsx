@@ -271,13 +271,13 @@ export default function Curriculum({ courseId, isPublished = false }: Props) {
   const [addingSection, setAddingSection] = useState(false);
   const [addingLesson, setAddingLesson]   = useState<number | null>(null);
   const [confirmSection, setConfirmSection] = useState<number | null>(null);
-  const [newLesson, setNewLesson]         = useState<Record<number, { title: string; description?: string; type: string; video_url: string; content?: string; is_preview: boolean; videoFiles?: File[]; duration?: number | null; articleFiles?: File[] }>>({});
+  const [newLesson, setNewLesson]         = useState<Record<number, { title: string; description?: string; type: string; video_url: string; content?: string; objectives?: string; takeaways?: string; completion_rule?: { watch_video: boolean; read_content: boolean; pass_quiz: boolean; submit_assignment: boolean }; is_preview: boolean; videoFiles?: File[]; duration?: number | null; articleFiles?: File[] }>>({});
   const [uploadProgress, setUploadProgress] = useState<Record<number, number>>({});
   const [uploadFileIndex, setUploadFileIndex] = useState<Record<number, { done: number; total: number }>>({});
   const [error, setError]                 = useState<string | null>(null);
 
   const [editingLessonId, setEditingLessonId] = useState<number | null>(null);
-  const [editForm, setEditForm] = useState({ title: "", description: "", is_preview: false, video_url: "", content: "" });
+  const [editForm, setEditForm] = useState({ title: "", description: "", is_preview: false, video_url: "", content: "", objectives: "", takeaways: "", completion_rule: { watch_video: false, read_content: false, pass_quiz: false, submit_assignment: false } });
   const [editSaving, setEditSaving] = useState(false);
   const [editErr, setEditErr] = useState<string | null>(null);
 
@@ -345,7 +345,14 @@ export default function Curriculum({ courseId, isPublished = false }: Props) {
       if (lesson.type === "article" && lesson.content?.trim())
         payload.content = lesson.content.trim();
 
-      const { data } = await instructorService.createLesson(courseId, sectionId, payload);
+      const outlinePayload = {
+        ...payload,
+        objectives: (lesson.objectives ?? "").split("\n").map((value) => value.trim()).filter(Boolean).map((objective, index) => ({ id: index + 1, objective, order: index })),
+        takeaways: (lesson.takeaways ?? "").split("\n").map((value) => value.trim()).filter(Boolean).map((takeaway, index) => ({ id: index + 1, takeaway, order: index })),
+        completion_rule: lesson.completion_rule,
+      };
+
+      const { data } = await instructorService.createLesson(courseId, sectionId, outlinePayload);
       const lessonId = data.data.id;
 
       if (lesson.type === "video" && lesson.videoFiles?.length) {
@@ -414,6 +421,14 @@ export default function Curriculum({ courseId, isPublished = false }: Props) {
       is_preview: lesson.is_preview,
       video_url: lesson.video_url ?? "",
       content: lesson.content ?? "",
+      objectives: (lesson.objectives ?? []).map((item) => item.objective).join("\n"),
+      takeaways: (lesson.takeaways ?? []).map((item) => item.takeaway).join("\n"),
+      completion_rule: {
+        watch_video: lesson.completion_rule?.watch_video ?? false,
+        read_content: lesson.completion_rule?.read_content ?? false,
+        pass_quiz: lesson.completion_rule?.pass_quiz ?? false,
+        submit_assignment: lesson.completion_rule?.submit_assignment ?? false,
+      },
     });
   };
 
@@ -428,6 +443,9 @@ export default function Curriculum({ courseId, isPublished = false }: Props) {
       };
       if (lesson.type === "video") payload.video_url = editForm.video_url || undefined;
       if (lesson.type === "article") payload.content = editForm.content || undefined;
+      payload.objectives = editForm.objectives.split("\n").map((value, index) => ({ id: index + 1, objective: value.trim(), order: index })).filter((item) => item.objective);
+      payload.takeaways = editForm.takeaways.split("\n").map((value, index) => ({ id: index + 1, takeaway: value.trim(), order: index })).filter((item) => item.takeaway);
+      payload.completion_rule = editForm.completion_rule;
       await instructorService.updateLesson(courseId, sectionId, lesson.id, payload);
       setSections((prev) => prev.map((s) =>
         s.id === sectionId
@@ -604,6 +622,19 @@ export default function Curriculum({ courseId, isPublished = false }: Props) {
                             className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13.5px] outline-none focus:border-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-white"
                           />
                         )}
+                        <div className="flex flex-col gap-3 rounded-xl border border-dashed border-teal-200 bg-teal-50/40 p-3.5 dark:border-teal-500/20 dark:bg-teal-500/5">
+                          <div>
+                            <p className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Lesson outline</p>
+                            <p className="mt-0.5 text-[11.5px] text-slate-400">Add one objective or takeaway per line.</p>
+                          </div>
+                          <textarea rows={3} placeholder="Learning objectives" value={editForm.objectives} onChange={(e) => setEditForm((f) => ({ ...f, objectives: e.target.value }))} className="resize-y rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13px] outline-none focus:border-teal-400 dark:border-slate-600 dark:bg-slate-800 dark:text-white" />
+                          <textarea rows={2} placeholder="Key takeaways" value={editForm.takeaways} onChange={(e) => setEditForm((f) => ({ ...f, takeaways: e.target.value }))} className="resize-y rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[13px] outline-none focus:border-teal-400 dark:border-slate-600 dark:bg-slate-800 dark:text-white" />
+                          <div className="grid gap-2 sm:grid-cols-2">
+                            {([["watch_video", "Watch the video"], ["read_content", "Read the content"], ["pass_quiz", "Pass the quiz"], ["submit_assignment", "Submit the assignment"]] as const).map(([key, label]) => (
+                              <label key={key} className="flex items-center gap-2 text-[12px] text-slate-600 dark:text-slate-400"><input type="checkbox" checked={editForm.completion_rule[key]} onChange={(e) => setEditForm((f) => ({ ...f, completion_rule: { ...f.completion_rule, [key]: e.target.checked } }))} />{label}</label>
+                            ))}
+                          </div>
+                        </div>
                         {editErr && <p className="text-[11.5px] font-medium text-rose-500">⚠ {editErr}</p>}
                         <div className="flex gap-2.5">
                           <button
@@ -746,6 +777,20 @@ export default function Curriculum({ courseId, isPublished = false }: Props) {
                         )}
                       </div>
                     )}
+
+                    <div className="flex flex-col gap-3 rounded-xl border border-dashed border-teal-200 bg-teal-50/40 p-3.5 dark:border-teal-500/20 dark:bg-teal-500/5">
+                      <div>
+                        <p className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Lesson outline</p>
+                        <p className="mt-0.5 text-[11.5px] text-slate-400">Add one objective or takeaway per line.</p>
+                      </div>
+                      <textarea rows={3} placeholder="Learning objectives" value={newLesson[section.id]?.objectives ?? ""} onChange={(e) => setNewLesson((p) => ({ ...p, [section.id]: { ...p[section.id], objectives: e.target.value } }))} className="resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-[13px] outline-none focus:border-teal-400 dark:border-slate-600 dark:bg-slate-700 dark:text-white" />
+                      <textarea rows={2} placeholder="Key takeaways" value={newLesson[section.id]?.takeaways ?? ""} onChange={(e) => setNewLesson((p) => ({ ...p, [section.id]: { ...p[section.id], takeaways: e.target.value } }))} className="resize-y rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-[13px] outline-none focus:border-teal-400 dark:border-slate-600 dark:bg-slate-700 dark:text-white" />
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {([["watch_video", "Watch the video"], ["read_content", "Read the content"], ["pass_quiz", "Pass the quiz"], ["submit_assignment", "Submit the assignment"]] as const).map(([key, label]) => (
+                          <label key={key} className="flex items-center gap-2 text-[12px] text-slate-600 dark:text-slate-400"><input type="checkbox" checked={newLesson[section.id]?.completion_rule?.[key] ?? false} onChange={(e) => setNewLesson((p) => ({ ...p, [section.id]: { ...p[section.id], completion_rule: { ...(p[section.id]?.completion_rule ?? { watch_video: false, read_content: false, pass_quiz: false, submit_assignment: false }), [key]: e.target.checked } } }))} />{label}</label>
+                        ))}
+                      </div>
+                    </div>
 
                     <div className="flex gap-2.5">
                       <button
