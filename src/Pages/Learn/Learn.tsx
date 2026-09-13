@@ -56,6 +56,68 @@ interface LessonVideoItem {
   order: number;
 }
 
+interface LessonObjectiveItem {
+  id: number;
+  objective: string;
+  order: number;
+}
+
+interface LessonContentBlockItem {
+  id: number;
+  type: string;
+  title?: string | null;
+  content?: string | null;
+  media_path?: string | null;
+  media_url?: string | null;
+  language?: string | null;
+  metadata?: Record<string, unknown> | null;
+  order: number;
+}
+
+interface LessonTakeawayItem {
+  id: number;
+  takeaway: string;
+  order: number;
+}
+
+interface LessonAssessmentQuestionItem {
+  id: number;
+  question: string;
+  type: string;
+  options?: string[] | null;
+  points?: number | null;
+  explanation?: string | null;
+  order: number;
+}
+
+interface LessonAssessmentItem {
+  id: number;
+  title: string;
+  description?: string | null;
+  passing_score?: number | null;
+  attempts?: number | null;
+  is_required?: boolean;
+  order?: number;
+  questions?: LessonAssessmentQuestionItem[];
+}
+
+interface LessonAssignmentItem {
+  id: number;
+  title: string;
+  instructions?: string | null;
+  submission_type?: string | null;
+  max_score?: number | null;
+  is_required?: boolean;
+  order?: number;
+}
+
+interface LessonCompletionRuleItem {
+  watch_video?: boolean;
+  read_content?: boolean;
+  pass_quiz?: boolean;
+  submit_assignment?: boolean;
+}
+
 interface LessonItem {
   id: number;
   title: string;
@@ -68,6 +130,12 @@ interface LessonItem {
   content?: string;
   description?: string;
   attachments?: LessonAttachment[];
+  objectives?: LessonObjectiveItem[];
+  content_blocks?: LessonContentBlockItem[];
+  takeaways?: LessonTakeawayItem[];
+  assessments?: LessonAssessmentItem[];
+  assignments?: LessonAssignmentItem[];
+  completion_rule?: LessonCompletionRuleItem | null;
 }
 
 interface SectionItem {
@@ -91,6 +159,35 @@ interface CourseData {
   instructor?: { id: number; name: string; avatar?: string | null; avatar_url?: string | null } | null;
   thumbnail_url?: string | null;
 }
+
+const sortByOrder = <T extends { order?: number }>(items?: T[] | null): T[] =>
+  [...(items ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+const normalizeLessonStructure = (lesson: LessonItem): LessonItem => {
+  const assessments = (lesson.assessments ?? []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const assignments = (lesson.assignments ?? []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  return {
+    ...lesson,
+    objectives: sortByOrder(lesson.objectives ?? []),
+    content_blocks: sortByOrder(lesson.content_blocks ?? []),
+    takeaways: sortByOrder(lesson.takeaways ?? []),
+    assessments: assessments.map((assessment: LessonAssessmentItem) => ({
+      ...assessment,
+      questions: sortByOrder(assessment.questions ?? []),
+    })),
+    assignments: assignments.map((assignment: LessonAssignmentItem) => ({ ...assignment })),
+    videos: sortByOrder(lesson.videos ?? []),
+  };
+};
+
+const normalizeCourseData = (course: CourseData): CourseData => ({
+  ...course,
+  sections: sortByOrder(course.sections ?? []).map((section) => ({
+    ...section,
+    lessons: sortByOrder(section.lessons ?? []).map((lesson) => normalizeLessonStructure(lesson)),
+  })),
+});
 
 type LessonTab = "lesson" | "comments";
 
@@ -175,7 +272,7 @@ export default function Learn() {
 
     api.get<{ data: CourseData }>(`/courses/${slug}`)
       .then(async ({ data }) => {
-        const courseData = data.data;
+        const courseData = normalizeCourseData(data.data);
         setCourse(courseData);
         const lessonParam = Number(searchParamsRef.current.get("lesson")) || null;
         const commentParam = Number(searchParamsRef.current.get("comment")) || null;
@@ -664,6 +761,75 @@ export default function Learn() {
                 <div className="learn-tab-panel" hidden={tab !== "lesson"}>
                   {activeLesson.description && (
                     <p className="learn-lesson-desc">{activeLesson.description}</p>
+                  )}
+
+                  {!!activeLesson.objectives?.length && (
+                    <section className="learn-outline-block">
+                      <h3>Learning objectives</h3>
+                      <ul>{activeLesson.objectives.map((item) => <li key={item.id}>{item.objective}</li>)}</ul>
+                    </section>
+                  )}
+
+                  {!!activeLesson.content_blocks?.length && (
+                    <section className="learn-outline-block">
+                      <h3>Lesson content</h3>
+                      {activeLesson.content_blocks.map((block) => (
+                        <div key={block.id} className="learn-content-block">
+                          {block.title && <h4>{block.title}</h4>}
+                          {block.type === "code" ? <pre><code>{block.content}</code></pre> : block.content && <p>{block.content}</p>}
+                        </div>
+                      ))}
+                    </section>
+                  )}
+
+                  {!!activeLesson.takeaways?.length && (
+                    <section className="learn-outline-block">
+                      <h3>Key takeaways</h3>
+                      <ul>{activeLesson.takeaways.map((item) => <li key={item.id}>{item.takeaway}</li>)}</ul>
+                    </section>
+                  )}
+
+                  {!!activeLesson.assessments?.length && (
+                    <section className="learn-outline-block">
+                      <h3>Knowledge check</h3>
+                      {activeLesson.assessments.map((assessment) => (
+                        <div key={assessment.id} className="learn-assessment">
+                          <h4>{assessment.title}</h4>
+                          {assessment.description && <p>{assessment.description}</p>}
+                          {assessment.questions?.map((question, index) => (
+                            <div key={question.id} className="learn-question">
+                              <strong>{index + 1}. {question.question}</strong>
+                              {!!question.options?.length && <ul>{question.options.map((option) => <li key={option}>{option}</li>)}</ul>}
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </section>
+                  )}
+
+                  {!!activeLesson.assignments?.length && (
+                    <section className="learn-outline-block">
+                      <h3>Assignment</h3>
+                      {activeLesson.assignments.map((assignment) => (
+                        <div key={assignment.id} className="learn-assignment">
+                          <h4>{assignment.title}</h4>
+                          {assignment.instructions && <p>{assignment.instructions}</p>}
+                          {assignment.submission_type && <span>Submission: {assignment.submission_type}</span>}
+                        </div>
+                      ))}
+                    </section>
+                  )}
+
+                  {activeLesson.completion_rule && Object.values(activeLesson.completion_rule).some(Boolean) && (
+                    <section className="learn-outline-block learn-completion-rule">
+                      <h3>Completion requirements</h3>
+                      <ul>
+                        {activeLesson.completion_rule.watch_video && <li>Watch the video</li>}
+                        {activeLesson.completion_rule.read_content && <li>Read the lesson content</li>}
+                        {activeLesson.completion_rule.pass_quiz && <li>Pass the knowledge check</li>}
+                        {activeLesson.completion_rule.submit_assignment && <li>Submit the assignment</li>}
+                      </ul>
+                    </section>
                   )}
 
                   {!!activeLesson.attachments?.length && (

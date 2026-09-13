@@ -6,6 +6,9 @@
   min-height: 100vh;
   font-family: "DM Sans", sans-serif;
   overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* ── State (loading / error) ── */
@@ -241,11 +244,11 @@
 
 /* ── Body ── */
 .detail-body {
-  max-width: 1200px;
+  width: min(100%, 1200px);
   margin: 0 auto;
   padding: 40px 24px 80px;
   display: grid;
-  grid-template-columns: 1fr 340px;
+  grid-template-columns: minmax(0, 1fr) 340px;
   gap: 32px;
   align-items: start;
 }
@@ -261,6 +264,8 @@
   gap: 20px;
   position: sticky;
   top: 24px;
+  width: min(100%, 340px);
+  margin: 0 auto;
 }
 
 /* ── Sections — flowing content, not boxed cards. Card treatment is
@@ -1276,11 +1281,16 @@
 /* ── Responsive ── */
 @media (max-width: 960px) {
   .detail-body {
+    width: min(100%, 760px);
     grid-template-columns: 1fr;
     padding: 24px 14px 60px;
     gap: 20px;
   }
-  .detail-sidebar-col { order: -1; }
+  .detail-sidebar-col {
+    order: -1;
+    width: min(100%, 420px);
+    margin: 0 auto;
+  }
   .detail-hero__content {
     min-height: 280px;
     padding: 16px 20px 28px;
@@ -1290,7 +1300,11 @@
   .detail-action-btn { min-height: 44px; padding: 10px 16px; }
   .detail-section { padding: 22px 0; }
   .detail-sidebar-col { position: static; }
-  .detail-card { padding: 22px; }
+  .detail-card {
+    padding: 22px;
+    width: min(100%, 420px);
+    margin: 0 auto;
+  }
   .related-card { flex-basis: 160px; }
   .detail-check-list { grid-template-columns: 1fr; }
   .detail-section p { overflow-wrap: anywhere; }

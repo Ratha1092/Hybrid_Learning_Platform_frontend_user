@@ -7,14 +7,14 @@ import { getVideoDuration } from "../../../../utils/videoUrl";
 import "../css/CreateCourse.css";
 
 interface LocalLesson {
-  id: number; title: string; description?: string; type: string; is_preview: boolean; video_url?: string; content?: string;
+  id: number; title: string; description?: string; type: string; is_preview: boolean; video_url?: string; content?: string; objectives?: { id: number; objective: string; order: number }[]; takeaways?: { id: number; takeaway: string; order: number }[]; completion_rule?: { watch_video?: boolean; read_content?: boolean; pass_quiz?: boolean; submit_assignment?: boolean } | null;
 }
 interface LocalSection {
   id: number; title: string; order?: number; lessons: LocalLesson[];
 }
 interface LessonForm {
   title: string; description: string; type: string; video_url: string; content: string; is_preview: boolean; videoFiles: File[];
-  duration: number | null; articleFile: File | null; resourceFiles: File[];
+  duration: number | null; articleFile: File | null; resourceFiles: File[]; objectives: string; takeaways: string; completion_rule: { watch_video: boolean; read_content: boolean; pass_quiz: boolean; submit_assignment: boolean };
 }
 
 const STEPS = ["Basic Info", "Curriculum", "Pricing", "Submit"];
@@ -177,14 +177,14 @@ interface SectionBlockProps {
 function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLessonAdded, onLessonDeleted, onLessonUpdated }: SectionBlockProps) {
   const [open, setOpen] = useState(true);
   const [showForm, setShowForm] = useState(!!autoOpenForm);
-  const [lesson, setLesson] = useState<LessonForm>({ title: "", description: "", type: "video", video_url: "", content: "", is_preview: false, videoFiles: [], duration: null, articleFile: null, resourceFiles: [] });
+  const [lesson, setLesson] = useState<LessonForm>({ title: "", description: "", type: "video", video_url: "", content: "", is_preview: false, videoFiles: [], duration: null, articleFile: null, resourceFiles: [], objectives: "", takeaways: "", completion_rule: { watch_video: false, read_content: false, pass_quiz: false, submit_assignment: false } });
   const [saving, setSaving] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [expandedResources, setExpandedResources] = useState<Set<number>>(new Set());
 
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editForm, setEditForm] = useState({ title: "", description: "", is_preview: false, video_url: "", content: "" });
+  const [editForm, setEditForm] = useState({ title: "", description: "", is_preview: false, video_url: "", content: "", objectives: "", takeaways: "", completion_rule: { watch_video: false, read_content: false, pass_quiz: false, submit_assignment: false } });
   const [editSaving, setEditSaving] = useState(false);
   const [editErr, setEditErr] = useState<string | null>(null);
 
@@ -195,7 +195,7 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
     setShowForm(false);
     setEditingId(l.id);
     setEditErr(null);
-    setEditForm({ title: l.title, description: l.description ?? "", is_preview: l.is_preview, video_url: l.video_url ?? "", content: l.content ?? "" });
+    setEditForm({ title: l.title, description: l.description ?? "", is_preview: l.is_preview, video_url: l.video_url ?? "", content: l.content ?? "", objectives: (l.objectives ?? []).map((item) => item.objective).join("\n"), takeaways: (l.takeaways ?? []).map((item) => item.takeaway).join("\n"), completion_rule: { watch_video: l.completion_rule?.watch_video ?? false, read_content: l.completion_rule?.read_content ?? false, pass_quiz: l.completion_rule?.pass_quiz ?? false, submit_assignment: l.completion_rule?.submit_assignment ?? false } });
   };
 
   const handleSaveEdit = async (l: LocalLesson) => {
@@ -209,6 +209,9 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
       };
       if (l.type === "video") payload.video_url = editForm.video_url || undefined;
       if (l.type === "article") payload.content = editForm.content || undefined;
+      payload.objectives = editForm.objectives.split("\n").map((value, index) => ({ id: index + 1, objective: value.trim(), order: index })).filter((item) => item.objective);
+      payload.takeaways = editForm.takeaways.split("\n").map((value, index) => ({ id: index + 1, takeaway: value.trim(), order: index })).filter((item) => item.takeaway);
+      payload.completion_rule = editForm.completion_rule;
       await instructorService.updateLesson(courseId, section.id, l.id, payload);
       onLessonUpdated(l.id, {
         title: editForm.title.trim(),
@@ -216,13 +219,16 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
         is_preview: editForm.is_preview,
         ...(l.type === "video" ? { video_url: editForm.video_url } : {}),
         ...(l.type === "article" ? { content: editForm.content } : {}),
+        objectives: payload.objectives,
+        takeaways: payload.takeaways,
+        completion_rule: payload.completion_rule,
       });
       setEditingId(null);
     } catch (e) { setEditErr(getApiError(e)); }
     setEditSaving(false);
   };
 
-  const setL = (k: keyof LessonForm, v: string | boolean | File | File[] | number | null) => setLesson((f) => ({ ...f, [k]: v }));
+  const setL = (k: keyof LessonForm, v: string | boolean | File | File[] | number | null | LessonForm["completion_rule"]) => setLesson((f) => ({ ...f, [k]: v }));
 
   const handleAddLesson = async () => {
     if (!lesson.title.trim()) return;
@@ -236,6 +242,9 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
         is_preview: lesson.is_preview,
         video_url: lesson.type === "video" && !lesson.videoFiles.length ? (lesson.video_url || undefined) : undefined,
         content: lesson.content || undefined,
+        objectives: lesson.objectives.split("\n").map((value, index) => ({ id: index + 1, objective: value.trim(), order: index })).filter((item) => item.objective),
+        takeaways: lesson.takeaways.split("\n").map((value, index) => ({ id: index + 1, takeaway: value.trim(), order: index })).filter((item) => item.takeaway),
+        completion_rule: lesson.completion_rule,
       });
       const lessonId = data.data.id;
       if (lesson.type === "video" && lesson.videoFiles.length) {
@@ -268,7 +277,7 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
       }
       setUploadProgress(null);
       onLessonAdded({ ...data.data, lessons: undefined } as unknown as LocalLesson);
-      setLesson({ title: "", description: "", type: "video", video_url: "", content: "", is_preview: false, videoFiles: [], duration: null, articleFile: null, resourceFiles: [] });
+      setLesson({ title: "", description: "", type: "video", video_url: "", content: "", is_preview: false, videoFiles: [], duration: null, articleFile: null, resourceFiles: [], objectives: "", takeaways: "", completion_rule: { watch_video: false, read_content: false, pass_quiz: false, submit_assignment: false } });
       setShowForm(false);
     } catch (e) { setErr(getApiError(e)); }
     setSaving(false);
@@ -356,6 +365,11 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
                       onChange={(e) => setEditForm((f) => ({ ...f, content: e.target.value }))}
                     />
                   )}
+                  <textarea rows={3} placeholder="Learning objectives (one per line)" value={editForm.objectives} onChange={(e) => setEditForm((f) => ({ ...f, objectives: e.target.value }))} />
+                  <textarea rows={2} placeholder="Key takeaways (one per line)" value={editForm.takeaways} onChange={(e) => setEditForm((f) => ({ ...f, takeaways: e.target.value }))} />
+                  <div className="cur-lesson-form__row">
+                    {([["watch_video", "Watch video"], ["read_content", "Read content"], ["pass_quiz", "Pass quiz"], ["submit_assignment", "Submit assignment"]] as const).map(([key, label]) => <label key={key} className="cur-lesson-form__check"><input type="checkbox" checked={editForm.completion_rule[key]} onChange={(e) => setEditForm((f) => ({ ...f, completion_rule: { ...f.completion_rule, [key]: e.target.checked } }))} />{label}</label>)}
+                  </div>
                   {editErr && <p style={{ color: "#dc2626", fontSize: 12, margin: 0 }}>⚠ {editErr}</p>}
                   <div className="cur-lesson-form__actions">
                     <button className="cur-btn cur-btn--primary" onClick={() => handleSaveEdit(l)} disabled={editSaving}>
@@ -464,6 +478,11 @@ function SectionBlock({ section, index, courseId, autoOpenForm, onDelete, onLess
                   )}
                 </>
               )}
+              <textarea rows={3} placeholder="Learning objectives (one per line)" value={lesson.objectives} onChange={(e) => setL("objectives", e.target.value)} />
+              <textarea rows={2} placeholder="Key takeaways (one per line)" value={lesson.takeaways} onChange={(e) => setL("takeaways", e.target.value)} />
+              <div className="cur-lesson-form__row">
+                {([["watch_video", "Watch video"], ["read_content", "Read content"], ["pass_quiz", "Pass quiz"], ["submit_assignment", "Submit assignment"]] as const).map(([key, label]) => <label key={key} className="cur-lesson-form__check"><input type="checkbox" checked={lesson.completion_rule[key]} onChange={(e) => setL("completion_rule", { ...lesson.completion_rule, [key]: e.target.checked })} />{label}</label>)}
+              </div>
               <div className="cur-resource-picker">
                 <strong>Lesson resources <span>(optional)</span></strong>
                 <p>Attach PDFs, documents, slides, ZIP files, images, or videos now. They will upload when you save this lesson.</p>

@@ -28,6 +28,69 @@ export interface Course {
   target_audience?: string | null;
   required_tools_materials?: string | null;
   preview_video_url?: string | null;
+  resources_downloadable?: boolean;
+}
+
+export interface LessonObjective {
+  id: number;
+  objective: string;
+  order: number;
+}
+
+export interface LessonContentBlock {
+  id: number;
+  type: "text" | "video" | "image" | "code" | "resource" | "external" | string;
+  title?: string | null;
+  content?: string | null;
+  media_path?: string | null;
+  media_url?: string | null;
+  language?: string | null;
+  metadata?: Record<string, unknown> | null;
+  order: number;
+}
+
+export interface LessonTakeaway {
+  id: number;
+  takeaway: string;
+  order: number;
+}
+
+export interface LessonAssessmentQuestion {
+  id: number;
+  question: string;
+  type: "single_choice" | "multiple_choice" | "true_false" | string;
+  options?: string[] | null;
+  points?: number | null;
+  explanation?: string | null;
+  order: number;
+}
+
+export interface LessonAssessment {
+  id: number;
+  title: string;
+  description?: string | null;
+  passing_score?: number | null;
+  attempts?: number | null;
+  is_required?: boolean;
+  order?: number;
+  questions?: LessonAssessmentQuestion[];
+}
+
+export interface LessonAssignment {
+  id: number;
+  title: string;
+  instructions?: string | null;
+  submission_type?: "file" | "text" | "url" | string | null;
+  max_score?: number | null;
+  is_required?: boolean;
+  order?: number;
+}
+
+export interface LessonCompletionRule {
+  watch_video?: boolean;
+  read_content?: boolean;
+  pass_quiz?: boolean;
+  submit_assignment?: boolean;
 }
 
 // A lesson can hold several videos (e.g. a lecture split into parts).
@@ -44,11 +107,17 @@ export interface Lesson {
   type: string;
   description?: string;
   is_preview: boolean;
-  video_url?: string;
+  video_url?: string | null;
   videos?: LessonVideo[];
   content?: string;
   order: number;
   duration: number;
+  objectives?: LessonObjective[];
+  content_blocks?: LessonContentBlock[];
+  takeaways?: LessonTakeaway[];
+  assessments?: LessonAssessment[];
+  assignments?: LessonAssignment[];
+  completion_rule?: LessonCompletionRule | null;
 }
 
 export interface Section {
@@ -65,6 +134,38 @@ export interface CourseDetail extends Course {
   is_enrolled?: boolean;
   access_expired?: boolean;
   access_expires_at?: string | null;
+}
+
+function sortByOrder<T extends { order?: number }>(items?: T[] | null): T[] {
+  return [...(items ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+}
+
+export function normalizeStructuredLesson(lesson: Lesson): Lesson {
+  const assessments = (lesson.assessments ?? []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const assignments = (lesson.assignments ?? []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  return {
+    ...lesson,
+    objectives: sortByOrder(lesson.objectives ?? []),
+    content_blocks: sortByOrder(lesson.content_blocks ?? []),
+    takeaways: sortByOrder(lesson.takeaways ?? []),
+    assessments: assessments.map((assessment: LessonAssessment) => ({
+      ...assessment,
+      questions: sortByOrder(assessment.questions ?? []),
+    })),
+    assignments: assignments.map((assignment: LessonAssignment) => ({ ...assignment })),
+    videos: sortByOrder(lesson.videos ?? []),
+  };
+}
+
+export function normalizeCourseDetail(course: CourseDetail): CourseDetail {
+  return {
+    ...course,
+    sections: sortByOrder(course.sections ?? []).map((section) => ({
+      ...section,
+      lessons: sortByOrder(section.lessons ?? []).map((lesson) => normalizeStructuredLesson(lesson)),
+    })),
+  };
 }
 
 export interface EnrolledCourse {
