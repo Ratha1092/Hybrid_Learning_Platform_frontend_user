@@ -448,6 +448,8 @@ a.lesson-topnav__crumb:hover { color: #111827; }
 /* Previous / Next navigation */
 .learn-nav-bar {
   display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
   padding: 16px 24px;
   border-top: 1px solid #e5e7eb;
   background: #fff; flex-shrink: 0;
@@ -559,6 +561,7 @@ a.lesson-topnav__crumb:hover { color: #111827; }
 @media (max-width: 420px) {
   .lesson-topnav__icon-btn { width: 32px; height: 32px; }
   .lesson-topnav__crumb { max-width: 64px; }
+  .lesson-topnav__signin { display: none; }
   .learn-main__inner { padding-inline: 8px; }
   .learn-nav-bar { padding-inline: 0; }
   .learn-complete-btn { padding-inline: 10px; font-size: 12px; }

@@ -29,6 +29,7 @@ interface Draft {
     title: string; category_id: string; level: string; language: string;
     short_description: string; description: string;
     requirements: string; what_you_will_learn: string;
+    target_audience: string; required_tools_materials: string;
   };
   visibility: string;
   isFree: boolean;
@@ -731,7 +732,7 @@ function CurriculumStep({ courseId, sections, setSections, onNext, onBack }: Cur
 const DEFAULT_INFO = {
   title: "", category_id: "", level: "beginner",
   language: "English", short_description: "", description: "",
-  requirements: "", what_you_will_learn: "",
+  requirements: "", what_you_will_learn: "", target_audience: "", required_tools_materials: "",
 };
 
 export default function CreateCourse() {
@@ -824,6 +825,10 @@ export default function CreateCourse() {
         level: info.level,
         language: info.language,
         category_id: Number(info.category_id),
+        requirements: info.requirements,
+        what_you_will_learn: info.what_you_will_learn,
+        target_audience: info.target_audience,
+        required_tools_materials: info.required_tools_materials,
       };
 
       const uploadPreviewVideo = async (id: number) => {
@@ -1083,6 +1088,26 @@ export default function CreateCourse() {
                   placeholder="List prerequisites, one per line"
                   value={info.requirements}
                   onChange={(e) => setI("requirements", e.target.value)}
+                />
+              </div>
+
+              <div className="cc-field">
+                <label>Target Audience</label>
+                <textarea
+                  rows={3}
+                  placeholder="Who is this course for? One audience description per line"
+                  value={info.target_audience}
+                  onChange={(e) => setI("target_audience", e.target.value)}
+                />
+              </div>
+
+              <div className="cc-field">
+                <label>Required Tools & Materials</label>
+                <textarea
+                  rows={3}
+                  placeholder="List software, tools, books, or other materials students need"
+                  value={info.required_tools_materials}
+                  onChange={(e) => setI("required_tools_materials", e.target.value)}
                 />
               </div>
 

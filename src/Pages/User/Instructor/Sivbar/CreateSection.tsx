@@ -425,7 +425,7 @@ export default function SectionLibrary() {
             Section Library
           </h1>
           <p className="mt-1 max-w-lg text-[13.5px] leading-relaxed text-slate-500 dark:text-slate-400">
-            A <span className="font-semibold text-slate-700 dark:text-slate-200">section</span> is a group of lessons — like a chapter — that you build once here and reuse in any of your courses.
+            Create and organize sections before adding them to a course. Each section belongs to one course.
           </p>
           <p className="mt-1.5 text-[12.5px] font-medium text-slate-400 dark:text-slate-500">
             {loading ? "Loading…" : `${sections.length} standalone section${sections.length !== 1 ? "s" : ""}`}

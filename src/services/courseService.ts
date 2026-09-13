@@ -25,6 +25,8 @@ export interface Course {
   } | null;
   requirements?: string | null;
   what_you_will_learn?: string | null;
+  target_audience?: string | null;
+  required_tools_materials?: string | null;
   preview_video_url?: string | null;
 }
 

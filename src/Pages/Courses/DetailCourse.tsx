@@ -336,10 +336,6 @@ function ReviewsSection({ courseId, isEnrolled }: { courseId: number; isEnrolled
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { message?: string } } };
       const message = axiosErr.response?.data?.message ?? "Failed to submit review.";
-      // The backend can reject a resubmit as "already reviewed" even when that
-      // review is still pending moderation and was never included in the list
-      // above — without this, the user is stuck seeing a rejection next to an
-      // empty/contradictory reviews list with no way to know why.
       if (/already reviewed/i.test(message)) {
         setShowForm(false);
         setPendingOwnReview(true);
@@ -589,7 +585,7 @@ function DetailCourse() {
 
   return (
     <div className="detail-page">
-      {/* ── Hero ── */}
+      {/*  Hero  */}
       <div className="detail-hero">
         {course.thumbnail_url ? (
           <img src={resolveUrl(course.thumbnail_url)!} alt={course.title} className="detail-hero__img" />
@@ -671,9 +667,9 @@ function DetailCourse() {
         />
       )}
 
-      {/* ── Body ── */}
+      {/*  Body  */}
       <div className="detail-body">
-        {/* ── Left ── */}
+        {/*  Left  */}
         <div className="detail-main">
           {/* Description */}
           <section className="detail-section">
@@ -702,6 +698,34 @@ function DetailCourse() {
               <h2>Requirements</h2>
               <ul className="detail-check-list detail-check-list--dot">
                 {toLines(course.requirements).map((line, i) => (
+                  <li key={i}>
+                    <span className="detail-check-list__dot" />
+                    <span>{line}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {toLines(course.target_audience).length > 0 && (
+            <section className="detail-section">
+              <h2>Who This Course Is For</h2>
+              <ul className="detail-check-list detail-check-list--dot">
+                {toLines(course.target_audience).map((line, i) => (
+                  <li key={i}>
+                    <span className="detail-check-list__dot" />
+                    <span>{line}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {toLines(course.required_tools_materials).length > 0 && (
+            <section className="detail-section">
+              <h2>Required Tools & Materials</h2>
+              <ul className="detail-check-list detail-check-list--dot">
+                {toLines(course.required_tools_materials).map((line, i) => (
                   <li key={i}>
                     <span className="detail-check-list__dot" />
                     <span>{line}</span>
@@ -759,7 +783,7 @@ function DetailCourse() {
           )}
         </div>
 
-        {/* ── Right: Enroll card + instructor ── */}
+        {/*  Right: Enroll card + instructor  */}
         <div className="detail-sidebar-col">
           <aside className="detail-card">
             <div className="detail-card__price">

@@ -5,7 +5,6 @@ import api from "../../api/axios";
 import { classifyVideoUrl, buildYouTubeEmbed, buildVimeoEmbed, seekEmbeddedVideo } from "../../utils/videoUrl";
 import { resolveUrl } from "../../utils/format";
 import LessonComments from "../../Components/LessonComments/LessonComments";
-import CourseCommunity from "../../Components/CourseCommunity/CourseCommunity";
 import { useAuth } from "../../context/AuthContext";
 import { useAuthModal } from "../../context/AuthModalContext";
 import TopNavBar from "./TopNavBar";
@@ -93,7 +92,7 @@ interface CourseData {
   thumbnail_url?: string | null;
 }
 
-type LessonTab = "lesson" | "comments" | "community";
+type LessonTab = "lesson" | "comments";
 
 export default function Learn() {
   const { slug } = useParams<{ slug: string }>();
@@ -660,14 +659,6 @@ export default function Learn() {
                   >
                     Comments
                   </button>
-                  {course.is_enrolled && !course.access_expired && (
-                    <button
-                      className={`learn-tab${tab === "community" ? " learn-tab--active" : ""}`}
-                      onClick={() => setTab("community")}
-                    >
-                      Community
-                    </button>
-                  )}
                 </div>
 
                 <div className="learn-tab-panel" hidden={tab !== "lesson"}>
@@ -731,11 +722,6 @@ export default function Learn() {
                   />
                 </div>
 
-                {course.is_enrolled && !course.access_expired && (
-                  <div className="learn-tab-panel learn-tab-panel--community" hidden={tab !== "community"}>
-                    <CourseCommunity courseId={course.id} />
-                  </div>
-                )}
               </div>
             </div>
 

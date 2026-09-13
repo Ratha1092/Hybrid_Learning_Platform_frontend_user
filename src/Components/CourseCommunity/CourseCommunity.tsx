@@ -84,8 +84,7 @@ function DiscussionItem({
           {!isReply && (
             <button
               className="cc-action"
-              onClick={() => (isAuthenticated ? setReplyOpenId(replying ? null : discussion.id) : onOpenLogin())}
-            >
+              onClick={() => (isAuthenticated ? setReplyOpenId(replying ? null : discussion.id) : onOpenLogin())}>
               Reply
             </button>
           )}

@@ -67,47 +67,49 @@ export default function Students() {
             <p>{search ? "No results found." : "No students enrolled yet."}</p>
           </div>
         ) : (
-          <table className="st-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Student</th>
-                <th>Course</th>
-                <th>Progress</th>
-                <th>Enrolled</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((s, i) => (
-                <tr key={s.student_id ?? s.id ?? i}>
-                  <td className="st-table__num">{i + 1}</td>
-                  <td>
-                    <div className="st-student">
-                      <div className="st-avatar">
-                        {s.student_name.charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="st-student__name">{s.student_name}</p>
-                        <p className="st-student__email">{s.student_email}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="st-course">{s.course_title}</td>
-                  <td>
-                    <div className="st-progress">
-                      <div className="st-progress__bar" style={{ "--w": `${s.progress_percentage ?? s.progress ?? 0}%` } as React.CSSProperties} />
-                      <span>{s.progress_percentage ?? s.progress ?? 0}%</span>
-                    </div>
-                  </td>
-                  <td className="st-date">
-                    {new Date(s.enrolled_at).toLocaleDateString("en-US", {
-                      year: "numeric", month: "short", day: "numeric",
-                    })}
-                  </td>
+          <div className="st-table-wrap">
+            <table className="st-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Student</th>
+                  <th>Course</th>
+                  <th>Progress</th>
+                  <th>Enrolled</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filtered.map((s, i) => (
+                  <tr key={s.student_id ?? s.id ?? i}>
+                    <td className="st-table__num">{i + 1}</td>
+                    <td>
+                      <div className="st-student">
+                        <div className="st-avatar">
+                          {s.student_name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="st-student__name">{s.student_name}</p>
+                          <p className="st-student__email">{s.student_email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="st-course">{s.course_title}</td>
+                    <td>
+                      <div className="st-progress">
+                        <div className="st-progress__bar" style={{ "--w": `${s.progress_percentage ?? s.progress ?? 0}%` } as React.CSSProperties} />
+                        <span>{s.progress_percentage ?? s.progress ?? 0}%</span>
+                      </div>
+                    </td>
+                    <td className="st-date">
+                      {new Date(s.enrolled_at).toLocaleDateString("en-US", {
+                        year: "numeric", month: "short", day: "numeric",
+                      })}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

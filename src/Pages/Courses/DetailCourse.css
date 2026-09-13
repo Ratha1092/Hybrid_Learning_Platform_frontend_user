@@ -250,6 +250,11 @@
   align-items: start;
 }
 
+.detail-main,
+.detail-sidebar-col {
+  min-width: 0;
+}
+
 .detail-sidebar-col {
   display: flex;
   flex-direction: column;
@@ -329,7 +334,8 @@
 .detail-section__summary {
   font-size: 13px;
   color: #94a3b8;
-  white-space: nowrap;
+  white-space: normal;
+  text-align: right;
 }
 
 /* ── Accordion list ── */
@@ -633,13 +639,20 @@
 .detail-card__info li {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   font-size: 14px;
   padding-bottom: 12px;
   border-bottom: 1px solid #f1f5f9;
   color: #64748b;
 }
 .detail-card__info li:last-child { border-bottom: none; padding-bottom: 0; }
-.detail-card__info strong { color: #0f172a; font-weight: 600; }
+.detail-card__info strong {
+  min-width: 0;
+  color: #0f172a;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
 .detail-card__instructor-profile {
   display: flex !important;
   flex-direction: column;
@@ -679,6 +692,8 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  max-width: 100%;
+  text-align: center;
   color: #0f766e;
   font-size: 12px;
   font-weight: 700;
@@ -1259,7 +1274,7 @@
 .review-load-more:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* ── Responsive ── */
-@media (max-width: 768px) {
+@media (max-width: 960px) {
   .detail-body {
     grid-template-columns: 1fr;
     padding: 24px 14px 60px;

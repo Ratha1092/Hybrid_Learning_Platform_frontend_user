@@ -92,8 +92,14 @@
 .st-empty p { font-size: 0.9rem; margin: 0; }
 
 /* ── Table ── */
+.st-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .st-table {
   width: 100%;
+  min-width: 680px;
   border-collapse: collapse;
   font-size: 0.855rem;
 }
