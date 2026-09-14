@@ -146,6 +146,29 @@ export default function EditCourse() {
     setSaving(false);
   };
 
+  const handleCancelInfo = () => {
+    if (!course) return;
+    setForm({
+      title: course.title,
+      short_description: course.short_description ?? "",
+      description: course.description ?? "",
+      price: course.price,
+      level: course.level,
+      language: course.language ?? "English",
+      category_id: course.category_id != null ? String(course.category_id) : "",
+      requirements: course.requirements ?? "",
+      what_you_will_learn: course.what_you_will_learn ?? "",
+      target_audience: course.target_audience ?? "",
+      required_tools_materials: course.required_tools_materials ?? "",
+      visibility: course.visibility ?? "public",
+    });
+    setThumbFile(null);
+    setThumbPreview(null);
+    setPreviewVideoFile(null);
+    setPreviewVideoPreview(null);
+    setError(null);
+  };
+
   if (loading) return (
     <div className="flex min-h-[50vh] items-center justify-center">
       <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-blue-600" />
@@ -186,14 +209,33 @@ export default function EditCourse() {
         </div>
 
         {tab === "info" && (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleCancelInfo}
+              disabled={saving}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-[14px] font-bold text-slate-600 shadow-sm transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="edit-course-form"
+              disabled={saving}
+              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-[14px] font-bold text-white shadow-e1 transition-colors hover:bg-blue-700 disabled:opacity-50"
+            >
+              <Save className="h-4 w-4" />
+              {saving ? "Saving…" : "Save Changes"}
+            </button>
+          </div>
+        )}
+        {tab === "curriculum" && (
           <button
-            type="submit"
-            form="edit-course-form"
-            disabled={saving}
-            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-[14px] font-bold text-white shadow-e1 transition-colors hover:bg-blue-700 disabled:opacity-50"
+            type="button"
+            onClick={() => navigate("/instructor/courses")}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-[14px] font-bold text-slate-600 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
           >
-            <Save className="h-4 w-4" />
-            {saving ? "Saving…" : "Save Changes"}
+            Cancel
           </button>
         )}
       </div>
