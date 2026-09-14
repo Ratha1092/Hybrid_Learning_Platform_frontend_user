@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  ArrowLeft, CheckCircle, AlertTriangle, ImagePlus, X, Globe, Lock,
+  CheckCircle, AlertTriangle, ImagePlus, X, Globe, Lock,
   FileText, Layers, AlignLeft, Sparkles, Video, DollarSign, Eye, Save,
 } from "lucide-react";
 import { instructorService, type InstructorCourse } from "../../../../services/instructorService";
@@ -189,15 +189,8 @@ export default function EditCourse() {
     <div className="flex flex-col gap-6">
 
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div>
         <div>
-          <button
-            onClick={() => navigate("/instructor/courses")}
-            className="mb-3 inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-[13.5px] font-semibold text-slate-600 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-white"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            My Courses
-          </button>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="font-display text-[26px] font-extrabold text-slate-900 dark:text-white">
               {course.title}
@@ -208,36 +201,6 @@ export default function EditCourse() {
           </div>
         </div>
 
-        {tab === "info" && (
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleCancelInfo}
-              disabled={saving}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-[14px] font-bold text-slate-600 shadow-sm transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              form="edit-course-form"
-              disabled={saving}
-              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-[14px] font-bold text-white shadow-e1 transition-colors hover:bg-blue-700 disabled:opacity-50"
-            >
-              <Save className="h-4 w-4" />
-              {saving ? "Saving…" : "Save Changes"}
-            </button>
-          </div>
-        )}
-        {tab === "curriculum" && (
-          <button
-            type="button"
-            onClick={() => navigate("/instructor/courses")}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-[14px] font-bold text-slate-600 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-          >
-            Cancel
-          </button>
-        )}
       </div>
 
       {/* Tabs */}
@@ -531,12 +494,42 @@ export default function EditCourse() {
               </Section>
             </div>
           </form>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={handleCancelInfo}
+              disabled={saving}
+              className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-[14px] font-bold text-slate-600 shadow-sm transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="edit-course-form"
+              disabled={saving}
+              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-[14px] font-bold text-white shadow-e1 transition-colors hover:bg-blue-700 disabled:opacity-50"
+            >
+              <Save className="h-4 w-4" />
+              {saving ? "Saving…" : "Save Changes"}
+            </button>
+          </div>
         </>
       )}
 
       {/* Curriculum tab */}
       {tab === "curriculum" && (
-        <Curriculum courseId={course.id} isPublished={course.status === "published"} />
+        <div className="flex flex-col gap-4">
+          <Curriculum courseId={course.id} isPublished={course.status === "published"} />
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => navigate("/instructor/courses")}
+              className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-[14px] font-bold text-slate-600 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
