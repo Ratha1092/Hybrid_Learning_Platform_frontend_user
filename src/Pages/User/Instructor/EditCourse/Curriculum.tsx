@@ -491,18 +491,10 @@ export default function Curriculum({ courseId, isPublished = false }: Props) {
     <div className="flex flex-col gap-4">
 
       {/* Summary */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <p className="text-[13.5px] text-slate-500 dark:text-slate-400">
           {sections.length} section{sections.length !== 1 ? "s" : ""} · {totalLessons} lesson{totalLessons !== 1 ? "s" : ""}
         </p>
-        <button
-          type="button"
-          onClick={handleSaveCurriculum}
-          disabled={curriculumSaving}
-          className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-[13px] font-bold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {curriculumSaving ? "Saving…" : curriculumSaved ? "Curriculum Saved" : "Save Curriculum"}
-        </button>
       </div>
 
       {isPublished && (
@@ -876,6 +868,17 @@ export default function Curriculum({ courseId, isPublished = false }: Props) {
         >
           <Plus className="h-4 w-4" />
           {addingSection ? "Adding…" : "Add Section"}
+        </button>
+      </div>
+
+      <div className="flex justify-end border-t border-slate-100 pt-4 dark:border-slate-700">
+        <button
+          type="button"
+          onClick={handleSaveCurriculum}
+          disabled={curriculumSaving}
+          className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-[13px] font-bold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {curriculumSaving ? "Saving…" : curriculumSaved ? "Curriculum Saved" : "Save Curriculum"}
         </button>
       </div>
 
