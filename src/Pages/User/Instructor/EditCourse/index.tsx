@@ -39,6 +39,25 @@ function Section({
   );
 }
 
+function EditCourseSkeleton() {
+  return (
+    <div className="flex flex-col gap-6" aria-label="Loading course" role="status">
+      <div className="flex items-center gap-3">
+        <div className="skeleton h-8 w-72" />
+        <div className="skeleton h-6 w-20 rounded-full" />
+      </div>
+      <div className="flex gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1 dark:border-slate-700 dark:bg-slate-800/50">
+        <div className="skeleton h-10 flex-1 rounded-lg" />
+        <div className="skeleton h-10 flex-1 rounded-lg" />
+      </div>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="skeleton h-72 rounded-2xl lg:col-span-2" />
+        <div className="skeleton h-72 rounded-2xl" />
+      </div>
+    </div>
+  );
+}
+
 export default function EditCourse() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -146,11 +165,7 @@ export default function EditCourse() {
     setSaving(false);
   };
 
-  if (loading) return (
-    <div className="flex min-h-[50vh] items-center justify-center">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-blue-600" />
-    </div>
-  );
+  if (loading) return <EditCourseSkeleton />;
 
   if (!course) return (
     <div className="flex min-h-[50vh] items-center justify-center">

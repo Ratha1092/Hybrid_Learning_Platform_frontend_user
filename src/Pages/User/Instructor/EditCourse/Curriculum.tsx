@@ -10,6 +10,27 @@ const EXT_ICON: Record<string, string> = {
   pdf: "📄", zip: "🗜️", doc: "📝", docx: "📝", ppt: "📊", pptx: "📊", mp4: "🎬", jpg: "🖼️", png: "🖼️",
 };
 
+function CurriculumSkeleton() {
+  return (
+    <div className="flex flex-col gap-4" aria-label="Loading curriculum" role="status">
+      <div className="skeleton h-4 w-40" />
+      {[0, 1].map((item) => (
+        <div key={item} className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-e1 dark:border-slate-700 dark:bg-slate-800">
+          <div className="flex items-center gap-3">
+            <div className="skeleton h-4 w-4 rounded" />
+            <div className="skeleton h-4 w-44" />
+            <div className="skeleton h-3 w-20" />
+          </div>
+          <div className="mt-5 space-y-3 border-t border-slate-100 pt-4 dark:border-slate-700">
+            <div className="skeleton h-12 w-full rounded-xl" />
+            <div className="skeleton h-12 w-full rounded-xl" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 //  Lesson Resources Panel 
 function ResourcesPanel({ courseId, sectionId, lessonId, isPublished }: { courseId: number; sectionId: number; lessonId: number; isPublished: boolean }) {
   const [resources, setResources] = useState<LessonResource[]>([]);
@@ -479,11 +500,7 @@ export default function Curriculum({ courseId, isPublished = false, onCancel }: 
     setEditSaving(false);
   };
 
-  if (loading) return (
-    <div className="flex min-h-[200px] items-center justify-center">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-blue-600" />
-    </div>
-  );
+  if (loading) return <CurriculumSkeleton />;
 
   const totalLessons = sections.reduce((s, sec) => s + sec.lessons.length, 0);
 
