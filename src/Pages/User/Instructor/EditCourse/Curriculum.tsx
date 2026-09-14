@@ -280,6 +280,8 @@ export default function Curriculum({ courseId, isPublished = false }: Props) {
   const [editForm, setEditForm] = useState({ title: "", description: "", is_preview: false, video_url: "", content: "", objectives: "", takeaways: "", completion_rule: { watch_video: false, read_content: false, pass_quiz: false, submit_assignment: false } });
   const [editSaving, setEditSaving] = useState(false);
   const [editErr, setEditErr] = useState<string | null>(null);
+  const [curriculumSaving, setCurriculumSaving] = useState(false);
+  const [curriculumSaved, setCurriculumSaved] = useState(false);
 
   useEffect(() => {
     instructorService.getSections(courseId)
@@ -300,6 +302,23 @@ export default function Curriculum({ courseId, isPublished = false }: Props) {
 
   const toggleVideos = (lId: number) =>
     setExpandedVideos((prev) => { const n = new Set(prev); n.has(lId) ? n.delete(lId) : n.add(lId); return n; });
+
+  const handleSaveCurriculum = async () => {
+    if (curriculumSaving) return;
+    setCurriculumSaving(true);
+    setError(null);
+    try {
+      const { data } = await instructorService.getSections(courseId);
+      setSections((data.data ?? []).map((section) => ({ ...section, lessons: section.lessons ?? [] })));
+      setCurriculumSaved(true);
+      window.setTimeout(() => setCurriculumSaved(false), 3000);
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } }; message?: string };
+      setError(err.response?.data?.message ?? err.message ?? "Failed to save curriculum.");
+    } finally {
+      setCurriculumSaving(false);
+    }
+  };
 
   const handleAddSection = async () => {
     if (!newSectionTitle.trim()) return;
@@ -472,9 +491,19 @@ export default function Curriculum({ courseId, isPublished = false }: Props) {
     <div className="flex flex-col gap-4">
 
       {/* Summary */}
-      <p className="text-[13.5px] text-slate-500 dark:text-slate-400">
-        {sections.length} section{sections.length !== 1 ? "s" : ""} · {totalLessons} lesson{totalLessons !== 1 ? "s" : ""}
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-[13.5px] text-slate-500 dark:text-slate-400">
+          {sections.length} section{sections.length !== 1 ? "s" : ""} · {totalLessons} lesson{totalLessons !== 1 ? "s" : ""}
+        </p>
+        <button
+          type="button"
+          onClick={handleSaveCurriculum}
+          disabled={curriculumSaving}
+          className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-[13px] font-bold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {curriculumSaving ? "Saving…" : curriculumSaved ? "Curriculum Saved" : "Save Curriculum"}
+        </button>
+      </div>
 
       {isPublished && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[13px] font-medium text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-400">
