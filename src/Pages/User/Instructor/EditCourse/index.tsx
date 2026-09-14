@@ -146,29 +146,6 @@ export default function EditCourse() {
     setSaving(false);
   };
 
-  const handleCancelInfo = () => {
-    if (!course) return;
-    setForm({
-      title: course.title,
-      short_description: course.short_description ?? "",
-      description: course.description ?? "",
-      price: course.price,
-      level: course.level,
-      language: course.language ?? "English",
-      category_id: course.category_id != null ? String(course.category_id) : "",
-      requirements: course.requirements ?? "",
-      what_you_will_learn: course.what_you_will_learn ?? "",
-      target_audience: course.target_audience ?? "",
-      required_tools_materials: course.required_tools_materials ?? "",
-      visibility: course.visibility ?? "public",
-    });
-    setThumbFile(null);
-    setThumbPreview(null);
-    setPreviewVideoFile(null);
-    setPreviewVideoPreview(null);
-    setError(null);
-  };
-
   if (loading) return (
     <div className="flex min-h-[50vh] items-center justify-center">
       <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-blue-600" />
@@ -497,7 +474,7 @@ export default function EditCourse() {
           <div className="flex justify-end gap-2">
             <button
               type="button"
-              onClick={handleCancelInfo}
+              onClick={() => navigate("/instructor/courses")}
               disabled={saving}
               className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-[14px] font-bold text-slate-600 shadow-sm transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
             >
@@ -518,18 +495,11 @@ export default function EditCourse() {
 
       {/* Curriculum tab */}
       {tab === "curriculum" && (
-        <div className="flex flex-col gap-4">
-          <Curriculum courseId={course.id} isPublished={course.status === "published"} />
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={() => navigate("/instructor/courses")}
-              className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-[14px] font-bold text-slate-600 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
+        <Curriculum
+          courseId={course.id}
+          isPublished={course.status === "published"}
+          onCancel={() => navigate("/instructor/courses")}
+        />
       )}
     </div>
   );
