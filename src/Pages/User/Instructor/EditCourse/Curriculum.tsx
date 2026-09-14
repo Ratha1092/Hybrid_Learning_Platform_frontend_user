@@ -4,7 +4,7 @@ import { ChevronDown, ChevronRight, Trash2, Plus, Video, FileText, ListChecks, P
 import { instructorService, type InstructorSection, type InstructorLesson, type LessonResource, type InstructorLessonVideo } from "../../../../services/instructorService";
 import { getVideoDuration } from "../../../../utils/videoUrl";
 
-interface Props { courseId: number; isPublished?: boolean; }
+interface Props { courseId: number; isPublished?: boolean; onCancel?: () => void; }
 
 const EXT_ICON: Record<string, string> = {
   pdf: "📄", zip: "🗜️", doc: "📝", docx: "📝", ppt: "📊", pptx: "📊", mp4: "🎬", jpg: "🖼️", png: "🖼️",
@@ -261,7 +261,7 @@ function VideosPanel({ courseId, sectionId, lessonId, isPublished }: { courseId:
 }
 
 //  Curriculum
-export default function Curriculum({ courseId, isPublished = false }: Props) {
+export default function Curriculum({ courseId, isPublished = false, onCancel }: Props) {
   const [sections, setSections]           = useState<InstructorSection[]>([]);
   const [loading, setLoading]             = useState(true);
   const [openSections, setOpenSections]   = useState<Set<number>>(new Set([0]));
@@ -871,7 +871,16 @@ export default function Curriculum({ courseId, isPublished = false }: Props) {
         </button>
       </div>
 
-      <div className="flex justify-end border-t border-slate-100 pt-4 dark:border-slate-700">
+      <div className="flex justify-end gap-2 border-t border-slate-100 pt-4 dark:border-slate-700">
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-[13px] font-bold text-slate-600 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+          >
+            Cancel
+          </button>
+        )}
         <button
           type="button"
           onClick={handleSaveCurriculum}
